@@ -5,20 +5,20 @@ from flask import Flask
 from threading import Thread
 import os
 
-# --- TWOJE ID (UZUPEŁNIONE) ---
+# --- TWOJE ID (ZWERYFIKOWANE) ---
 TOKEN = "MTUwNDkyNDY0MTQxMDY4Mjk1MA.GtOXeL.hFpSnpa_jhBtjBEc-0YaTColiV5iKD5YjEpUK8"
 VERIFY_ROLE_ID = 1504942313724448889  # ID rangi Gracz
 WELCOME_CHANNEL_ID = 1504942324470251610 # ID kanału Powitania
-TICKET_CATEGORY_ID = 1504942324470251610 # Możesz zmienić na ID kategorii dla ticketów
+TICKET_CATEGORY_ID = 1504942324470251610 # Kategoria dla ticketów
 
-# --- SERWER WWW DLA RENDER ---
+# --- SERWER WWW DLA RENDER (Keep Alive) ---
 app = Flask('')
 @app.route('/')
 def home(): return "Mint.mc is Online!"
 def run(): app.run(host='0.0.0.0', port=8080)
 def keep_alive(): Thread(target=run).start()
 
-# --- WIDOK TICKETÓW (PRZYCISKI) ---
+# --- SYSTEM TICKETÓW (PRZYCISKI) ---
 class TicketTypeView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
@@ -62,7 +62,7 @@ class TicketCloseView(discord.ui.View):
     async def close(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.channel.delete()
 
-# --- WIDOK WERYFIKACJI ---
+# --- SYSTEM WERYFIKACJI ---
 class VerifyView(discord.ui.View):
     def __init__(self): super().__init__(timeout=None)
     @discord.ui.button(label="✅ Weryfikacja", style=discord.ButtonStyle.success, custom_id="v_btn")
@@ -84,7 +84,7 @@ class MintBot(commands.Bot):
         self.add_view(TicketTypeView())
         self.add_view(TicketCloseView())
         await self.tree.sync()
-        print("✅ Systemy załadowane i zsynchronizowane!")
+        print("✅ Systemy Mint.mc gotowe!")
 
 bot = MintBot()
 
@@ -99,23 +99,39 @@ async def on_member_join(member):
         )
         await channel.send(embed=embed)
 
-# --- KOMENDY ---
-@bot.tree.command(name="wiadomosc", description="Wysyła wiadomość jako bot")
-@app_commands.checks.has_permissions(administrator=True)
-async def msg(interaction: discord.Interaction, kanal: discord.TextChannel, tresc: str):
-    await kanal.send(tresc)
-    await interaction.response.send_message("✅ Wysłano", ephemeral=True)
+# --- KOMENDY SLASH ---
 
-@bot.tree.command(name="panele", description="Wysyła panel weryfikacji lub ticketów")
+@bot.tree.command(name="wiadomosc", description="Wysyła oficjalne ogłoszenie w obramowaniu")
+@app_commands.checks.has_permissions(administrator=True)
+async def msg(interaction: discord.Interaction, kanal: discord.TextChannel, tytul: str, tresc: str):
+    embed = discord.Embed(title=tytul, description=tresc, color=discord.Color.blue())
+    embed.set_footer(text="Mint.mc - Oficjalny komunikat", icon_url=bot.user.avatar.url if bot.user.avatar else None)
+    await kanal.send(embed=embed)
+    await interaction.response.send_message(f"✅ Ogłoszenie wysłane na {kanal.mention}", ephemeral=True)
+
+@bot.tree.command(name="panele", description="Wysyła panele weryfikacji lub ticketów")
 @app_commands.checks.has_permissions(administrator=True)
 async def panels(interaction: discord.Interaction, typ: str):
     if typ == "ver":
-        embed = discord.Embed(title="🛡️ Weryfikacja", description="Kliknij przycisk poniżej, aby otrzymać rangę i dostęp do serwera!", color=discord.Color.green())
+        embed = discord.Embed(title="🛡️ Weryfikacja", description="Kliknij przycisk poniżej, aby otrzymać dostęp do serwera!", color=discord.Color.green())
         await interaction.channel.send(embed=embed, view=VerifyView())
     elif typ == "ticket":
-        embed = discord.Embed(title="🎫 System Ticket", description="Wybierz interesującą Cię kategorię, aby porozmawiać z administracją.", color=discord.Color.blue())
+        embed = discord.Embed(title="🎫 System Ticket", description="Wybierz kategorię zgłoszenia poniżej:", color=discord.Color.blue())
         await interaction.channel.send(embed=embed, view=TicketTypeView())
     await interaction.response.send_message("Panel wysłany.", ephemeral=True)
+
+@bot.tree.command(name="zasady", description="Wysyła regulamin lub listę modów")
+@app_commands.checks.has_permissions(administrator=True)
+async def zasady(interaction: discord.Interaction, typ: str):
+    if typ == "mody":
+        embed = discord.Embed(title="📜 ZAKAZANE MODY", color=discord.Color.red())
+        embed.add_field(name="❌ Zakazane:", value="• Cheat-Clienty\n• X-Ray / Freecam\n• KillAura / Reach\n• Baritone", inline=False)
+        embed.add_field(name="✅ Dozwolone:", value="• OptiFine / Sodium\n• Replay Mod\n• Minimapa (bez graczy)", inline=False)
+    elif typ == "regulamin":
+        embed = discord.Embed(title="📋 REGULAMIN", description="1. Nie czituj.\n2. Nie obrażaj.\n3. Szanuj administrację.", color=discord.Color.blue())
+    
+    await interaction.channel.send(embed=embed)
+    await interaction.response.send_message("Wysłano informację.", ephemeral=True)
 
 if __name__ == "__main__":
     keep_alive()
