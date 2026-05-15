@@ -5,7 +5,7 @@ from flask import Flask
 from threading import Thread
 import os
 
-# --- SEKCA KEEP ALIVE (WYMAGANE PRZEZ RENDER) ---
+# --- SEKCA KEEP ALIVE (DLA RENDER) ---
 app = Flask('')
 
 @app.route('/')
@@ -37,24 +37,49 @@ bot = MintBot()
 @bot.event
 async def on_ready():
     print(f"🚀 Zalogowano jako {bot.user.name}")
+    await bot.change_presence(activity=discord.Game(name="/setup | Mint.mc"))
 
-# --- MEGA ROZBUDOWANA KOMENDA SETUP ---
-@bot.tree.command(name="setup", description="Buduje potężny serwer z masą kanałów")
+# --- GŁÓWNA KOMENDA SETUP (RANGI + KANAŁY) ---
+@bot.tree.command(name="setup", description="Buduje serwer Mint.mc (Rangi + Masa kanałów)")
 @app_commands.checks.has_permissions(administrator=True)
 async def setup(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True)
     guild = interaction.guild
 
-    # DEFINICJA KATEGORII I KANAŁÓW (Wszystko ze zdjęć + Twoja prośba)
+    # 1. TWORZENIE RANG
+    await interaction.followup.send("⏳ Tworzę rangi...", ephemeral=True)
+    roles_to_create = {
+        "👑 CEO": discord.Color.red(),
+        "💻 DEV": discord.Color.purple(),
+        "🛠️ ADMIN": discord.Color.orange(),
+        "🛡️ MOD": discord.Color.blue(),
+        "🛡️ HELPER": discord.Color.dark_blue(),
+        "💎 VIP": discord.Color.gold(),
+        "🟢 GRACZ": discord.Color.green()
+    }
+
+    created_roles = {}
+    for r_name, r_color in roles_to_create.items():
+        role = discord.utils.get(guild.roles, name=r_name)
+        if not role:
+            role = await guild.create_role(name=r_name, color=r_color, hoist=True)
+        created_roles[r_name] = role
+
+    # 2. TWORZENIE STRUKTURY KANAŁÓW
+    await interaction.followup.send("⏳ Tworzę kategorie i kanały...", ephemeral=True)
+    
     structure = {
         "MINT.MC - REGULAMIN": ["📋┃regulamin", "📜┃zakazane-mody", "👮┃taryfikator"],
-        "MINT.MC - LOBBY": ["💜┃boosty", "👑┃rangi", "🔧┃role", "👋┃powitania", "📊┃statystyki"],
-        "MINT.MC - HOSTING": ["❗┃cytrushost"],
-        "MINT.MC - INFORMACJE": ["📌┃ogloszenia", "🚧┃changelog", "⚙️┃rekrutacja", "🌈┃partnerstwa", "📊┃ankiety", "🎁┃konkursy", "🎉┃eventy"],
-        "MINT.MC - POMOC": ["📝┃stworz-ticket", "📑┃zasady-ticketow", "🛡️┃zglos-gracza", "❓┃pytania"],
-        "MINT.MC - MEDIA": ["🚨┃content", "🎥┃content-media", "📸┃zrzuty-ekranu", "📽️┃tiktok-yt"],
-        "MINT.MC - STREFA CHATU": ["💬┃chat-ogolny", "⛏️┃screeny-z-gry", "🤖┃boty", "🎭┃memowy", "🎮┃szukam-ekipy", "🎶┃muzyka"],
-        "MINT.MC - EKONOMIA": ["💰┃portfel", "🛒┃sklep-serwerowy", "📈┃rankingi"]
+        "MINT.MC - LOBBY": ["💜┃boosty", "👑┃rangi", "🔧┃role", "👋┃powitania"],
+        "MINT.MC - INFORMACJE": ["📌┃ogloszenia", "🚧┃changelog", "⚙️┃rekrutacja", "📊┃ankiety", "🎁┃konkursy"],
+        "MINT.MC - STREFA CHATU": [
+            "💬┃chat-ogolny", "💬┃chat-2", "💬┃wolne-pisanie", 
+            "⛏️┃zrzuty-z-gry", "🤖┃komendy-botow", "🎭┃memy", 
+            "🎮┃szukam-ekipy", "🍕┃lifestyle", "🎞️┃filmy-i-seriale",
+            "🎨┃tworczosc-graczy", "🍱┃jedzenie", "🚗┃motoryzacja"
+        ],
+        "MINT.MC - MEDIA": ["🚨┃content", "🎥┃content-media", "📸┃galeria"],
+        "MINT.MC - POMOC": ["📝┃stworz-ticket", "📑┃zasady-ticketow", "🛡️┃zgloszenia"],
     }
 
     for cat_name, channels in structure.items():
@@ -62,15 +87,15 @@ async def setup(interaction: discord.Interaction):
         for ch_name in channels:
             await guild.create_text_channel(ch_name, category=category)
 
-    # DODANIE KANAŁÓW GŁOSOWYCH
-    voice_cat = await guild.create_category("MINT.MC - KANAŁY GŁOSOWE")
-    await guild.create_voice_channel("🔊┃Poczekalnia", category=voice_cat)
-    await guild.create_voice_channel("🎮┃Gramy #1", category=voice_cat)
-    await guild.create_voice_channel("🎮┃Gramy #2", category=voice_cat)
-    await guild.create_voice_channel("🚨┃SPRAWDZANIE", category=voice_cat)
+    # 3. KANAŁY GŁOSOWE
+    v_cat = await guild.create_category("MINT.MC - GŁOSOWE")
+    voice_channels = ["🔊┃Poczekalnia", "🔊┃Chat Głosowy #1", "🔊┃Chat Głosowy #2", "🎮┃Gramy #1", "🎮┃Gramy #2", "🚨┃SPRAWDZANIE"]
+    for v_name in voice_channels:
+        await guild.create_voice_channel(v_name, category=v_cat)
 
-    await interaction.followup.send("🔥 Serwer został rozbudowany! Sprawdź listę kanałów.", ephemeral=True)
+    await interaction.followup.send("✅ Serwer Mint.mc został w pełni skonfigurowany!", ephemeral=True)
 
+# --- START ---
 if __name__ == "__main__":
     keep_alive()
     bot.run(TOKEN)
