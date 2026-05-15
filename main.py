@@ -1,8 +1,26 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
+from flask import Flask
+from threading import Thread
+import os
 
-# TWÓJ TOKEN
+# --- SEKCA KEEP ALIVE (DLA RENDER) ---
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Mint.mc Bot is Online!"
+
+def run():
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
+
+def keep_alive():
+    t = Thread(target=run)
+    t.start()
+
+# --- KONFIGURACJA ---
 TOKEN = "MTUwNDkyNDY0MTQxMDY4Mjk1MA.GtOXeL.hFpSnpa_jhBtjBEc-0YaTColiV5iKD5YjEpUK8"
 
 class MintBot(commands.Bot):
@@ -11,27 +29,24 @@ class MintBot(commands.Bot):
         super().__init__(command_prefix="!", intents=intents)
 
     async def setup_hook(self):
-        # Synchronizacja komend / z serwerami
         await self.tree.sync()
-        print("✅ Komendy slash (/) zostały zsynchronizowane!")
+        print("✅ Komendy slash zsynchronizowane!")
 
 bot = MintBot()
 
 @bot.event
 async def on_ready():
-    print(f"✅ Bot {bot.user.name} jest online (Slash Commands Mode)")
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="Mint.mc"))
+    print(f"🚀 Bot gotowy! Zalogowano jako {bot.user.name}")
+    await bot.change_presence(activity=discord.Game(name="/setup | Mint.mc"))
 
-# ==========================================
-# 🏗️ KOMENDA /SETUP
-# ==========================================
-@bot.tree.command(name="setup", description="Buduje serwer Mint.mc w stylu Mooneu")
+# --- GŁÓWNA KOMENDA SETUP ---
+@bot.tree.command(name="setup", description="Buduje kompletny serwer Mint.mc (dużo kanałów)")
 @app_commands.checks.has_permissions(administrator=True)
 async def setup(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True)
     guild = interaction.guild
 
-    # --- TWORZENIE RANG ---
+    # 1. TWORZENIE RANG
     roles_data = {
         "👑 CEO": discord.Color.red(),
         "💻 DEV": discord.Color.purple(),
@@ -49,71 +64,65 @@ async def setup(interaction: discord.Interaction):
 
     everyone = guild.default_role
 
-    # --- KATEGORIE I KANAŁY (Styl Mooneu) ---
+    # 2. STRUKTURA KANAŁÓW (Wzorowana na Mooneu)
 
-    # 1. REGULAMIN
+    # --- REGULAMIN ---
     cat_reg = await guild.create_category("MINT.MC - REGULAMIN")
     await guild.create_text_channel("📋┃regulamin", category=cat_reg)
     await guild.create_text_channel("📜┃zakazane-mody", category=cat_reg)
     await guild.create_text_channel("👮┃taryfikator", category=cat_reg)
 
-    # 2. LOBBY
+    # --- LOBBY ---
     cat_lobby = await guild.create_category("MINT.MC - LOBBY")
     await guild.create_text_channel("💜┃boosty", category=cat_lobby)
     await guild.create_text_channel("👑┃rangi", category=cat_lobby)
     await guild.create_text_channel("🔧┃role", category=cat_lobby)
 
-    # 3. INFORMACJE
+    # --- HOSTING ---
+    cat_host = await guild.create_category("MINT.MC - HOSTING")
+    await guild.create_text_channel("❗┃cytrushost", category=cat_host)
+
+    # --- INFORMACJE ---
     cat_info = await guild.create_category("MINT.MC - INFORMACJE")
     await guild.create_text_channel("📌┃ogloszenia", category=cat_info)
     await guild.create_text_channel("🚧┃changelog", category=cat_info)
     await guild.create_text_channel("⚙️┃rekrutacja", category=cat_info)
     await guild.create_text_channel("📊┃ankiety", category=cat_info)
+    await guild.create_text_channel("🎁┃konkursy", category=cat_info)
+    await guild.create_text_channel("🎉┃eventy", category=cat_info)
 
-    # 4. POMOC
+    # --- POMOC ---
     cat_help = await guild.create_category("MINT.MC - POMOC")
     await guild.create_text_channel("📝┃stworz-ticket", category=cat_help)
-    await guild.create_text_channel("📑┃zasady-ticketów", category=cat_help)
-    ch_help_v = await guild.create_voice_channel("❓ ‧ POMOC", category=cat_help)
-    ch_check_v = await guild.create_voice_channel("🚨 ‧ SPRAWDZANIE", category=cat_help)
+    await guild.create_text_channel("📑┃zasady-ticketow", category=cat_help)
+    await guild.create_voice_channel("❓ ‧ OFF (15-21)", category=cat_help)
+    await guild.create_voice_channel("🚨 ‧ SPRAWDZANIE", category=cat_help)
 
-    # 5. MEDIA
+    # --- MEDIA ---
     cat_media = await guild.create_category("MINT.MC - MEDIA")
     await guild.create_text_channel("🚨┃content", category=cat_media)
     await guild.create_text_channel("🎥┃content-media", category=cat_media)
 
-    # --- PERMISJE ---
-    for category in [cat_lobby, cat_info, cat_help, cat_media]:
+    # 3. UPRAWNIENIA
+    # Ukrywamy wszystko przed @everyone, co wymaga rangi GRACZ
+    for category in [cat_lobby, cat_host, cat_info, cat_help, cat_media]:
         await category.set_permissions(everyone, read_messages=False)
         await category.set_permissions(created_roles["🟢 GRACZ"], read_messages=True)
 
-    await interaction.followup.send("✅ Serwer został zbudowany zgodnie ze wzorem!", ephemeral=True)
+    await interaction.followup.send("✅ Serwer Mint.mc został w pełni zbudowany!", ephemeral=True)
 
-# ==========================================
-# 🚨 KOMENDA /SPRAWDZ
-# ==========================================
-@bot.tree.command(name="sprawdz", description="Przenosi gracza na kanał sprawdzania")
-@app_commands.describe(użytkownik="Gracz, którego chcesz sprawdzić")
+# --- KOMENDA /SPRAWDZ ---
+@bot.tree.command(name="sprawdz", description="Przerzuca gracza do izolatki")
 @app_commands.checks.has_permissions(move_members=True)
-async def sprawdz(interaction: discord.Interaction, użytkownik: discord.Member):
+async def sprawdz(interaction: discord.Interaction, gracz: discord.Member):
     voice_target = discord.utils.get(interaction.guild.voice_channels, name="🚨 ‧ SPRAWDZANIE")
-    
-    if użytkownik.voice:
-        await użytkownik.move_to(voice_target)
-        await interaction.response.send_message(f"🚨 Przeniesiono {użytkownik.mention} do izolatki!", ephemeral=True)
+    if gracz.voice:
+        await gracz.move_to(voice_target)
+        await interaction.response.send_message(f"🚨 Przeniesiono {gracz.mention} do kanału sprawdzania!", ephemeral=True)
     else:
-        await interaction.response.send_message(f"❌ {użytkownik.mention} nie jest na żadnym kanale głosowym.", ephemeral=True)
+        await interaction.response.send_message(f"❌ {gracz.mention} nie jest na głosowym.", ephemeral=True)
 
-# ==========================================
-# ✅ KOMENDA /WERYFIKACJA
-# ==========================================
-@bot.tree.command(name="weryfikacja", description="Nadaje rangę gracza")
-async def weryfikacja(interaction: discord.Interaction):
-    role = discord.utils.get(interaction.guild.roles, name="🟢 GRACZ")
-    if role in interaction.user.roles:
-        await interaction.response.send_message("Już jesteś zweryfikowany!", ephemeral=True)
-    else:
-        await interaction.user.add_roles(role)
-        await interaction.response.send_message("🎉 Zostałeś zweryfikowany na Mint.mc!", ephemeral=True)
-
-bot.run(TOKEN)
+# --- URUCHOMIENIE ---
+if __name__ == "__main__":
+    keep_alive()
+    bot.run(TOKEN)
