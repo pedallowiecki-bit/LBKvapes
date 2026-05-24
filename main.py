@@ -1,6 +1,5 @@
 import os
 import asyncio
-import threading
 import random
 import string
 from datetime import datetime
@@ -8,6 +7,7 @@ from flask import Flask, request, redirect, jsonify
 import requests
 import discord
 from discord import app_commands
+from asgiref.wsgi import WsgiToAsgi
 
 # ========================================================
 # CONFIGURATION
@@ -101,7 +101,7 @@ def redirect_to_url(link_id):
 
 @app.route('/')
 def home():
-    return "Server is running perfectly!", 200
+    return "OK", 200
 
 # ========================================================
 # DISCORD BOT
@@ -115,7 +115,7 @@ class MyClient(discord.Client):
         print(f'Bot zalogowany jako {self.user}')
         try:
             await self.tree.sync()
-            print("Komendy zsynchronizowane.")
+            print("Komendy slash zsynchronizowane.")
         except Exception as e:
             print(f"Błąd synchronizacji: {e}")
 
@@ -125,27 +125,36 @@ bot_client = MyClient()
 @app_commands.describe(url="Wklej oryginalny adres URL")
 async def link(interaction: discord.Interaction, url: str):
     await interaction.response.defer(ephemeral=True)
-    
-    # Komunikacja wewnętrzna w pamięci aplikacji
     link_id = generate_random_id()
     links_database[link_id] = url
     logger_url = f"{SERVER_URL}/redirect/{link_id}"
-    
     await interaction.followup.send(content=f"🟢 **Link wygenerowany:**\n`{logger_url}`", ephemeral=True)
 
-def run_bot_in_thread():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(bot_client.start(BOT_TOKEN))
+# ========================================================
+# ASGI LIFECYCLE (Uvicorn integration)
+# ========================================================
+wsgi_app = WsgiToAsgi(app)
 
-# Automatyczny start bota przy imporcie pliku przez Gunicorn
-if BOT_TOKEN:
-    print("Inicjalizacja wątku bota...")
-    threading.Thread(target=run_bot_in_thread, daemon=True).start()
-else:
-    print("🚨 BRAK TOKENU BOTA W ZMIENNYCH ŚRODOWISKOWYCH!")
+async def start_bot():
+    if BOT_TOKEN:
+        try:
+            await bot_client.start(BOT_TOKEN)
+        except Exception as e:
+            print(f"Błąd startu bota: {e}")
+    else:
+        print("🚨 Brak DISCORD_BOT_TOKEN!")
 
-# Uruchomienie lokalne (tylko do testów, Gunicorn tego nie używa)
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+# Serwer ASGI, który zostanie wywołany przez Uvicorn
+async def asgi_app(scope, receive, send):
+    if scope['type'] == 'lifespan':
+        while True:
+            message = await receive()
+            if message['type'] == 'lifespan.startup':
+                # Odpal bota w tle pętli zdarzeń Uvicorna
+                asyncio.create_task(start_bot())
+                await send({'type': 'lifespan.startup.complete'})
+            elif message['type'] == 'lifespan.shutdown':
+                await send({'type': 'lifespan.shutdown.complete'})
+                return
+    else:
+        await wsgi_app(scope, receive, send)
