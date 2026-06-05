@@ -1,181 +1,184 @@
-const { Client, GatewayIntentBits, SlashCommandBuilder, EmbedBuilder, ChannelType, PermissionFlagsBits } = require('discord.js');
+import os
+import random
+import time
+import discord
+from discord import app_commands
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
+# --- KONFIGURACJA ID RÓL (Wklej tutaj ID ze swojego serwera) ---
+ROLE_PRO_ID = 1512520808839381012  # Zmień na prawdziwe ID (jako liczba, bez cudzysłowu)
+ROLE_ULTRA_ID = 1512520692015562812  # Zmień na prawdziwe ID (jako liczba, bez cudzysłowu)
 
-// --- KONFIGURACJA ZMIENNYCH ---
-// Zamiast wpisywać token na sztywno, bot pobierze go z ustawień hostingu
-const TOKEN = process.env.DISCORD_TOKEN; 
+# --- CZASY COOLDOWNÓW (w sekundach) ---
+CD_UZER = 5 * 60 * 60  # 5 godzin
+CD_PRO = 30 * 60       # 30 minut
+CD_ULTRA = 30          # 30 sekund
 
-const ROLE_PRO_ID = '1512520808839381012';
-const ROLE_ULTRA_ID = '1512520692015562812';
+# Słownik do przechowywania cooldownów
+cooldowns = {}
 
-const CD_UZER = 5 * 60 * 60 * 1000;
-const CD_PRO = 30 * 60 * 1000;
-const CD_ULTRA = 30 * 1000;
+class MyClient(discord.Client):
+    def __init__(self):
+        super().__init__(intents=discord.Intents.default())
+        self.tree = app_commands.CommandTree(self)
 
-const cooldowns = new Map();
+    async def setup_hook(self):
+        # Rejestracja komend slash globalnie
+        await self.tree.sync()
 
-function generateRandomCode(template) {
-    return template.replace(/X/g, () => {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        return chars.charAt(Math.floor(Math.random() * chars.length));
-    });
-}
+client = MyClient()
 
-function formatTime(ms) {
-    const s = Math.ceil(ms / 1000);
-    if (s < 60) return `${s}s`;
-    const m = Math.floor(s / 60);
-    if (m < 60) return `${m}m ${s % 60}s`;
-    const h = Math.floor(m / 60);
-    return `${h}h ${m % 60}m`;
-}
+def generate_random_code(template):
+    chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    result = ""
+    for char in template:
+        if char == 'X':
+            result += random.choice(chars)
+        else:
+            result += char
+    return result
 
-client.once('ready', async () => {
-    console.log(`Bot zalogowany na hostingu jako ${client.user.tag}!`);
+def format_time(seconds):
+    if seconds < 60:
+        return f"{int(seconds)}s"
+    minutes = seconds // 60
+    if minutes < 60:
+        return f"{int(minutes)}m {int(seconds % 60)}s"
+    hours = minutes // 60
+    return f"{int(hours)}h {int(minutes % 60)}m"
 
-    const commands = [
-        new SlashCommandBuilder().setName('gen-mc').setDescription('Generuje kod podarunkowy do Minecraft'),
-        new SlashCommandBuilder().setName('gen-psc').setDescription('Generuje kod zasilający PaySafeCard'),
-        new SlashCommandBuilder().setName('gen-roblox').setDescription('Generuje kod na darmowe Robuxy'),
-        new SlashCommandBuilder()
-            .setName('setup-server')
-            .setDescription('Automatycznie tworzy strukturę kanałów i cennik rang generatora')
-            .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
-    ];
+@client.event
+async def on_ready():
+    print(f"Bot zalogowany na hostingu jako {client.user}")
 
-    await client.application.commands.set(commands);
-    console.log('✅ Komendy zarejestrowane!');
-});
+# Funkcja pomocnicza do obsługi generatorów
+async def handle_gen(interaction: discord.Interaction, game_name, template):
+    user = interaction.user
+    member = interaction.guild.get_member(user.id)
+    
+    # Ustalanie rangi i czasu cooldownu
+    user_cooldown_duration = CD_UZER
+    rank_name = "UZER"
 
-client.on('interactionCreate', async interaction => {
-    if (!interaction.isChatInputCommand()) return;
+    if member:
+        role_ids = [role.id for role in member.roles]
+        if ROLE_ULTRA_ID in role_ids:
+            user_cooldown_duration = CD_ULTRA
+            rank_name = "ULTRA"
+        elif ROLE_PRO_ID in role_ids:
+            user_cooldown_duration = CD_PRO
+            rank_name = "PRO"
 
-    const { commandName, user, member, guild } = interaction;
-    const userId = user.id;
+    # Sprawdzanie cooldownu
+    cooldown_key = f"{user.id}-{interaction.command.name}"
+    now = time.time()
 
-    if (commandName === 'setup-server') {
-        await interaction.reply({ content: '⚙️ Rozpoczynam budowanie struktury serwera... Proszę czekać.', ephemeral: true });
+    if cooldown_key in cooldowns:
+        expiration_time = cooldowns[cooldown_key] + user_cooldown_duration
+        if now < expiration_time:
+            time_left = expiration_time - now
+            error_embed = discord.Embed(
+                title="Limit wyczerpany!",
+                description=f"Twoja ranga to **{rank_name}**. Mozesz wygenerowac kolejny kod dopiero za:\n⏳ **{format_time(time_left)}**",
+                color=discord.Color.red()
+            )
+            error_embed.set_footer(text="Chcesz generowac czesciej? Kup wyzsza range!")
+            await interaction.response.send_message(embed=error_embed, ephemeral=True)
+            return
 
-        try {
-            const mainCategory = await guild.channels.create({
-                name: '📢 ▬▬ GŁÓWNA STREFA ▬▬',
-                type: ChannelType.GuildCategory,
-            });
+    # Generowanie kodu
+    code = generate_random_code(template)
+    
+    # Tworzenie embeda na PV
+    dm_embed = discord.Embed(
+        title=f"KOD {game_name} WYGENEROWANY!",
+        description=f"Tworzenie nowego kodu zakonczone sukcesem!\n\n**KOD:** ```{code}
+```\n*Zrealizuj go jak najszybciej.*",
+        color=discord.Color.green()
+    )
+    dm_embed.add_field(name="Uzyta ranga", value=f"`{rank_name}`", inline=True)
+    dm_embed.add_field(name="Status kodu", value="Aktywny", inline=True)
+    dm_embed.set_footer(text="Dzieki za korzystanie z bazy!")
 
-            const infoChannel = await guild.channels.create({ name: '💬｜regulamin', type: ChannelType.GuildText, parent: mainCategory.id });
-            const shopChannel = await guild.channels.create({ name: '🛒｜cennik-rang', type: ChannelType.GuildText, parent: mainCategory.id });
-            const proofChannel = await guild.channels.create({ name: '✅｜dowody-legit', type: ChannelType.GuildText, parent: mainCategory.id });
+    try:
+        # Wysyłanie wiadomości prywatnej (PV)
+        await user.send(embed=dm_embed)
 
-            const genCategory = await guild.channels.create({
-                name: '🔑 ▬▬ DARMOWE KODY ▬▬',
-                type: ChannelType.GuildCategory,
-            });
-
-            await guild.channels.create({ name: '🎮｜gen-minecraft', type: ChannelType.GuildText, parent: genCategory.id });
-            await guild.channels.create({ name: '🤖｜gen-roblox', type: ChannelType.GuildText, parent: genCategory.id });
-            await guild.channels.create({ name: '💳｜gen-psc', type: ChannelType.GuildText, parent: genCategory.id });
-
-            const priceEmbed = new EmbedBuilder()
-                .setColor('#FFD700')
-                .setTitle('🛒 SKLEP GENERATORA – OFERTA RANG')
-                .setDescription('Chcesz generować kody znacznie częściej bez długiego czekania? Zdobądź wyższą rangę i omiń limity!')
-                .addFields(
-                    { name: '👤 Ranga: UZER', value: '• **Cena:** `DARMOWA` (Dla każdego)\n• Cooldown: **5 godzin** na komendę\n• Dostęp do podstawowych generatorów.', inline: false },
-                    { name: '💎 Ranga: PRO', value: '• **Cena:** `10 PLN` (PSC / Blik / SMS)\n• Cooldown: **Skrócony do 30 minut!**\n• Większa szansa na trafienie działającego kodu.', inline: false },
-                    { name: '🔥 Ranga: ULTRA', value: '• **Cena:** `25 PLN` (PSC / Blik)\n• Cooldown: **Zaledwie 30 sekund!** (Brak limitów)\n• Priorytetowe generowanie i unikalny kolor na serwerze.', inline: false }
-                )
-                .setThumbnail(client.user.displayAvatarURL())
-                .setFooter({ text: 'W celu zakupu skontaktuj się z Właścicielem serwera poprzez Ticket / DM!' });
-
-            await shopChannel.send({ embeds: [priceEmbed] });
-            return await interaction.editReply({ content: '✅ Serwer został pomyślnie zbudowany!' });
-
-        } catch (error) {
-            console.error(error);
-            return await interaction.editReply({ content: '❌ Wystąpił błąd podczas budowania serwera. Sprawdź uprawnienia bota.' });
-        }
-    }
-
-    let userCooldownDuration = CD_UZER; 
-    let rankName = 'UZER';
-
-    if (member.roles.cache.has(ROLE_ULTRA_ID)) {
-        userCooldownDuration = CD_ULTRA;
-        rankName = 'ULTRA';
-    } else if (member.roles.cache.has(ROLE_PRO_ID)) {
-        userCooldownDuration = CD_PRO;
-        rankName = 'PRO';
-    }
-
-    const cooldownKey = `${userId}-${commandName}`;
-    if (cooldowns.has(cooldownKey)) {
-        const expirationTime = cooldowns.get(cooldownKey) + userCooldownDuration;
-        const now = Date.now();
-
-        if (now < expirationTime) {
-            const timeLeft = expirationTime - now;
-            const errorEmbed = new EmbedBuilder()
-                .setColor('#FF0000')
-                .setTitle('❌ Limit wyczerpany!')
-                .setDescription(`Twoja ranga to **${rankName}**. Możesz wygenerować kolejny kod dopiero za:\n⏳ **${formatTime(timeLeft)}**`)
-                .setFooter({ text: 'Chcesz generować częściej? Kup wyższą rangę!' });
-            
-            return interaction.reply({ embeds: [errorEmbed], ephemeral: true });
-        }
-    }
-
-    let code = '';
-    let title = '';
-
-    if (commandName === 'gen-mc') {
-        code = generateRandomCode('XXXX-XXXX-XXXX');
-        title = '🎮 KOD MINECRAFT';
-    } else if (commandName === 'gen-psc') {
-        code = generateRandomCode('XXXX-XXXX-XXXX-XXXX');
-        title = '💳 KOD PAYSAFECARD';
-    } else if (commandName === 'gen-roblox') {
-        code = generateRandomCode('XXXX-XXXX-XXXX');
-        title = '🤖 KOD ROBLOX ROBUX';
-    }
-
-    const dmEmbed = new EmbedBuilder()
-        .setColor('#00FF00')
-        .setTitle(`${title} WYGENEROWANY!`)
-        .setDescription(`Twój kod został pomyślnie wyciągnięty z bazy danych!\n\n**KOD:** \`\`\`${code}\`\`\`\n*Zrealizuj go jak najszybciej.*`)
-        .addFields(
-            { name: 'Użyta ranga', value: `\`${rankName}\``, inline: true },
-            { name: 'Status kodu', value: '🟢 Aktywny', inline: true }
+        # Sukces na kanale publicznym
+        success_embed = discord.Embed(
+            title="Kod wyslany!",
+            description=f"Hej {user.mention}, wygenerowano nowy kod i wyslano go w wiadomosci prywatnej (PV)! Sprawdz DM.",
+            color=discord.Color.green()
         )
-        .setFooter({ text: 'Dzięki za korzystanie z bazy!' });
+        success_embed.set_footer(text=f"Ranga: {rank_name} - Nastepny za: {format_time(user_cooldown_duration)}")
+        
+        cooldowns[cooldown_key] = now
+        await interaction.response.send_message(embed=success_embed)
 
-    try {
-        await user.send({ embeds: [dmEmbed] });
+    except discord.Forbidden:
+        # Błąd jeśli użytkownik ma zablokowane DM
+        error_channel_embed = discord.Embed(
+            title="Blad wysylania!",
+            description=f"Nie moglem wyslac kodu do Ciebie, {user.mention}.\n\nMasz zablokowane wiadomosci prywatne (DM) z tego serwera! Odblokuj je w ustawieniach i sprobuj ponownie.",
+            color=discord.Color.red()
+        )
+        error_channel_embed.set_footer(text="Status: Blokada DM")
+        await interaction.response.send_message(embed=error_channel_embed, ephemeral=True)
 
-        const successChannelEmbed = new EmbedBuilder()
-            .setColor('#00FF00')
-            .setTitle('✅ Kod wysłany!')
-            .setDescription(`Hej ${user}, wygenerowano nowy kod i wysłano go w **wiadomości prywatnej (PV)**! Sprawdź DM. 📬`)
-            .setFooter({ text: `Ranga: ${rankName} • Następny za: ${formatTime(userCooldownDuration)}` });
+# --- KOMENDY SLASH ---
 
-        cooldowns.set(cooldownKey, Date.now());
-        await interaction.reply({ embeds: [successChannelEmbed] });
+@client.tree.command(name="gen-mc", description="Generuje kod podarunkowy do Minecraft")
+async def gen_mc(interaction: discord.Interaction):
+    await handle_gen(interaction, "MINECRAFT", "XXXX-XXXX-XXXX")
 
-    } catch (error) {
-        const errorChannelEmbed = new EmbedBuilder()
-            .setColor('#FF0000')
-            .setTitle('❌ Błąd wysyłania!')
-            .setDescription(`Nie mogłem wysłać kodu do Ciebie, ${user}.\n\n⚠️ **Masz zablokowane wiadomości prywatne (DM) z tego serwera!** Odblokuj je w ustawieniach i spróbuj ponownie.`)
-            .setFooter({ text: 'Status: Blokada DM' });
+@client.tree.command(name="gen-psc", description="Generuje kod zasilajacy PaySafeCard")
+async def gen_psc(interaction: discord.Interaction):
+    await handle_gen(interaction, "PAYSAFECARD", "XXXX-XXXX-XXXX-XXXX")
 
-        await interaction.reply({ embeds: [errorChannelEmbed], ephemeral: true });
-    }
-});
+@client.tree.command(name="gen-roblox", description="Generuje kod na darmowe Robuxy")
+async def gen_roblox(interaction: discord.Interaction):
+    await handle_gen(interaction, "ROBLOX ROBUX", "XXXX-XXXX-XXXX")
 
-// Zabezpieczenie przed wywaleniem bota, gdy w panelu nie ma tokenu
-if (!TOKEN) {
-    console.error("❌ BŁĄD: Brak zmiennej DISCORD_TOKEN w konfiguracji hostingu!");
-    process.exit(1);
-}
+@client.tree.command(name="setup-server", description="Automatycznie tworzy strukture kanalow i cennik rang")
+@app_commands.checks.has_permissions(administrator=True)
+async def setup_server(interaction: discord.Interaction):
+    await interaction.response.send_message("Rozpoczynam budowanie struktury serwera... Prosze czekac.", ephemeral=True)
+    guild = interaction.guild
 
-client.login(TOKEN);
+    try:
+        # Tworzenie Kategorii i kanałów
+        main_category = await guild.create_category(name="GLOWNA STREFA")
+        await guild.create_text_channel(name="regulamin", category=main_category)
+        shop_channel = await guild.create_text_channel(name="cennik-rang", category=main_category)
+        await guild.create_text_channel(name="dowody-legit", category=main_category)
+
+        gen_category = await guild.create_category(name="DARMOWE KODY")
+        await guild.create_text_channel(name="gen-minecraft", category=gen_category)
+        await guild.create_text_channel(name="gen-roblox", category=gen_category)
+        await guild.create_text_channel(name="gen-psc", category=gen_category)
+
+        # Cennik
+        price_embed = discord.Embed(
+            title="SKLEP GENERATORA - OFERTA RANG",
+            description="Chcesz generowac kody znacznie czesciej bez dlugiego czekania? Zdobadz wyzsza range i omin limity!",
+            color=discord.Color.gold()
+        )
+        price_embed.add_field(name="Ranga: UZER", value="• **Cena:** `DARMOWA` (Dla kazdego)\n• Cooldown: **5 godzin** na komende\n• Dostep do podstawowych generatorow.", inline=False)
+        price_embed.add_field(name="Ranga: PRO", value="• **Cena:** `10 PLN` (PSC / Blik)\n• Cooldown: **Skrocony do 30 minut!**\n• Wieksza szansa na trafienie kodu.", inline=False)
+        price_embed.add_field(name="Ranga: ULTRA", value="• **Cena:** `25 PLN` (PSC / Blik)\n• Cooldown: **Zaledwie 30 sekund!**\n• Priorytetowe generowanie.", inline=False)
+        price_embed.set_footer(text="W celu zakupu skontaktuj sie z Wlascicielem serwera poprzez Ticket / DM!")
+
+        await shop_channel.send(embed=price_embed)
+        await interaction.edit_original_response(content="Serwer zostal pomyslnie zbudowany!")
+
+    except Exception as e:
+        print(e)
+        await interaction.edit_original_response(content="Wystapil blad podczas budowania serwera. Sprawdz uprawnienia bota.")
+
+# Pobieranie tokenu ze zmiennych środowiskowych na hostingu
+TOKEN = os.getenv("DISCORD_TOKEN")
+
+if not TOKEN:
+    print("BLAD: Brak zmiennej DISCORD_TOKEN w konfiguracji hostingu!")
+    exit(1)
+
+client.run(TOKEN)
