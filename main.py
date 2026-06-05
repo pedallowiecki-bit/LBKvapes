@@ -32,7 +32,7 @@ function formatTime(ms) {
 }
 
 client.once('ready', async () => {
-    console.log(`🤖 Bot zalogowany na hostingu jako ${client.user.tag}!`);
+    console.log(`Bot zalogowany na hostingu jako ${client.user.tag}!`);
 
     const commands = [
         new SlashCommandBuilder().setName('gen-mc').setDescription('Generuje kod podarunkowy do Minecraft'),
