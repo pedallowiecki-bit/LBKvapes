@@ -2,8 +2,8 @@ import os
 import json
 import base64
 import requests
-import asyncio
 import threading
+import asyncio
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import discord
 from discord.ext import commands
@@ -13,30 +13,29 @@ from discord import app_commands
 ADMIN_ROLE_ID = 1518638158961709153
 CLIENT_ROLE_ID = 1518633914925580438
 
-# KONFIGURACJA ZMIENNYCH ŚRODOWISKOWYCH
+# ZMIENNE ŚRODOWISKOWE
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-GITHUB_REPO = os.getenv("GITHUB_REPO")  # np. "TwojNick/lbkpets-store"
+GITHUB_TOKEN = os.getenv("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")
+GITHUB_REPO = os.getenv("pedallowiecki-bit/serwer-mc")
 FILE_PATH = "products.json"
 
-# SERWER HTTP DLA RENDERA (Zapobiega błędom i wyłączaniu usłu)
+# SERWER HTTP DLA RENDERA
 class KeepAliveHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.send_header('Content-type', 'text/html; charset=utf-8')
         self.end_headers()
-        self.wfile.write(b"LBKPETS Bot is running 24/7!")
+        self.wfile.write(b"LBKPETS Bot is running!")
 
 def run_http_server():
     port = int(os.getenv("PORT", 10000))
     server = HTTPServer(('0.0.0.0', port), KeepAliveHandler)
-    print(f"🌐 Serwer HTTP dla Rendera uruchomiony na porcie {port}")
     server.serve_forever()
 
-# Uruchomienie serwera HTTP w osobnym wątku
+# Uruchomienie serwera WWW w osobnym wątku
 threading.Thread(target=run_http_server, daemon=True).start()
 
-# INTENTY BOTA DISCORD
+# INTENTY BOTA
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
@@ -72,17 +71,14 @@ def get_current_products():
 
 @bot.event
 async def on_ready():
-    print(f"✅ Bot zalogowany jako {bot.user}")
+    print(f"✅ Bot jest ONLINE jako: {bot.user}")
     try:
         synced = await bot.tree.sync()
-        print(f"⚡ Zsynchronizowano {len(synced)} komend slash.")
+        print(f"⚡ Zsynchronizowano komendy slash ({len(synced)}).")
     except Exception as e:
-        print(f"Błąd synchronizacji: {e}")
+        print(f"❌ Błąd synchronizacji komend: {e}")
 
-# =========================================================
-# KOMENDY DLA ADMINA (Rola ID: 1518638158961709153)
-# =========================================================
-
+# KOMENDY ADMINA
 @bot.tree.command(name="dodaj", description="[ADMIN] Dodaj nowy produkt do sklepu")
 @app_commands.describe(
     nazwa="Nazwa produktu",
@@ -101,7 +97,7 @@ async def dodaj(
 ):
     user_role_ids = [role.id for role in interaction.user.roles]
     if ADMIN_ROLE_ID not in user_role_ids:
-        await interaction.response.send_message("❌ Ta komenda jest zarezerwowana tylko dla Admina!", ephemeral=True)
+        await interaction.response.send_message("❌ Komenda tylko dla Admina!", ephemeral=True)
         return
 
     await interaction.response.defer(thinking=True)
@@ -146,14 +142,11 @@ async def usun(interaction: discord.Interaction, product_id: str):
         return
 
     if update_github_json(new_products, f"Usunięto produkt ID: {product_id}"):
-        await interaction.followup.send(f"🗑️ Pomyślnie usunięto produkt o ID: `{product_id}`")
+        await interaction.followup.send(f"🗑️ Usunięto produkt o ID: `{product_id}`")
     else:
         await interaction.followup.send("❌ Błąd zapisu w GitHubie.")
 
-# =========================================================
-# KOMENDY DLA KLIENTA (Rola ID: 1518633914925580438)
-# =========================================================
-
+# KOMENDY KLIENTA
 @bot.tree.command(name="sklep", description="[KLIENT] Przeglądaj aktualną ofertę sklepu")
 async def sklep(interaction: discord.Interaction):
     user_role_ids = [role.id for role in interaction.user.roles]
@@ -163,7 +156,7 @@ async def sklep(interaction: discord.Interaction):
 
     products = get_current_products()
     if not products:
-        await interaction.response.send_message("🛒 Sklep jest obecnie pusty.", ephemeral=True)
+        await interaction.response.send_message("🛒 Sklep jest pusty.", ephemeral=True)
         return
 
     embed = discord.Embed(title="🛍️ Oferta Sklepu LBKPETS", color=0x00a6ff)
@@ -179,20 +172,10 @@ async def sklep(interaction: discord.Interaction):
 
     await interaction.response.send_message(embed=embed)
 
-@bot.tree.command(name="zamowienie", description="[KLIENT] Złóż zamówienie wpisując ID koszyka ze strony")
-async def zamowienie(interaction: discord.Interaction, id: str):
-    user_role_ids = [role.id for role in interaction.user.roles]
-    if CLIENT_ROLE_ID not in user_role_ids and ADMIN_ROLE_ID not in user_role_ids:
-        await interaction.response.send_message("❌ Brak wymaganej rangi Klienta!", ephemeral=True)
-        return
-
-    await interaction.response.send_message(
-        f"📦 Dziękujemy za złożenie zamówienia `{id}`! Administracja skontaktuje się z Tobą na PW w celu finalizacji płatności.",
-        ephemeral=True
-    )
-
+# URUCHOMIENIE BOTA
 if __name__ == "__main__":
-    if DISCORD_TOKEN:
-        bot.run(DISCORD_TOKEN)
+    if not DISCORD_TOKEN:
+        print("❌ CRITICAL ERROR: Zmienna DISCORD_TOKEN nie została ustawiona w Renderze!")
     else:
-        print("❌ BŁĄD: Brak zmiennej DISCORD_TOKEN w Environment Variables!")
+        print("🚀 Uruchamianie bota Discord...")
+        bot.run(DISCORD_TOKEN)
