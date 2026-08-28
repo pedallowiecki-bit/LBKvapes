@@ -2,6 +2,9 @@ import os
 import json
 import base64
 import requests
+import asyncio
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -16,7 +19,28 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO = os.getenv("GITHUB_REPO")  # np. "TwojNick/lbkpets-store"
 FILE_PATH = "products.json"
 
+# SERWER HTTP DLA RENDERA (Zapobiega błędom i wyłączaniu usłu)
+class KeepAliveHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html; charset=utf-8')
+        self.end_headers()
+        self.wfile.write(b"LBKPETS Bot is running 24/7!")
+
+def run_http_server():
+    port = int(os.getenv("PORT", 10000))
+    server = HTTPServer(('0.0.0.0', port), KeepAliveHandler)
+    print(f"🌐 Serwer HTTP dla Rendera uruchomiony na porcie {port}")
+    server.serve_forever()
+
+# Uruchomienie serwera HTTP w osobnym wątku
+threading.Thread(target=run_http_server, daemon=True).start()
+
+# INTENTY BOTA DISCORD
 intents = discord.Intents.default()
+intents.message_content = True
+intents.members = True
+
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 def update_github_json(new_products, commit_msg):
@@ -168,4 +192,7 @@ async def zamowienie(interaction: discord.Interaction, id: str):
     )
 
 if __name__ == "__main__":
-    bot.run(DISCORD_TOKEN)
+    if DISCORD_TOKEN:
+        bot.run(DISCORD_TOKEN)
+    else:
+        print("❌ BŁĄD: Brak zmiennej DISCORD_TOKEN w Environment Variables!")
