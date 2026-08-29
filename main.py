@@ -4,6 +4,7 @@ import base64
 import requests
 import threading
 import asyncio
+import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import discord
 from discord import app_commands
@@ -192,9 +193,9 @@ async def usun(interaction: discord.Interaction, product_id: int):
     else:
         await interaction.followup.send("❌ Błąd zapisu na GitHubie.")
 
-# KOMENDA: /zamowienie (POBIERA PRODUKT, LICZY KOSZTA + DOSTAWA 15ZŁ I POKAZUJE OBRAZEK)
+# KOMENDA: /zamowienie (Z AUTOMATYCZNYM AUTOCOMPLETE PRODUKTÓW)
 @bot.tree.command(name="zamowienie", description="Otwórz ticket w celu zakupu produktu ze sklepu")
-@app_commands.describe(product_id="ID produktu z komendy /sklep")
+@app_commands.describe(product_id="Wybierz produkt z listy (wyszukaj po nazwie)")
 async def zamowienie(interaction: discord.Interaction, product_id: int):
     await interaction.response.defer(ephemeral=True)
 
@@ -205,7 +206,7 @@ async def zamowienie(interaction: discord.Interaction, product_id: int):
 
     product = next((p for p in products if p.get('id') == product_id), None)
     if not product:
-        await interaction.followup.send(f"❌ Nie znaleziono produktu o ID `{product_id}`. Sprawdź aktualne ID w `/sklep`.", ephemeral=True)
+        await interaction.followup.send(f"❌ Nie znaleziono wybranego produktu.", ephemeral=True)
         return
 
     guild = interaction.guild
@@ -251,7 +252,7 @@ async def zamowienie(interaction: discord.Interaction, product_id: int):
             color=discord.Color.green()
         )
         embed.add_field(name="👤 Klient", value=user.mention, inline=True)
-        embed.add_field(name="📦 Zamówienie", value=f"**{nazwa}** (ID: `{product_id}`)", inline=False)
+        embed.add_field(name="📦 Zamówienie", value=f"**{nazwa}**", inline=False)
         embed.add_field(name="💵 Cena produktu", value=f"{cena:.2f} PLN", inline=True)
         embed.add_field(name="🚚 Dostawa", value=f"{dostawa:.2f} PLN", inline=True)
         embed.add_field(name="💰 Łączna kwota", value=f"**{suma:.2f} PLN**", inline=False)
@@ -271,6 +272,23 @@ async def zamowienie(interaction: discord.Interaction, product_id: int):
     except Exception as e:
         await interaction.followup.send(f"❌ Wystąpił błąd podczas tworzenia ticketu: {e}", ephemeral=True)
 
+# AUTOCOMPLETE DLA KOMENDY /zamowienie
+@zamowienie.autocomplete('product_id')
+async def zamowienie_autocomplete(interaction: discord.Interaction, current: str):
+    products, _, _ = get_github_file()
+    choices = []
+    for p in products:
+        name = p.get('name', 'Brak nazwy')
+        price = p.get('price', 0)
+        product_id = p.get('id')
+        
+        # Filtruje po wpisywanym tekście
+        if current.lower() in name.lower():
+            choices.append(
+                app_commands.Choice(name=f"{name} ({price} PLN)", value=product_id)
+            )
+    return choices[:25] # Discord pozwala na maksymalnie 25 podpowiedzi
+
 # KOMENDA: /zamknij
 @bot.tree.command(name="zamknij", description="Zamyka i usuwa bieżący ticket")
 async def zamknij(interaction: discord.Interaction):
@@ -280,6 +298,13 @@ async def zamknij(interaction: discord.Interaction):
         await interaction.channel.delete()
     else:
         await interaction.response.send_message("❌ Tej komendy możesz użyć tylko na kanale ticketu.", ephemeral=True)
+
+# KOMENDA: /restart
+@bot.tree.command(name="restart", description="Restartuje bota")
+@app_commands.default_permissions(administrator=True)
+async def restart(interaction: discord.Interaction):
+    await interaction.response.send_message("🔄 **Restartowanie bota...**", ephemeral=True)
+    os.execv(sys.executable, ['python'] + sys.argv)
 
 if __name__ == "__main__":
     if DISCORD_TOKEN:
