@@ -230,8 +230,8 @@
       </button>
 
       <div id="token-result" class="hidden mt-4 bg-brand-light/50 p-4 rounded-2xl border border-brand/20 text-center">
-        <p class="text-xs text-slate-700 font-bold mb-1">✅ Zamówienie zapisane pomyślnie!</p>
-        <p class="text-[11px] text-slate-500 mb-2">Skopiuj poniższą komendę, przejdź na nasz serwer Discord i wklej ją na dowolnym kanale lub w tickecie:</p>
+        <p class="text-xs text-slate-700 font-bold mb-1">✅ Zamówienie zapisane pomyślnie na GitHubie!</p>
+        <p class="text-[11px] text-slate-500 mb-2">Skopiuj poniższą komendę, przejdź na nasz serwer Discord i wklej ją:</p>
         
         <code id="final-code" class="block font-mono font-bold text-sm text-brand bg-white p-2.5 rounded-xl border border-brand/20 my-2 select-all">/zamowienie order_id:LBK-XXXXX</code>
         
@@ -454,7 +454,8 @@
       btn.innerText = "Wysyłanie zamówienia...";
 
       try {
-        const backendUrl = 'https://nazwa-twojej-aplikacji.onrender.com/create-order';
+        // Prawidłowy adres backendu na Renderze
+        const backendUrl = 'https://lbk.onrender.com/create-order';
 
         const response = await fetch(backendUrl, {
           method: 'POST',
