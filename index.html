@@ -1,55 +1,400 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sklep Serwera</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #121212; color: #fff; padding: 20px; text-align: center; }
-        .grid { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 30px; }
-        .card { background: #1e1e1e; border-radius: 10px; padding: 15px; width: 220px; border: 1px solid #333; text-align: left; }
-        .card img { width: 100%; height: 150px; object-fit: cover; border-radius: 8px; }
-        .price { color: #00a6ff; font-weight: bold; font-size: 1.2em; }
-        .old-price { text-decoration: line-through; color: #888; margin-left: 5px; font-size: 0.9em; }
-        .badge { background: #ff4757; color: white; padding: 3px 8px; border-radius: 5px; font-size: 0.8em; }
-    </style>
-</head>
-<body>
-
-    <h1>🛍️ Sklep Serwera</h1>
-    <div id="products-container" class="grid">Ładowanie produktów...</div>
-
-    <script>
-        async function loadProducts() {
-            try {
-                const response = await fetch('products.json?t=' + new Date().getTime());
-                const products = await response.json();
-                
-                const container = document.getElementById('products-container');
-                container.innerHTML = '';
-
-                if (!products || products.length === 0) {
-                    container.innerHTML = '<p>Brak produktów w sklepie.</p>';
-                    return;
-                }
-
-                products.forEach(p => {
-                    const card = document.createElement('div');
-                    card.className = 'card';
-                    card.innerHTML = `
-                        <img src="${p.img}" alt="${p.name}">
-                        <h3>${p.badge ? `<span class="badge">${p.badge}</span> ` : ''}${p.name}</h3>
-                        <p class="price">${p.price.toFixed(2)} PLN ${p.oldPrice ? `<span class="old-price">${p.oldPrice.toFixed(2)} PLN</span>` : ''}</p>
-                        <small>ID Koszyka: <code>${p.id}</code></small>
-                    `;
-                    container.appendChild(card);
-                });
-            } catch (err) {
-                document.getElementById('products-container').innerHTML = '<p>Błąd ładowania produktów lub pusty plik.</p>';
-            }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LBKPETS - Official Store</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: { DEFAULT: '#00a6ff', hover: '#008ce0', light: '#e6f6ff' }
+          }
         }
+      }
+    }
+  </script>
+</head>
+<body class="bg-[#fafbfc] text-slate-800 font-sans min-h-screen flex flex-col justify-between antialiased pb-24">
 
-        loadProducts();
-    </script>
+  <div class="bg-slate-900 text-slate-300 text-[11px] py-2 px-4 text-center font-medium tracking-wide flex justify-between items-center max-w-[1400px] mx-auto w-full">
+    <div class="flex items-center gap-2">
+      <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span>🔥 Oferta ograniczona czasowo! Koniec promocji za: <strong id="promo-timer" class="text-white font-mono">05:42:19</strong></span>
+    </div>
+    <button onclick="accessAdminModal()" class="text-brand font-bold hover:underline cursor-pointer">⚙️ Panel Admina</button>
+  </div>
+
+  <div>
+    <section class="max-w-[1400px] mx-auto px-6 pt-8 pb-4">
+      <div class="bg-white rounded-3xl border border-slate-200/80 p-6 md:p-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-8">
+        
+        <div class="flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-left">
+          <div class="w-24 h-24 md:w-28 md:h-28 bg-slate-50 rounded-2xl flex items-center justify-center p-3 border border-slate-100 shrink-0 shadow-inner">
+            <div class="w-full h-full bg-gradient-to-tr from-cyan-600 to-teal-400 rounded-xl flex flex-col items-center justify-center shadow-md transform -rotate-2">
+              <span class="text-white font-black text-2xl tracking-tighter">LBK</span>
+              <span class="text-[9px] font-bold text-white uppercase tracking-widest -mt-1">PETS</span>
+            </div>
+          </div>
+
+          <div class="max-w-xl">
+            <span class="text-xs font-bold text-brand uppercase tracking-widest block mb-1">O naszej marce</span>
+            <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tight mb-2">Kim jesteśmy?</h2>
+            <p class="text-xs md:text-sm text-slate-600 font-medium leading-relaxed">
+              LBKPETS to Twój zaufany sklep internetowy. Zaczynaliśmy od społeczności na Discordzie, a dziś oferujemy w pełni profesjonalny asortyment, szybką dostawę i pełną gwarancję satysfakcji.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-1 lg:grid-cols-3 gap-3 w-full md:w-auto shrink-0">
+          <div class="bg-slate-50 border border-slate-100 p-3.5 rounded-2xl text-center flex flex-col items-center justify-center">
+            <span class="text-lg mb-0.5">⚡</span>
+            <strong class="text-xs font-black text-slate-900 block">Wysyłka 24h</strong>
+            <span class="text-[10px] text-slate-500 font-medium">Ekspresowa realizacja</span>
+          </div>
+
+          <div class="bg-brand-light/60 border border-brand/20 p-3.5 rounded-2xl text-center flex flex-col items-center justify-center">
+            <span class="text-lg mb-0.5">📦</span>
+            <strong class="text-xs font-black text-brand block">Darmowa dostawa</strong>
+            <span class="text-[10px] text-slate-600 font-medium">Zamówienia od 120 PLN</span>
+          </div>
+
+          <div class="bg-slate-50 border border-slate-100 p-3.5 rounded-2xl text-center flex flex-col items-center justify-center">
+            <span class="text-lg mb-0.5">🛡️</span>
+            <strong class="text-xs font-black text-slate-900 block">100% Pewność</strong>
+            <span class="text-[10px] text-slate-500 font-medium">Bezpieczne zakupy</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="max-w-[1400px] mx-auto px-6 py-4">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div onclick="filterProducts('all')" class="cursor-pointer bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-5 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md">
+          <div>
+            <span class="text-[10px] font-bold text-brand uppercase tracking-wider block">Kategoria</span>
+            <h3 class="text-base font-black">Wszystkie Produkty</h3>
+          </div>
+          <span class="text-2xl">🔥</span>
+        </div>
+
+        <div onclick="filterProducts('box')" class="cursor-pointer bg-gradient-to-br from-brand to-cyan-600 text-white rounded-2xl p-5 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md shadow-brand/20">
+          <div>
+            <span class="text-[10px] font-bold text-cyan-100 uppercase tracking-wider block">Zestawy i Hurt</span>
+            <h3 class="text-base font-black">BOXY (10 SZT)</h3>
+          </div>
+          <span class="text-2xl">📦</span>
+        </div>
+
+        <div onclick="filterProducts('promo')" class="cursor-pointer bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-2xl p-5 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md shadow-amber-500/20">
+          <div>
+            <span class="text-[10px] font-bold text-amber-100 uppercase tracking-wider block">Super Okazje</span>
+            <h3 class="text-base font-black">Promocje %</h3>
+          </div>
+          <span class="text-2xl">💎</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="max-w-[1400px] mx-auto px-6 pt-4 flex flex-col sm:flex-row gap-4 justify-between items-center">
+      <div class="flex gap-2">
+        <button onclick="filterProducts('all')" class="bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all">Wszystkie</button>
+        <button onclick="filterProducts('promo')" class="bg-white border text-slate-600 text-xs font-bold px-4 py-2 rounded-xl hover:border-brand transition-all">Promocje 🔥</button>
+        <button onclick="filterProducts('box')" class="bg-white border text-slate-600 text-xs font-bold px-4 py-2 rounded-xl hover:border-brand transition-all">Boxy 📦</button>
+      </div>
+
+      <div class="relative w-full sm:w-72">
+        <input type="text" id="search-input" onkeyup="searchProducts()" placeholder="Szukaj produktu..." class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-brand shadow-sm">
+      </div>
+    </div>
+
+    <header class="max-w-[1400px] mx-auto px-6 pt-6 pb-4 flex justify-between items-end border-b border-slate-200/60">
+      <h1 class="text-xl font-black tracking-tight text-slate-900 uppercase">KATALOG PRODUKTÓW</h1>
+      <button onclick="openCartModal()" class="text-xs font-bold text-brand hover:text-brand-hover uppercase tracking-wider flex items-center gap-1 cursor-pointer">
+        ZOBACZ KOSZYK (<span id="cart-count">0</span>) <span class="text-sm">&rsaquo;</span>
+      </button>
+    </header>
+
+    <main class="max-w-[1400px] mx-auto px-6 py-8">
+      <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6"></div>
+    </main>
+
+    <section class="max-w-[1400px] mx-auto px-6 py-10 border-t border-slate-200/60">
+      <div class="text-center mb-8">
+        <span class="text-xs font-bold text-brand uppercase tracking-widest">Opinie społeczności</span>
+        <h2 class="text-xl font-black text-slate-900 uppercase">Co mówią o nas klienci z Discorda?</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+          <div class="flex items-center gap-1 text-amber-400 text-xs mb-2">★★★★★</div>
+          <p class="text-xs text-slate-600 font-medium mb-3">"Paczka przyszła w niecałe 24h! Wszystko dobrze zapakowane, kody z discorda działają bez problemu. Polecam w 100%!"</p>
+          <div class="flex items-center justify-between text-[11px]">
+            <strong class="text-slate-900">@Szymon_DC</strong>
+            <span class="text-emerald-500 font-bold">Zweryfikowany zakup</span>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+          <div class="flex items-center gap-1 text-amber-400 text-xs mb-2">★★★★★</div>
+          <p class="text-xs text-slate-600 font-medium mb-3">"Bralem boxa 10x WGA smart. Cena najlepsza w internecie, wysyłka błyskawica. Napewno jeszcze wrócę."</p>
+          <div class="flex items-center justify-between text-[11px]">
+            <strong class="text-slate-900">@KacperVape</strong>
+            <span class="text-emerald-500 font-bold">Zweryfikowany zakup</span>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+          <div class="flex items-center gap-1 text-amber-400 text-xs mb-2">★★★★★</div>
+          <p class="text-xs text-slate-600 font-medium mb-3">"Mega sprawna obsługa na DC, super jakość i szybka realizacja. Najlepszy sklep w sieci."</p>
+          <div class="flex items-center justify-between text-[11px]">
+            <strong class="text-slate-900">@Mati_LBK</strong>
+            <span class="text-emerald-500 font-bold">Zweryfikowany zakup</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="cart-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative border border-slate-100">
+      <h2 class="text-lg font-black text-slate-900 mb-4 border-b pb-3 uppercase">Twój Koszyk</h2>
+      <div id="cart-list" class="space-y-2 max-h-52 overflow-y-auto mb-4 text-xs pr-1"></div>
+
+      <div class="flex justify-between font-black text-base border-t pt-3 mb-5">
+        <span>ŁĄCZNIE:</span>
+        <span id="cart-total" class="text-brand">0,00 PLN</span>
+      </div>
+
+      <button onclick="generateDiscordToken()" id="gen-btn" disabled class="w-full bg-slate-200 text-slate-400 font-extrabold text-xs py-3.5 rounded-xl uppercase tracking-wider cursor-not-allowed">
+        Generuj kod na Discorda
+      </button>
+
+      <div id="token-result" class="hidden mt-4 bg-brand-light/50 p-4 rounded-2xl border border-brand/20 text-center">
+        <p class="text-xs text-slate-700 font-medium mb-1">Wyślij komendę na Discordzie:</p>
+        <code id="final-code" class="block font-mono font-bold text-sm text-brand bg-white p-2.5 rounded-xl border border-brand/20 my-2 select-all">/zamowienie id:XXXXX</code>
+        <button onclick="copyCode()" class="text-xs bg-slate-900 text-white font-bold px-4 py-2 rounded-lg cursor-pointer">Kopiuj Komendę</button>
+      </div>
+
+      <button onclick="closeCartModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 font-black text-lg cursor-pointer">✕</button>
+    </div>
+  </div>
+
+  <div id="admin-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative">
+      <h2 class="text-lg font-black text-slate-900 mb-4 border-b pb-3 uppercase flex items-center gap-2">
+        🔒 Panel Administracyjny
+      </h2>
+
+      <form onsubmit="handleAddProduct(event)" class="space-y-3 mb-6">
+        <h3 class="text-xs font-bold text-slate-500 uppercase">Dodaj nowy produkt</h3>
+        <input type="text" id="p-name" placeholder="Nazwa produktu" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand">
+        <div class="grid grid-cols-2 gap-2">
+          <input type="number" step="0.01" id="p-price" placeholder="Cena (PLN)" required class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand">
+          <input type="number" step="0.01" id="p-oldprice" placeholder="Stara cena (opcjonalnie)" class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand">
+        </div>
+        <input type="url" id="p-img" placeholder="Link do obrazka (URL)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand">
+        <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-3 rounded-xl uppercase tracking-wider cursor-pointer">
+          + Dodaj Produkt
+        </button>
+      </form>
+
+      <h3 class="text-xs font-bold text-slate-500 uppercase mb-2">Zarządzaj obecnymi produktami</h3>
+      <div id="admin-products-list" class="space-y-2 max-h-40 overflow-y-auto text-xs pr-1"></div>
+
+      <button onclick="toggleAdminModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 font-black text-lg cursor-pointer">✕</button>
+    </div>
+  </div>
+
+  <div id="cookie-banner" class="fixed bottom-4 left-4 right-4 z-40 max-w-[1400px] mx-auto">
+    <div class="bg-white/95 backdrop-blur-md border border-slate-200/80 p-4 rounded-2xl shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="text-xs text-slate-600">
+        <strong class="text-slate-900 font-bold block mb-0.5">Polityka plików cookies</strong>
+        Nasza strona korzysta z plików cookies. <a href="#" class="text-brand font-semibold hover:underline">Dowiedz się więcej</a>
+      </div>
+      <div class="flex items-center gap-3 shrink-0">
+        <button onclick="closeCookies()" class="text-xs text-slate-500 font-bold px-4 py-2">Odrzuć</button>
+        <button onclick="closeCookies()" class="bg-brand text-white text-xs font-extrabold px-6 py-2.5 rounded-xl shadow-md shadow-brand/20">Akceptuję</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let products = [];
+    let displayedProducts = [];
+    let cart = [];
+
+    async function loadProductsFromJSON() {
+      try {
+        const res = await fetch('products.json?t=' + new Date().getTime());
+        if (res.ok) {
+          products = await res.json();
+        } else {
+          products = [];
+        }
+      } catch (e) {
+        products = [];
+      }
+      displayedProducts = [...products];
+      renderProducts();
+    }
+
+    function accessAdminModal() {
+      const password = prompt("Wprowadź hasło administratora:");
+      if (password === "lbk2026") {
+        toggleAdminModal();
+      } else if (password !== null) {
+        alert("Błędne hasło! Dostęp zabroniony.");
+      }
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById('products-grid');
+      let html = '';
+      
+      if (displayedProducts.length === 0) {
+        grid.innerHTML = '<p class="col-span-full text-center text-slate-400 py-10">Brak dostępnych produktów w sklepie.</p>';
+        return;
+      }
+
+      displayedProducts.forEach(p => {
+        const price = typeof p.price === 'number' ? p.price : parseFloat(p.price);
+        const oldPrice = p.oldPrice ? (typeof p.oldPrice === 'number' ? p.oldPrice : parseFloat(p.oldPrice)) : null;
+
+        html += `
+          <div class="group bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-xl hover:border-brand/30 transition-all duration-300 flex flex-col justify-between relative">
+            ${p.badge ? `<span class="absolute top-3 left-3 bg-slate-900 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider z-10 shadow-sm">${p.badge}</span>` : ''}
+            <div>
+              <div class="w-full h-44 bg-slate-50 rounded-xl mb-3 overflow-hidden flex items-center justify-center p-3 group-hover:bg-brand-light/30 transition-colors">
+                <img src="${p.img || 'https://via.placeholder.com/200'}" alt="${p.name}" class="max-h-full object-contain group-hover:scale-105 transition-transform duration-300">
+              </div>
+              <h3 class="text-xs font-bold text-slate-800 uppercase leading-snug mb-1 min-h-[32px] group-hover:text-brand transition-colors">
+                ${p.name}
+              </h3>
+              <div class="flex items-center gap-1 text-amber-400 text-xs mb-2">
+                <span>★★★★★</span>
+                <span class="text-slate-400 text-[10px] font-medium">(1)</span>
+              </div>
+            </div>
+            <div>
+              <div class="mb-3">
+                <span class="text-base font-black text-slate-900">${price.toFixed(2)} <span class="text-xs font-bold">PLN</span></span>
+                ${oldPrice ? `<span class="text-xs text-slate-400 line-through block font-medium">${oldPrice.toFixed(2)} PLN</span>` : ''}
+              </div>
+              <button onclick="addToCart('${p.name.replace(/'/g, "\\'")}', ${price})" class="w-full bg-brand hover:bg-brand-hover text-white text-xs font-extrabold py-3 rounded-xl uppercase tracking-wider transition-all duration-200 shadow-md shadow-brand/20 active:scale-95 cursor-pointer">
+                DODAJ DO KOSZYKA
+              </button>
+            </div>
+          </div>
+        `;
+      });
+      grid.innerHTML = html;
+    }
+
+    function searchProducts() {
+      const query = document.getElementById('search-input').value.toLowerCase();
+      displayedProducts = products.filter(p => p.name.toLowerCase().includes(query));
+      renderProducts();
+    }
+
+    function filterProducts(type) {
+      if (type === 'promo') {
+        displayedProducts = products.filter(p => p.oldPrice !== null && p.oldPrice !== undefined);
+      } else if (type === 'box') {
+        displayedProducts = products.filter(p => p.name.toLowerCase().includes('box'));
+      } else {
+        displayedProducts = [...products];
+      }
+      renderProducts();
+    }
+
+    function handleAddProduct(e) {
+      e.preventDefault();
+      alert("Aby dodać produkt na stałe, użyj komendy /dodaj na serwerze Discord!");
+    }
+
+    function renderAdminList() {
+      const list = document.getElementById('admin-products-list');
+      list.innerHTML = products.map(p => `
+        <div class="flex justify-between items-center bg-slate-50 p-2 rounded-xl border">
+          <span class="font-bold truncate max-w-[200px]">${p.name}</span>
+          <span class="text-xs text-slate-400">ID: ${p.id}</span>
+        </div>
+      `).join('');
+    }
+
+    function addToCart(title, price) {
+      cart.push({ title, price });
+      document.getElementById('cart-count').innerText = cart.length;
+      openCartModal();
+    }
+
+    function openCartModal() {
+      const listEl = document.getElementById('cart-list');
+      const totalEl = document.getElementById('cart-total');
+      const btn = document.getElementById('gen-btn');
+      
+      if (cart.length === 0) {
+        listEl.innerHTML = '<p class="text-slate-400 italic text-center py-4">Koszyk jest pusty.</p>';
+        totalEl.innerText = '0,00 PLN';
+        btn.disabled = true;
+        btn.className = "w-full bg-slate-200 text-slate-400 font-extrabold text-xs py-3.5 rounded-xl uppercase tracking-wider cursor-not-allowed";
+      } else {
+        listEl.innerHTML = '';
+        let total = 0;
+        cart.forEach((item) => {
+          total += item.price;
+          listEl.innerHTML += `
+            <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+              <span class="font-bold text-slate-800 truncate pr-2">${item.title}</span>
+              <span class="font-black text-slate-900 shrink-0">${item.price.toFixed(2)} PLN</span>
+            </div>
+          `;
+        });
+        totalEl.innerText = `${total.toFixed(2)} PLN`;
+        btn.disabled = false;
+        btn.className = "w-full bg-brand hover:bg-brand-hover text-white font-extrabold text-xs py-3.5 rounded-xl uppercase tracking-wider transition-all shadow-md shadow-brand/20 cursor-pointer";
+      }
+
+      document.getElementById('cart-modal').classList.remove('hidden');
+    }
+
+    function closeCartModal() { document.getElementById('cart-modal').classList.add('hidden'); }
+    function toggleAdminModal() { 
+      const el = document.getElementById('admin-modal');
+      el.classList.toggle('hidden');
+      if(!el.classList.contains('hidden')) renderAdminList();
+    }
+
+    function generateDiscordToken() {
+      const code = 'LBK-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+      document.getElementById('final-code').innerText = `/zamowienie id:${code}`;
+      document.getElementById('token-result').classList.remove('hidden');
+    }
+
+    function copyCode() {
+      navigator.clipboard.writeText(document.getElementById('final-code').innerText);
+      alert('Skopiowano komendę do schowka!');
+    }
+
+    function closeCookies() { document.getElementById('cookie-banner').style.display = 'none'; }
+
+    let time = 20539;
+    setInterval(() => {
+      time--;
+      const h = String(Math.floor(time / 3600)).padStart(2, '0');
+      const m = String(Math.floor((time % 3600) / 60)).padStart(2, '0');
+      const s = String(time % 60).padStart(2, '0');
+      document.getElementById('promo-timer').innerText = `${h}:${m}:${s}`;
+    }, 1000);
+
+    loadProductsFromJSON();
+  </script>
 </body>
 </html>
