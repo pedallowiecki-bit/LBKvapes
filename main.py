@@ -188,21 +188,32 @@ async def zamowienie(interaction: discord.Interaction, id: str):
     guild = interaction.guild
     user = interaction.user
 
-    # Pobieranie bota (z zabezpieczeniem przed None)
+    if not guild:
+        await interaction.followup.send("❌ Tej komendy można używać tylko na serwerze.", ephemeral=True)
+        return
+
+    # Bezpieczne pobieranie bota (eliminacja błędu NoneType)
     bot_member = guild.me
-    if not bot_member:
-        bot_member = await guild.fetch_member(bot.user.id)
+    if bot_member is None:
+        try:
+            bot_member = await guild.fetch_member(bot.user.id)
+        except Exception:
+            bot_member = None
 
+    # Bezpieczne pobieranie kategorii
     category = guild.get_channel(CATEGORY_ID)
+    if not isinstance(category, discord.CategoryChannel):
+        category = None
 
-    # Domyślny brak dostępu (@everyone = False)
+    # Nadawanie uprawnień
     overwrites = {
         guild.default_role: discord.PermissionOverwrite(read_messages=False),
-        user: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True),
-        bot_member: discord.PermissionOverwrite(read_messages=True, send_messages=True)
+        user: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True)
     }
 
-    # Przyznanie dostępu KAŻDEJ roli, która ma uprawnienie 'Administrator'
+    if bot_member:
+        overwrites[bot_member] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
+
     for role in guild.roles:
         if role.permissions.administrator:
             overwrites[role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
@@ -211,7 +222,7 @@ async def zamowienie(interaction: discord.Interaction, id: str):
         channel_name = f"ticket-{user.name}".lower().replace(" ", "-")
         ticket_channel = await guild.create_text_channel(
             name=channel_name,
-            category=category if isinstance(category, discord.CategoryChannel) else None,
+            category=category,
             overwrites=overwrites
         )
 
