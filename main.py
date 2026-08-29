@@ -31,6 +31,10 @@ DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO = os.getenv("GITHUB_REPO")
 
+# Konfiguracja Ticketów z Render Environment Variables
+CATEGORY_ID = int(os.getenv("CATEGORY_ID", 0))
+ROLE_ADMIN_ID = int(os.getenv("ROLE_ADMIN_ID", 0))
+
 FILE_PATH = "products.json"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{FILE_PATH}"
 
@@ -175,14 +179,55 @@ async def usun(interaction: discord.Interaction, product_id: int):
     else:
         await interaction.followup.send("❌ Błąd zapisu na GitHubie.")
 
-# KOMENDA: /zamowienie
+# KOMENDA: /zamowienie (TICKET SYSTEM)
 @bot.tree.command(name="zamowienie", description="Realizacja zamówienia ze strony WWW")
+@app_commands.describe(id="Kod zamówienia ze strony (np. LBK-X82A)")
 async def zamowienie(interaction: discord.Interaction, id: str):
+    guild = interaction.guild
+    user = interaction.user
+    
+    category = guild.get_channel(CATEGORY_ID) if CATEGORY_ID else None
+    admin_role = guild.get_role(ROLE_ADMIN_ID) if ROLE_ADMIN_ID else None
+
+    # Uprawnienia: Tylko Klient, Bot i Admin widzą nowy kanał
+    overwrites = {
+        guild.default_role: discord.PermissionOverwrite(read_messages=False),
+        user: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True),
+        guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
+    }
+    if admin_role:
+        overwrites[admin_role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
+
+    # Tworzenie ukrytego kanału
+    channel_name = f"ticket-{user.name}".lower().replace(" ", "-")
+    ticket_channel = await guild.create_text_channel(
+        name=channel_name,
+        category=category,
+        overwrites=overwrites
+    )
+
+    # Odpowiedź widoczna tylko dla klienta (ephemeral)
+    await interaction.response.send_message(
+        f"✅ **Otworzono prywatny ticket!** Przejdź na kanał: {ticket_channel.mention}", 
+        ephemeral=True
+    )
+
+    # Szablon wiadomości w nowym kąciku zamówień
     embed = discord.Embed(
-        title="🛒 Otrzymano nowe zamówienie!",
-        description=f"Klient {interaction.user.mention} przesłał kod zamówienia: **{id}**",
+        title=f"🛒 Nowe Zamówienie: `{id.upper()}`",
+        description=f"Witaj {user.mention}!\nOtworzyliśmy Twój prywatny ticket dotyczący zamówienia ze strony **LBKPETS**.",
         color=discord.Color.green()
     )
-    await interaction.response.send_message(embed=embed)
+    embed.add_field(name="👤 Kupujący", value=user.mention, inline=True)
+    embed.add_field(name="🔑 Kod Zamówienia", value=f"`{id.upper()}`", inline=True)
+    embed.add_field(
+        name="📌 Instrukcja dla klienta", 
+        value="1. Podaj na tym kanale preferowaną metodę płatności (**BLIK / PSC / Crypto / Przelew**).\n2. Poczekaj na weryfikację przez administrację (szczegóły produktów zostały automatycznie wysłane na kanał logów).", 
+        inline=False
+    )
+    embed.set_footer(text="LBKPETS • System Zamówień")
+
+    admin_ping = admin_role.mention if admin_role else ""
+    await ticket_channel.send(content=f"{user.mention} {admin_ping}", embed=embed)
 
 bot.run(DISCORD_TOKEN)
