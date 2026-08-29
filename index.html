@@ -24,7 +24,6 @@
 </head>
 <body class="bg-[#fafbfc] text-slate-800 font-sans min-h-screen flex flex-col justify-between antialiased pb-24">
 
-  <!-- 18+ WERYFIKACJA WIEKU MODAL -->
   <div id="age-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border border-slate-100">
       <div class="text-3xl mb-3">🔞</div>
@@ -37,7 +36,6 @@
     </div>
   </div>
 
-  <!-- TOP BAR Z DISCORDEM I TIMEREM -->
   <div class="bg-slate-900 text-slate-300 text-xs py-2.5 px-6 border-b border-slate-800">
     <div class="max-w-[1400px] mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
       <div class="flex items-center gap-2">
@@ -55,7 +53,6 @@
   </div>
 
   <div>
-    <!-- HERO BANNER -->
     <section class="max-w-[1400px] mx-auto px-6 pt-8 pb-4">
       <div class="bg-white rounded-3xl border border-slate-200/80 p-6 md:p-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-8">
         <div class="flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-left">
@@ -97,7 +94,6 @@
       </div>
     </section>
 
-    <!-- KATEGORIE -->
     <section class="max-w-[1400px] mx-auto px-6 py-4">
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div onclick="filterProducts('all')" class="cursor-pointer bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-5 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md">
@@ -126,7 +122,6 @@
       </div>
     </section>
 
-    <!-- PRZYCISKI FILTROWANIA I WYSZUKIWARKA -->
     <div class="max-w-[1400px] mx-auto px-6 pt-4 flex flex-col sm:flex-row gap-4 justify-between items-center">
       <div class="flex gap-2" id="filter-buttons">
         <button id="btn-all" onclick="filterProducts('all')" class="filter-btn bg-slate-900 text-white text-xs font-extrabold px-5 py-2.5 rounded-2xl transition-all shadow-sm">Wszystkie</button>
@@ -139,7 +134,6 @@
       </div>
     </div>
 
-    <!-- NAGŁÓWEK SEKCJII I KOSZYK -->
     <header class="max-w-[1400px] mx-auto px-6 pt-6 pb-4 flex justify-between items-end border-b border-slate-200/60">
       <h1 class="text-xl font-black tracking-tight text-slate-900 uppercase">KATALOG PRODUKTÓW</h1>
       <button onclick="openCartModal()" class="text-xs font-bold text-brand hover:text-brand-hover uppercase tracking-wider flex items-center gap-1 cursor-pointer">
@@ -147,12 +141,10 @@
       </button>
     </header>
 
-    <!-- PRODUKTY GRID -->
     <main class="max-w-[1400px] mx-auto px-6 py-8">
       <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6"></div>
     </main>
 
-    <!-- OPINIE -->
     <section class="max-w-[1400px] mx-auto px-6 py-10 border-t border-slate-200/60">
       <div class="text-center mb-8">
         <span class="text-xs font-bold text-brand uppercase tracking-widest">Opinie społeczności</span>
@@ -190,15 +182,32 @@
     </section>
   </div>
 
-  <!-- MODAL KOSZYKA Z NICKIEM DISCORD -->
   <div id="cart-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative border border-slate-100">
-      <h2 class="text-lg font-black text-slate-900 mb-4 border-b pb-3 uppercase">Twój Koszyk</h2>
-      <div id="cart-list" class="space-y-2 max-h-40 overflow-y-auto mb-4 text-xs pr-1"></div>
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative border border-slate-100">
+      <h2 class="text-lg font-black text-slate-900 mb-4 border-b pb-3 uppercase">Twój Koszyk i Dane Zamówienia</h2>
+      <div id="cart-list" class="space-y-2 max-h-32 overflow-y-auto mb-4 text-xs pr-1"></div>
 
-      <div class="mb-4">
-        <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Twój nick na Discordzie:</label>
-        <input type="text" id="discord-nick" placeholder="np. nazwa_uzytkownika" oninput="checkCartForm()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand">
+      <div class="space-y-3 mb-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Twój nick na Discordzie:</label>
+          <input type="text" id="discord-nick" placeholder="np. nazwa_uzytkownika" oninput="checkCartForm()" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand">
+        </div>
+        
+        <div>
+          <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Adres E-mail (Gmail):</label>
+          <input type="email" id="customer-email" placeholder="np. imie@gmail.com" oninput="checkCartForm()" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Numer Telefonu:</label>
+            <input type="tel" id="customer-phone" placeholder="np. 500600700" oninput="checkCartForm()" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Paczkomat (kod np. WAW01M):</label>
+            <input type="text" id="customer-paczkomat" placeholder="np. WAW01M" oninput="checkCartForm()" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand">
+          </div>
+        </div>
       </div>
 
       <div class="flex justify-between font-black text-base border-t pt-3 mb-5">
@@ -206,22 +215,22 @@
         <span id="cart-total" class="text-brand">0,00 PLN</span>
       </div>
 
-      <button onclick="generateDiscordToken()" id="gen-btn" disabled class="w-full bg-slate-200 text-slate-400 font-extrabold text-xs py-3.5 rounded-xl uppercase tracking-wider cursor-not-allowed">
-        Generuj kod na Discorda
+      <button onclick="submitOrder()" id="gen-btn" disabled class="w-full bg-slate-200 text-slate-400 font-extrabold text-xs py-3.5 rounded-xl uppercase tracking-wider cursor-not-allowed">
+        Złóż zamówienie i przejdź na Discorda
       </button>
 
       <div id="token-result" class="hidden mt-4 bg-brand-light/50 p-4 rounded-2xl border border-brand/20 text-center">
-        <p class="text-xs text-slate-700 font-bold mb-1">Dokończ zamówienie na Discordzie!</p>
-        <p class="text-[11px] text-slate-500 mb-2">Skopiuj komendę, otwórz **Ticket / Kanał zamówień** na naszym Discordzie i ją wklej:</p>
+        <p class="text-xs text-slate-700 font-bold mb-1">✅ Zamówienie zapisane pomyślnie!</p>
+        <p class="text-[11px] text-slate-500 mb-2">Skopiuj poniższą komendę, przejdź na nasz serwer Discord i wklej ją na dowolnym kanale lub w tickecie:</p>
         
-        <code id="final-code" class="block font-mono font-bold text-sm text-brand bg-white p-2.5 rounded-xl border border-brand/20 my-2 select-all">/zamowienie id:XXXXX nick:NICK</code>
+        <code id="final-code" class="block font-mono font-bold text-sm text-brand bg-white p-2.5 rounded-xl border border-brand/20 my-2 select-all">/zamowienie order_id:LBK-XXXXX</code>
         
         <div class="flex gap-2 mt-3">
           <button onclick="copyCode()" class="flex-1 text-xs bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl cursor-pointer transition-colors">
             📋 Kopiuj Komendę
           </button>
           <a href="https://discord.gg/y2xdvzx34V" target="_blank" class="flex-1 text-xs bg-discord hover:bg-discord-hover text-white font-bold py-2.5 rounded-xl text-center cursor-pointer transition-colors flex items-center justify-center gap-1">
-            💬 Otwórz Ticket
+            💬 Otwórz Discord
           </a>
         </div>
       </div>
@@ -230,7 +239,6 @@
     </div>
   </div>
 
-  <!-- COOKIES BANNER -->
   <div id="cookie-banner" class="fixed bottom-4 left-4 right-4 z-40 max-w-[1400px] mx-auto">
     <div class="bg-white/95 backdrop-blur-md border border-slate-200/80 p-4 rounded-2xl shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
       <div class="text-xs text-slate-600">
@@ -375,8 +383,12 @@
 
     function checkCartForm() {
       const nick = document.getElementById('discord-nick').value.trim();
+      const email = document.getElementById('customer-email').value.trim();
+      const phone = document.getElementById('customer-phone').value.trim();
+      const paczkomat = document.getElementById('customer-paczkomat').value.trim();
       const btn = document.getElementById('gen-btn');
-      if (cart.length > 0 && nick !== '') {
+
+      if (cart.length > 0 && nick !== '' && email !== '' && phone !== '' && paczkomat !== '') {
         btn.disabled = false;
         btn.className = "w-full bg-brand hover:bg-brand-hover text-white font-extrabold text-xs py-3.5 rounded-xl uppercase tracking-wider cursor-pointer shadow-md shadow-brand/20 transition-all";
       } else {
@@ -418,13 +430,46 @@
       document.getElementById('cart-modal').classList.add('hidden');
     }
 
-    function generateDiscordToken() {
+    async function submitOrder() {
       const nick = document.getElementById('discord-nick').value.trim();
-      if (!nick) return;
-      const randomId = Math.floor(10000 + Math.random() * 90000);
-      const command = `/zamowienie id:${randomId} nick:${nick}`;
-      document.getElementById('final-code').innerText = command;
-      document.getElementById('token-result').classList.remove('hidden');
+      const email = document.getElementById('customer-email').value.trim();
+      const phone = document.getElementById('customer-phone').value.trim();
+      const paczkomat = document.getElementById('customer-paczkomat').value.trim();
+
+      if (!nick || !email || !phone || !paczkomat || cart.length === 0) return;
+
+      const btn = document.getElementById('gen-btn');
+      btn.disabled = true;
+      btn.innerText = "Wysyłanie zamówienia...";
+
+      try {
+        const response = await fetch('/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            discord: nick,
+            email: email,
+            phone: phone,
+            paczkomat: paczkomat,
+            items: cart
+          })
+        });
+
+        const data = await response.json();
+        if (response.ok && data.success) {
+          document.getElementById('token-result').classList.remove('hidden');
+          document.getElementById('final-code').innerText = `/zamowienie order_id:${data.order_id}`;
+          btn.innerText = "Zamówienie wysłane pomyślnie!";
+        } else {
+          alert('Błąd serwera: ' + (data.error || 'Nieznany błąd'));
+          btn.disabled = false;
+          btn.innerText = "Złóż zamówienie i przejdź na Discorda";
+        }
+      } catch (err) {
+        alert('Błąd połączenia z backendem bota: ' + err.message);
+        btn.disabled = false;
+        btn.innerText = "Złóż zamówienie i przejdź na Discorda";
+      }
     }
 
     function copyCode() {
