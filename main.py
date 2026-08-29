@@ -122,7 +122,7 @@ async def sklep(interaction: discord.Interaction):
     
     await interaction.followup.send(embed=embed)
 
-# KOMENDA: /dodaj (Z WYBOREM TYPU: BOX / INNE)
+# KOMENDA: /dodaj
 @bot.tree.command(name="dodaj", description="Dodaj nowy produkt do sklepu")
 @app_commands.describe(
     typ="Wybierz typ produktu",
@@ -192,14 +192,21 @@ async def usun(interaction: discord.Interaction, product_id: int):
     else:
         await interaction.followup.send("❌ Błąd zapisu na GitHubie.")
 
-# KOMENDA: /zamowienie (Z NAZWĄ, CENĄ I AUTOMATYCZNĄ DOSTAWĄ 15 ZŁ)
-@bot.tree.command(name="zamowienie", description="Otwórz ticket w celu złożenia zamówienia")
-@app_commands.describe(
-    produkt="Nazwa produktu/zamówienia",
-    cena="Cena produktu w PLN"
-)
-async def zamowienie(interaction: discord.Interaction, produkt: str, cena: float):
+# KOMENDA: /zamowienie (POBIERA PRODUKT, LICZY KOSZTA + DOSTAWA 15ZŁ I POKAZUJE OBRAZEK)
+@bot.tree.command(name="zamowienie", description="Otwórz ticket w celu zakupu produktu ze sklepu")
+@app_commands.describe(product_id="ID produktu z komendy /sklep")
+async def zamowienie(interaction: discord.Interaction, product_id: int):
     await interaction.response.defer(ephemeral=True)
+
+    products, _, error = get_github_file()
+    if error:
+        await interaction.followup.send(f"❌ Błąd wczytywania sklepu: {error}", ephemeral=True)
+        return
+
+    product = next((p for p in products if p.get('id') == product_id), None)
+    if not product:
+        await interaction.followup.send(f"❌ Nie znaleziono produktu o ID `{product_id}`. Sprawdź aktualne ID w `/sklep`.", ephemeral=True)
+        return
 
     guild = interaction.guild
     user = interaction.user
@@ -209,6 +216,9 @@ async def zamowienie(interaction: discord.Interaction, produkt: str, cena: float
         return
 
     try:
+        nazwa = product.get('name', 'Produkt')
+        cena = float(product.get('price', 0))
+        obrazek = product.get('img', '')
         dostawa = 15.0
         suma = cena + dostawa
 
@@ -237,14 +247,18 @@ async def zamowienie(interaction: discord.Interaction, produkt: str, cena: float
 
         embed = discord.Embed(
             title="🛒 Nowe Zamówienie / Ticket",
-            description=f"Witaj {user.mention}!\nOtworzyliśmy Twój prywatny ticket w sklepie **LBKPETS**.",
+            description=f"Witaj {user.mention}!\nOtworzyliśmy Twój prywatny ticket dotyczący zakupu w sklepie **LBKPETS**.",
             color=discord.Color.green()
         )
         embed.add_field(name="👤 Klient", value=user.mention, inline=True)
-        embed.add_field(name="📦 Zamówienie", value=f"**{produkt}**", inline=False)
+        embed.add_field(name="📦 Zamówienie", value=f"**{nazwa}** (ID: `{product_id}`)", inline=False)
         embed.add_field(name="💵 Cena produktu", value=f"{cena:.2f} PLN", inline=True)
         embed.add_field(name="🚚 Dostawa", value=f"{dostawa:.2f} PLN", inline=True)
         embed.add_field(name="💰 Łączna kwota", value=f"**{suma:.2f} PLN**", inline=False)
+
+        if obrazek:
+            embed.set_image(url=obrazek)
+
         embed.add_field(
             name="📌 Instrukcja", 
             value="1. Podaj metodę płatności (**BLIK / PSC / Crypto / Przelew**).\n2. Poczekaj na administrację.", 
