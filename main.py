@@ -36,6 +36,7 @@ FILE_PATH = "products.json"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{FILE_PATH}"
 
 intents = discord.Intents.default()
+intents.members = True  # Włączenie intencji członków, aby uniknąć problemów z guild.me
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 def get_headers():
@@ -191,7 +192,7 @@ async def usun(interaction: discord.Interaction, product_id: int):
     else:
         await interaction.followup.send("❌ Błąd zapisu na GitHubie.")
 
-# KOMENDA: /zamowienie (PANCERNA WERSJA - BEZ BŁĘDÓW)
+# KOMENDA: /zamowienie (PANCERNA WERSJA - BEZ BŁĘDÓW NONETYPE, BEZ ID, DLA KAŻDEGO)
 @bot.tree.command(name="zamowienie", description="Otwórz ticket w celu złożenia zamówienia")
 async def zamowienie(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True)
@@ -204,16 +205,22 @@ async def zamowienie(interaction: discord.Interaction):
         return
 
     try:
-        overwrites = {
+        # Słownik surowych uprawnień
+        raw_overwrites = {
             guild.default_role: discord.PermissionOverwrite(read_messages=False),
-            user: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True)
+            user: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True),
+            guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
         }
 
-        if guild.me:
-            overwrites[guild.me] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
+        # Rygorystyczne filtrowanie, aby wyeliminować jakikolwiek obiekt typu None (zapobiega błędom Nonetype)
+        overwrites = {
+            target: perm for target, perm in raw_overwrites.items() 
+            if target is not None and hasattr(target, 'id')
+        }
 
         channel_name = f"ticket-{user.name}".lower().replace(" ", "-")
         
+        # Tworzy kanał na samej górze serwera z przefiltrowanymi uprawnieniami
         ticket_channel = await guild.create_text_channel(
             name=channel_name,
             overwrites=overwrites
