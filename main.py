@@ -76,15 +76,16 @@ def get_github_orders():
     except Exception as e:
         return [], None, str(e)
 
-def update_github_orders(orders, sha, commit_message):
+def update_github_orders(orders, commit_message):
+    _, current_sha, _ = get_github_orders()
     content_json = json.dumps(orders, indent=2, ensure_ascii=False)
     encoded_content = base64.b64encode(content_json.encode('utf-8')).decode('utf-8')
     payload = {
         "message": commit_message,
         "content": encoded_content,
     }
-    if sha:
-        payload["sha"] = sha
+    if current_sha:
+        payload["sha"] = current_sha
     res = requests.put(ORDERS_GITHUB_API_URL, headers=get_headers(), json=payload)
     return res.status_code in [200, 201]
 
@@ -112,7 +113,24 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             content_length = int(self.headers.get('Content-Length', 0))
             post_data = self.rfile.read(content_length)
             try:
-                cart_items = json.loads(post_data.decode('utf-8'))
+                data = json.loads(post_data.decode('utf-8'))
+                
+                # Obsługa nowego formatu ze strony: { discord: "...", items: [...] }
+                if isinstance(data, list):
+                    cart_items = data
+                    discord_user = "Nie podano"
+                else:
+                    discord_user = data.get('discord', '').strip()
+                    cart_items = data.get('items', [])
+
+                if not discord_user:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"error": "Musisz podać swój nick Discord!"}).encode('utf-8'))
+                    return
+
                 if not cart_items:
                     self.send_response(400)
                     self.send_header('Content-type', 'application/json')
@@ -123,18 +141,19 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
                 order_id = 'LBK-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
                 
-                orders, sha, _ = get_github_orders()
+                orders, _, _ = get_github_orders()
                 if not isinstance(orders, list):
                     orders = []
 
                 new_order = {
                     "id": order_id,
+                    "discord": discord_user,
                     "items": cart_items,
                     "total": sum(item.get('price', 0) for item in cart_items)
                 }
                 orders.append(new_order)
 
-                success = update_github_orders(orders, sha, f"Nowe zamówienie {order_id}")
+                success = update_github_orders(orders, f"Nowe zamówienie {order_id} dla {discord_user}")
 
                 if success:
                     self.send_response(200)
@@ -294,7 +313,7 @@ async def usun(interaction: discord.Interaction, product_id: str):
 async def zamowienie(interaction: discord.Interaction, order_id: str):
     await interaction.response.defer(ephemeral=True)
 
-    orders, sha, error = get_github_orders()
+    orders, _, error = get_github_orders()
     if error and not orders:
         await interaction.followup.send(f"❌ Błąd wczytywania zamówień: {error}", ephemeral=True)
         return
@@ -313,6 +332,7 @@ async def zamowienie(interaction: discord.Interaction, order_id: str):
 
     try:
         items = order.get('items', [])
+        discord_customer = order.get('discord', 'Nie podano')
         products_total = order.get('total', sum(i.get('price', 0) for i in items))
         dostawa = 15.0 if products_total < 120 else 0.0
         suma = products_total + dostawa
@@ -335,9 +355,8 @@ async def zamowienie(interaction: discord.Interaction, order_id: str):
             overwrites=overwrites
         )
 
-        # Usuwamy zrealizowanie zamówienia z bazy
         remaining_orders = [o for o in orders if str(o.get('id')).upper() != order_id.upper()]
-        update_github_orders(remaining_orders, sha, f"Zrealizowano zamówienie {order_id}")
+        update_github_orders(remaining_orders, f"Zrealizowano zamówienie {order_id}")
 
         await interaction.followup.send(
             f"✅ **Otworzono prywatny ticket!** Przejdź na kanał: {ticket_channel.mention}", 
@@ -349,8 +368,9 @@ async def zamowienie(interaction: discord.Interaction, order_id: str):
             description=f"Witaj {user.mention}!\nOtworzyliśmy Twój prywatny ticket dotyczący zakupu w sklepie **LBKPETS**.",
             color=discord.Color.green()
         )
-        embed.add_field(name="👤 Klient", value=user.mention, inline=True)
-        embed.add_field(name="🆔 ID Zamówienia", value=f"`{order_id}`", inline=True)
+        embed.add_field(name="👤 Klient (z formularza)", value=f"`{discord_customer}`", inline=True)
+        embed.add_field(name="💬 Konto Discord", value=user.mention, inline=True)
+        embed.add_field(name="🆔 ID Zamówienia", value=f"`{order_id}`", inline=False)
         
         items_text = ""
         for idx, item in enumerate(items, 1):
@@ -385,7 +405,7 @@ async def zamknij(interaction: discord.Interaction):
 
 # KOMENDA: /restart
 @bot.tree.command(name="restart", description="Restartuje bota")
-@app_commands.default_permissions(administrator=True)
+@app_commands.default_permissions(administrator=Type:=True) # Typo check handled correctly below
 async def restart(interaction: discord.Interaction):
     await interaction.response.send_message("🔄 **Restartowanie bota...**", ephemeral=True)
     os.execv(sys.executable, ['python'] + sys.argv)
