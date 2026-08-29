@@ -32,9 +32,8 @@ DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO = os.getenv("GITHUB_REPO")
 
-# Wpisane identyfikatory z Twojej wiadomości:
+# ID Kategorii zamówień
 CATEGORY_ID = 1543241155951599669
-ROLE_ADMIN_ID = 1518638158961709153
 
 FILE_PATH = "products.json"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{FILE_PATH}"
@@ -188,25 +187,31 @@ async def zamowienie(interaction: discord.Interaction, id: str):
 
     guild = interaction.guild
     user = interaction.user
-    bot_member = guild.me or await guild.fetch_member(bot.user.id)
-    
-    category = guild.get_channel(CATEGORY_ID)
-    admin_role = guild.get_role(ROLE_ADMIN_ID)
 
+    # Pobieranie bota
+    bot_member = guild.me
+    if not bot_member:
+        bot_member = await guild.fetch_member(bot.user.id)
+
+    category = guild.get_channel(CATEGORY_ID)
+
+    # Uprawnienia: Dostęp mają wyłącznie Użytkownik, Bot oraz osoby z uprawnieniem Administratora
     overwrites = {
         guild.default_role: discord.PermissionOverwrite(read_messages=False),
         user: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True),
         bot_member: discord.PermissionOverwrite(read_messages=True, send_messages=True)
     }
-    
-    if admin_role:
-        overwrites[admin_role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
+
+    # Przyznawanie widoczności wszystkim profilom/rolom posiadającym uprawnienie Administratora
+    for role in guild.roles:
+        if role.permissions.administrator:
+            overwrites[role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
 
     try:
         channel_name = f"ticket-{user.name}".lower().replace(" ", "-")
         ticket_channel = await guild.create_text_channel(
             name=channel_name,
-            category=category,
+            category=category if isinstance(category, discord.CategoryChannel) else None,
             overwrites=overwrites
         )
 
@@ -229,8 +234,7 @@ async def zamowienie(interaction: discord.Interaction, id: str):
         )
         embed.set_footer(text="LBKPETS • System Zamówień")
 
-        admin_ping = admin_role.mention if admin_role else ""
-        await ticket_channel.send(content=f"{user.mention} {admin_ping}", embed=embed)
+        await ticket_channel.send(content=f"{user.mention} | Wzywam Administrację", embed=embed)
 
     except Exception as e:
         await interaction.followup.send(f"❌ Wystąpił błąd podczas tworzenia ticketu: {e}", ephemeral=True)
