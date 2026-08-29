@@ -32,9 +32,6 @@ DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO = os.getenv("GITHUB_REPO")
 
-# ID Kategorii na Discordzie dla ticketów zamówień
-CATEGORY_ID = 1543241155951599669
-
 FILE_PATH = "products.json"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{FILE_PATH}"
 
@@ -115,19 +112,33 @@ async def sklep(interaction: discord.Interaction):
         price = p.get('price', 0)
         old_price = f"~~{p.get('oldPrice')} PLN~~ " if p.get('oldPrice') else ""
         badge = f"[{p.get('badge')}] " if p.get('badge') else ""
+        typ = f"Typ: {p.get('type')}\n" if p.get('type') else ""
         embed.add_field(
             name=f"{badge}{p.get('name')}",
-            value=f"Cena: {old_price}**{price} PLN**\nID: `{p.get('id')}`",
+            value=f"{typ}Cena: {old_price}**{price} PLN**\nID: `{p.get('id')}`",
             inline=False
         )
     
     await interaction.followup.send(embed=embed)
 
-# KOMENDA: /dodaj
+# KOMENDA: /dodaj (Z WYBOREM TYPU: BOX / INNE)
 @bot.tree.command(name="dodaj", description="Dodaj nowy produkt do sklepu")
+@app_commands.describe(
+    typ="Wybierz typ produktu",
+    nazwa="Nazwa produktu",
+    cena="Cena produktu",
+    stara_cena="Poprzednia cena (opcjonalnie)",
+    odznaka="Tekst odznaki np. PROMOCJA (opcjonalnie)",
+    obrazek="Link do obrazka (opcjonalnie)"
+)
+@app_commands.choices(typ=[
+    app_commands.Choice(name="Box", value="Box"),
+    app_commands.Choice(name="Inne", value="Inne")
+])
 @app_commands.default_permissions(administrator=True)
 async def dodaj(
     interaction: discord.Interaction, 
+    typ: app_commands.Choice[str],
     nazwa: str, 
     cena: float, 
     stara_cena: float = None, 
@@ -143,6 +154,7 @@ async def dodaj(
 
     new_product = {
         "id": int(discord.utils.utcnow().timestamp()),
+        "type": typ.value,
         "name": nazwa,
         "price": cena,
         "oldPrice": stara_cena,
@@ -152,8 +164,8 @@ async def dodaj(
 
     products.append(new_product)
     
-    if update_github_file(products, sha, f"Dodano produkt: {nazwa}"):
-        await interaction.followup.send(f"✅ Pomyślnie dodano produkt **{nazwa}**!")
+    if update_github_file(products, sha, f"Dodano produkt ({typ.value}): {nazwa}"):
+        await interaction.followup.send(f"✅ Pomyślnie dodano produkt **{nazwa}** (Typ: `{typ.value}`)!")
     else:
         await interaction.followup.send("❌ Błąd zapisu na GitHubie (sprawdź token).")
 
@@ -179,7 +191,7 @@ async def usun(interaction: discord.Interaction, product_id: int):
     else:
         await interaction.followup.send("❌ Błąd zapisu na GitHubie.")
 
-# KOMENDA: /zamowienie (TICKET SYSTEM ZE STRONY WWW)
+# KOMENDA: /zamowienie (TICKET SYSTEM - TWORZENIE NA GÓRZE SERWERA)
 @bot.tree.command(name="zamowienie", description="Realizacja zamówienia ze strony WWW")
 @app_commands.describe(id="Kod zamówienia ze strony (np. LBK-X82A)")
 async def zamowienie(interaction: discord.Interaction, id: str):
@@ -192,7 +204,6 @@ async def zamowienie(interaction: discord.Interaction, id: str):
         await interaction.followup.send("❌ Tej komendy można używać tylko na serwerze.", ephemeral=True)
         return
 
-    # Bezpieczne pobieranie bota (eliminacja błędu NoneType)
     bot_member = guild.me
     if bot_member is None:
         try:
@@ -200,12 +211,6 @@ async def zamowienie(interaction: discord.Interaction, id: str):
         except Exception:
             bot_member = None
 
-    # Bezpieczne pobieranie kategorii
-    category = guild.get_channel(CATEGORY_ID)
-    if not isinstance(category, discord.CategoryChannel):
-        category = None
-
-    # Nadawanie uprawnień
     overwrites = {
         guild.default_role: discord.PermissionOverwrite(read_messages=False),
         user: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True)
@@ -220,9 +225,9 @@ async def zamowienie(interaction: discord.Interaction, id: str):
 
     try:
         channel_name = f"ticket-{user.name}".lower().replace(" ", "-")
+        
         ticket_channel = await guild.create_text_channel(
             name=channel_name,
-            category=category,
             overwrites=overwrites
         )
 
