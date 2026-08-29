@@ -32,9 +32,9 @@ DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO = os.getenv("GITHUB_REPO")
 
-# Konfiguracja Ticketów z Render Environment Variables
-CATEGORY_ID = int(os.getenv("CATEGORY_ID", 0))
-ROLE_ADMIN_ID = int(os.getenv("ROLE_ADMIN_ID", 0))
+# Wpisane identyfikatory z Twojej wiadomości:
+CATEGORY_ID = 1543241155951599669
+ROLE_ADMIN_ID = 1518638158961709153
 
 FILE_PATH = "products.json"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{FILE_PATH}"
@@ -184,26 +184,25 @@ async def usun(interaction: discord.Interaction, product_id: int):
 @bot.tree.command(name="zamowienie", description="Realizacja zamówienia ze strony WWW")
 @app_commands.describe(id="Kod zamówienia ze strony (np. LBK-X82A)")
 async def zamowienie(interaction: discord.Interaction, id: str):
-    # POPRAWKA: defer() informuje Discorda, że przetwarzasz komendę (odnosi sukces do 15s)
     await interaction.response.defer(ephemeral=True)
 
     guild = interaction.guild
     user = interaction.user
+    bot_member = guild.me or await guild.fetch_member(bot.user.id)
     
-    category = guild.get_channel(CATEGORY_ID) if CATEGORY_ID else None
-    admin_role = guild.get_role(ROLE_ADMIN_ID) if ROLE_ADMIN_ID else None
+    category = guild.get_channel(CATEGORY_ID)
+    admin_role = guild.get_role(ROLE_ADMIN_ID)
 
-    # Uprawnienia: Tylko Klient, Bot i Admin widzą nowy kanał
     overwrites = {
         guild.default_role: discord.PermissionOverwrite(read_messages=False),
         user: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True),
-        guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
+        bot_member: discord.PermissionOverwrite(read_messages=True, send_messages=True)
     }
+    
     if admin_role:
         overwrites[admin_role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
 
     try:
-        # Tworzenie ukrytego kanału
         channel_name = f"ticket-{user.name}".lower().replace(" ", "-")
         ticket_channel = await guild.create_text_channel(
             name=channel_name,
@@ -211,13 +210,11 @@ async def zamowienie(interaction: discord.Interaction, id: str):
             overwrites=overwrites
         )
 
-        # Odpowiedź wysyłana przez followup po wykonaniu defer()
         await interaction.followup.send(
             f"✅ **Otworzono prywatny ticket!** Przejdź na kanał: {ticket_channel.mention}", 
             ephemeral=True
         )
 
-        # Szablon wiadomości w nowym kąciku zamówień
         embed = discord.Embed(
             title=f"🛒 Nowe Zamówienie: `{id.upper()}`",
             description=f"Witaj {user.mention}!\nOtworzyliśmy Twój prywatny ticket dotyczący zamówienia ze strony **LBKPETS**.",
