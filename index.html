@@ -308,7 +308,6 @@
     function filterProducts(type) {
       currentFilter = type;
       
-      // Aktualizacja stylów przycisków
       const btns = {
         all: document.getElementById('btn-all'),
         promo: document.getElementById('btn-promo'),
@@ -384,10 +383,33 @@
 
     function closeCartModal() { document.getElementById('cart-modal').classList.add('hidden'); }
 
-    function generateDiscordToken() {
-      const code = 'LBK-' + Math.random().toString(36).substring(2, 7).toUpperCase();
-      document.getElementById('final-code').innerText = `/zamowienie id:${code}`;
-      document.getElementById('token-result').classList.remove('hidden');
+    async function generateDiscordToken() {
+      const btn = document.getElementById('gen-btn');
+      btn.innerText = "Generowanie...";
+      btn.disabled = true;
+
+      try {
+        // Jeśli strona jest hostowana na Renderze razem z botem, wystarczy '/create-order'
+        // Jeśli strona jest na GitHub Pages, podaj pełny adres, np. 'https://nazwa-twojej-apki.onrender.com/create-order'
+        const response = await fetch('/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(cart)
+        });
+        
+        const data = await response.json();
+        if (response.ok && data.success) {
+          document.getElementById('final-code').innerText = `/zamowienie id:${data.order_id}`;
+          document.getElementById('token-result').classList.remove('hidden');
+        } else {
+          alert('Błąd podczas generowania zamówienia: ' + (data.error || 'Nieznany błąd'));
+        }
+      } catch (e) {
+        alert('Błąd połączenia z serwerem bota.');
+      } finally {
+        btn.innerText = "Generuj kod na Discorda";
+        btn.disabled = false;
+      }
     }
 
     function copyCode() {
