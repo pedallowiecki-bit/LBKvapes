@@ -350,7 +350,7 @@ async def zamowienie(interaction: discord.Interaction, order_id: str):
             color=discord.Color.green()
         )
         embed.add_field(name="👤 Klient", value=user.mention, inline=True)
-        embed.add_field(name="🆔 ID Zamówienia", value=`{order_id}`, inline=True)
+        embed.add_field(name="🆔 ID Zamówienia", value=f"`{order_id}`", inline=True)
         
         items_text = ""
         for idx, item in enumerate(items, 1):
