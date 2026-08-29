@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "id": 1788006228,
+    "name": "TEST",
+    "price": 1.0,
+    "oldPrice": 11.0,
+    "badge": "1",
+    "img": "https://cdn.discordapp.com/attachments/1259871675877556275/1471304310074642497/attachment-13.gif?ex=6a937b6b&is=6a9229eb&hm=edd97ec0ce3abd840f759ffb8bee5b952fc63410817e19c46508b411e653f845&"
+  }
+]
