@@ -36,7 +36,7 @@ FILE_PATH = "products.json"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{FILE_PATH}"
 
 intents = discord.Intents.default()
-intents.members = True  # Włączenie intencji członków, aby uniknąć problemów z guild.me
+intents.members = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 def get_headers():
@@ -192,9 +192,13 @@ async def usun(interaction: discord.Interaction, product_id: int):
     else:
         await interaction.followup.send("❌ Błąd zapisu na GitHubie.")
 
-# KOMENDA: /zamowienie (PANCERNA WERSJA - BEZ BŁĘDÓW NONETYPE, BEZ ID, DLA KAŻDEGO)
+# KOMENDA: /zamowienie (Z NAZWĄ, CENĄ I AUTOMATYCZNĄ DOSTAWĄ 15 ZŁ)
 @bot.tree.command(name="zamowienie", description="Otwórz ticket w celu złożenia zamówienia")
-async def zamowienie(interaction: discord.Interaction):
+@app_commands.describe(
+    produkt="Nazwa produktu/zamówienia",
+    cena="Cena produktu w PLN"
+)
+async def zamowienie(interaction: discord.Interaction, produkt: str, cena: float):
     await interaction.response.defer(ephemeral=True)
 
     guild = interaction.guild
@@ -205,14 +209,15 @@ async def zamowienie(interaction: discord.Interaction):
         return
 
     try:
-        # Słownik surowych uprawnień
+        dostawa = 15.0
+        suma = cena + dostawa
+
         raw_overwrites = {
             guild.default_role: discord.PermissionOverwrite(read_messages=False),
             user: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True),
             guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
         }
 
-        # Rygorystyczne filtrowanie, aby wyeliminować jakikolwiek obiekt typu None (zapobiega błędom Nonetype)
         overwrites = {
             target: perm for target, perm in raw_overwrites.items() 
             if target is not None and hasattr(target, 'id')
@@ -220,7 +225,6 @@ async def zamowienie(interaction: discord.Interaction):
 
         channel_name = f"ticket-{user.name}".lower().replace(" ", "-")
         
-        # Tworzy kanał na samej górze serwera z przefiltrowanymi uprawnieniami
         ticket_channel = await guild.create_text_channel(
             name=channel_name,
             overwrites=overwrites
@@ -237,9 +241,13 @@ async def zamowienie(interaction: discord.Interaction):
             color=discord.Color.green()
         )
         embed.add_field(name="👤 Klient", value=user.mention, inline=True)
+        embed.add_field(name="📦 Zamówienie", value=f"**{produkt}**", inline=False)
+        embed.add_field(name="💵 Cena produktu", value=f"{cena:.2f} PLN", inline=True)
+        embed.add_field(name="🚚 Dostawa", value=f"{dostawa:.2f} PLN", inline=True)
+        embed.add_field(name="💰 Łączna kwota", value=f"**{suma:.2f} PLN**", inline=False)
         embed.add_field(
             name="📌 Instrukcja", 
-            value="1. Napisz, co chcesz zamówić.\n2. Podaj metodę płatności (**BLIK / PSC / Crypto / Przelew**).\n3. Poczekaj na administrację.", 
+            value="1. Podaj metodę płatności (**BLIK / PSC / Crypto / Przelew**).\n2. Poczekaj na administrację.", 
             inline=False
         )
         embed.set_footer(text="LBKPETS • System Zamówień")
