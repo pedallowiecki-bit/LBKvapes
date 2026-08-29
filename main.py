@@ -115,7 +115,6 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             try:
                 data = json.loads(post_data.decode('utf-8'))
                 
-                # Obsługa nowego formatu ze strony: { discord: "...", items: [...] }
                 if isinstance(data, list):
                     cart_items = data
                     discord_user = "Nie podano"
@@ -405,7 +404,7 @@ async def zamknij(interaction: discord.Interaction):
 
 # KOMENDA: /restart
 @bot.tree.command(name="restart", description="Restartuje bota")
-@app_commands.default_permissions(administrator=Type:=True) # Typo check handled correctly below
+@app_commands.default_permissions(administrator=True)
 async def restart(interaction: discord.Interaction):
     await interaction.response.send_message("🔄 **Restartowanie bota...**", ephemeral=True)
     os.execv(sys.executable, ['python'] + sys.argv)
