@@ -121,7 +121,7 @@ async def sklep(interaction: discord.Interaction):
     
     await interaction.followup.send(embed=embed)
 
-# KOMENDA: /dodaj (Z WYBOREM TYPU: BOX / INNE)
+# KOMENDA: /dodaj
 @bot.tree.command(name="dodaj", description="Dodaj nowy produkt do sklepu")
 @app_commands.describe(
     typ="Wybierz typ produktu",
@@ -191,10 +191,9 @@ async def usun(interaction: discord.Interaction, product_id: int):
     else:
         await interaction.followup.send("❌ Błąd zapisu na GitHubie.")
 
-# KOMENDA: /zamowienie (TICKET SYSTEM - TWORZENIE NA GÓRZE SERWERA)
-@bot.tree.command(name="zamowienie", description="Realizacja zamówienia ze strony WWW")
-@app_commands.describe(id="Kod zamówienia ze strony (np. LBK-X82A)")
-async def zamowienie(interaction: discord.Interaction, id: str):
+# KOMENDA: /zamowienie (TICKET SYSTEM - BEZ ID, DLA KAŻDEGO)
+@bot.tree.command(name="zamowienie", description="Otwórz ticket w celu złożenia zamówienia")
+async def zamowienie(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True)
 
     guild = interaction.guild
@@ -204,26 +203,19 @@ async def zamowienie(interaction: discord.Interaction, id: str):
         await interaction.followup.send("❌ Tej komendy można używać tylko na serwerze.", ephemeral=True)
         return
 
-    bot_member = guild.me
-    if bot_member is None:
-        try:
-            bot_member = await guild.fetch_member(bot.user.id)
-        except Exception:
-            bot_member = None
-
-    overwrites = {
-        guild.default_role: discord.PermissionOverwrite(read_messages=False),
-        user: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True)
-    }
-
-    if bot_member:
-        overwrites[bot_member] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
-
-    for role in guild.roles:
-        if role.permissions.administrator:
-            overwrites[role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
-
     try:
+        overwrites = {
+            guild.default_role: discord.PermissionOverwrite(read_messages=False),
+            user: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True)
+        }
+
+        if guild.me:
+            overwrites[guild.me] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
+
+        for role in guild.roles:
+            if role and role.permissions.administrator:
+                overwrites[role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
+
         channel_name = f"ticket-{user.name}".lower().replace(" ", "-")
         
         ticket_channel = await guild.create_text_channel(
@@ -237,15 +229,14 @@ async def zamowienie(interaction: discord.Interaction, id: str):
         )
 
         embed = discord.Embed(
-            title=f"🛒 Nowe Zamówienie: `{id.upper()}`",
-            description=f"Witaj {user.mention}!\nOtworzyliśmy Twój prywatny ticket dotyczący zamówienia ze strony **LBKPETS**.",
+            title="🛒 Nowe Zamówienie / Ticket",
+            description=f"Witaj {user.mention}!\nOtworzyliśmy Twój prywatny ticket w sklepie **LBKPETS**.",
             color=discord.Color.green()
         )
-        embed.add_field(name="👤 Kupujący", value=user.mention, inline=True)
-        embed.add_field(name="🔑 Kod Zamówienia", value=f"`{id.upper()}`", inline=True)
+        embed.add_field(name="👤 Klient", value=user.mention, inline=True)
         embed.add_field(
-            name="📌 Instrukcja dla klienta", 
-            value="1. Podaj na tym kanale preferowaną metodę płatności (**BLIK / PSC / Crypto / Przelew**).\n2. Poczekaj na weryfikację przez administrację.", 
+            name="📌 Instrukcja", 
+            value="1. Napisz, co chcesz zamówić.\n2. Podaj metodę płatności (**BLIK / PSC / Crypto / Przelew**).\n3. Poczekaj, aż administracja przejmie zamówienie.", 
             inline=False
         )
         embed.set_footer(text="LBKPETS • System Zamówień")
