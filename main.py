@@ -126,6 +126,7 @@ async def sklep(interaction: discord.Interaction):
 # KOMENDA: /dodaj
 @bot.tree.command(name="dodaj", description="Dodaj nowy produkt do sklepu")
 @app_commands.describe(
+    id_produktu="Unikalne ID produktu (np. LBK-9LYGP ze strony)",
     typ="Wybierz typ produktu",
     nazwa="Nazwa produktu",
     cena="Cena produktu",
@@ -140,6 +141,7 @@ async def sklep(interaction: discord.Interaction):
 @app_commands.default_permissions(administrator=True)
 async def dodaj(
     interaction: discord.Interaction, 
+    id_produktu: str,
     typ: app_commands.Choice[str],
     nazwa: str, 
     cena: float, 
@@ -155,7 +157,7 @@ async def dodaj(
         return
 
     new_product = {
-        "id": int(discord.utils.utcnow().timestamp()),
+        "id": id_produktu,
         "type": typ.value,
         "name": nazwa,
         "price": cena,
@@ -167,14 +169,15 @@ async def dodaj(
     products.append(new_product)
     
     if update_github_file(products, sha, f"Dodano produkt ({typ.value}): {nazwa}"):
-        await interaction.followup.send(f"✅ Pomyślnie dodano produkt **{nazwa}** (Typ: `{typ.value}`)!")
+        await interaction.followup.send(f"✅ Pomyślnie dodano produkt **{nazwa}** z ID `{id_produktu}`!")
     else:
         await interaction.followup.send("❌ Błąd zapisu na GitHubie (sprawdź token).")
 
 # KOMENDA: /usun
 @bot.tree.command(name="usun", description="Usuń produkt ze sklepu po ID")
+@app_commands.describe(product_id="ID produktu (np. LBK-9LYGP)")
 @app_commands.default_permissions(administrator=True)
-async def usun(interaction: discord.Interaction, product_id: int):
+async def usun(interaction: discord.Interaction, product_id: str):
     await interaction.response.defer(ephemeral=True)
     products, sha, error = get_github_file()
     
@@ -182,7 +185,7 @@ async def usun(interaction: discord.Interaction, product_id: int):
         await interaction.followup.send(f"❌ {error}")
         return
 
-    new_products = [p for p in products if p.get('id') != product_id]
+    new_products = [p for p in products if str(p.get('id')) != product_id]
 
     if len(products) == len(new_products):
         await interaction.followup.send(f"❌ Nie znaleziono produktu o ID `{product_id}`.")
@@ -193,10 +196,10 @@ async def usun(interaction: discord.Interaction, product_id: int):
     else:
         await interaction.followup.send("❌ Błąd zapisu na GitHubie.")
 
-# KOMENDA: /zamowienie (Z AUTOMATYCZNYM AUTOCOMPLETE PRODUKTÓW)
+# KOMENDA: /zamowienie (OBSŁUGUJE TEKSTOWE ID ZE STRONY, NP. LBK-9LYGP)
 @bot.tree.command(name="zamowienie", description="Otwórz ticket w celu zakupu produktu ze sklepu")
-@app_commands.describe(product_id="Wybierz produkt z listy (wyszukaj po nazwie)")
-async def zamowienie(interaction: discord.Interaction, product_id: int):
+@app_commands.describe(product_id="ID produktu (np. LBK-9LYGP skopiowane ze strony)")
+async def zamowienie(interaction: discord.Interaction, product_id: str):
     await interaction.response.defer(ephemeral=True)
 
     products, _, error = get_github_file()
@@ -204,9 +207,9 @@ async def zamowienie(interaction: discord.Interaction, product_id: int):
         await interaction.followup.send(f"❌ Błąd wczytywania sklepu: {error}", ephemeral=True)
         return
 
-    product = next((p for p in products if p.get('id') == product_id), None)
+    product = next((p for p in products if str(p.get('id')) == product_id), None)
     if not product:
-        await interaction.followup.send(f"❌ Nie znaleziono wybranego produktu.", ephemeral=True)
+        await interaction.followup.send(f"❌ Nie znaleziono produktu o ID `{product_id}`. Sprawdź poprawność kodu ze strony.", ephemeral=True)
         return
 
     guild = interaction.guild
@@ -252,7 +255,7 @@ async def zamowienie(interaction: discord.Interaction, product_id: int):
             color=discord.Color.green()
         )
         embed.add_field(name="👤 Klient", value=user.mention, inline=True)
-        embed.add_field(name="📦 Zamówienie", value=f"**{nazwa}**", inline=False)
+        embed.add_field(name="📦 Zamówienie", value=f"**{nazwa}** (ID: `{product_id}`)", inline=False)
         embed.add_field(name="💵 Cena produktu", value=f"{cena:.2f} PLN", inline=True)
         embed.add_field(name="🚚 Dostawa", value=f"{dostawa:.2f} PLN", inline=True)
         embed.add_field(name="💰 Łączna kwota", value=f"**{suma:.2f} PLN**", inline=False)
@@ -280,14 +283,13 @@ async def zamowienie_autocomplete(interaction: discord.Interaction, current: str
     for p in products:
         name = p.get('name', 'Brak nazwy')
         price = p.get('price', 0)
-        product_id = p.get('id')
+        product_id = str(p.get('id', ''))
         
-        # Filtruje po wpisywanym tekście
-        if current.lower() in name.lower():
+        if current.lower() in name.lower() or current.lower() in product_id.lower():
             choices.append(
-                app_commands.Choice(name=f"{name} ({price} PLN)", value=product_id)
+                app_commands.Choice(name=f"{name} ({price} PLN) [ID: {product_id}]", value=product_id)
             )
-    return choices[:25] # Discord pozwala na maksymalnie 25 podpowiedzi
+    return choices[:25]
 
 # KOMENDA: /zamknij
 @bot.tree.command(name="zamknij", description="Zamyka i usuwa bieżący ticket")
