@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LBKPETS - Official Store</title>
+  <title>LBKPETS - Oficjalny Sklep</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -14,7 +14,8 @@
         extend: {
           fontFamily: { sans: ['Inter', 'sans-serif'] },
           colors: {
-            brand: { DEFAULT: '#00a6ff', hover: '#008ce0', light: '#e6f6ff' }
+            brand: { DEFAULT: '#00a6ff', hover: '#008ce0', light: '#e6f6ff' },
+            discord: { DEFAULT: '#5865F2', hover: '#4752C4' }
           }
         }
       }
@@ -23,18 +24,27 @@
 </head>
 <body class="bg-[#fafbfc] text-slate-800 font-sans min-h-screen flex flex-col justify-between antialiased pb-24">
 
-  <div class="bg-slate-900 text-slate-300 text-[11px] py-2 px-4 text-center font-medium tracking-wide flex justify-between items-center max-w-[1400px] mx-auto w-full">
-    <div class="flex items-center gap-2">
-      <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-      <span>🔥 Oferta ograniczona czasowo! Koniec promocji za: <strong id="promo-timer" class="text-white font-mono">05:42:19</strong></span>
+  <!-- TOP BAR Z DISCORDEM I TIMEREM -->
+  <div class="bg-slate-900 text-slate-300 text-xs py-2.5 px-6 border-b border-slate-800">
+    <div class="max-w-[1400px] mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+      <div class="flex items-center gap-2">
+        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span>🔥 Oferta ograniczona czasowo! Koniec promocji za: <strong id="promo-timer" class="text-white font-mono">05:42:19</strong></span>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <a href="https://discord.gg/y2xdvzx34V" target="_blank" class="bg-discord hover:bg-discord-hover text-white font-extrabold px-3.5 py-1 rounded-lg flex items-center gap-1.5 transition-all shadow-md shadow-discord/20 text-[11px]">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 127.14 96.36"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a74.57,74.57,0,0,0,64.3,0c.87.69,1.76,1.37,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,45.91,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,45.91,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
+          DOŁĄCZ DO DISCORDA
+        </a>
+      </div>
     </div>
-    <button onclick="accessAdminModal()" class="text-brand font-bold hover:underline cursor-pointer">⚙️ Panel Admina</button>
   </div>
 
   <div>
+    <!-- HERO BANNER -->
     <section class="max-w-[1400px] mx-auto px-6 pt-8 pb-4">
       <div class="bg-white rounded-3xl border border-slate-200/80 p-6 md:p-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-8">
-        
         <div class="flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-left">
           <div class="w-24 h-24 md:w-28 md:h-28 bg-slate-50 rounded-2xl flex items-center justify-center p-3 border border-slate-100 shrink-0 shadow-inner">
             <div class="w-full h-full bg-gradient-to-tr from-cyan-600 to-teal-400 rounded-xl flex flex-col items-center justify-center shadow-md transform -rotate-2">
@@ -74,6 +84,7 @@
       </div>
     </section>
 
+    <!-- KATEGORIE -->
     <section class="max-w-[1400px] mx-auto px-6 py-4">
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div onclick="filterProducts('all')" class="cursor-pointer bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-5 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md">
@@ -102,18 +113,20 @@
       </div>
     </section>
 
+    <!-- PRZYCISKI FILTROWANIA I WYSZUKIWARKA -->
     <div class="max-w-[1400px] mx-auto px-6 pt-4 flex flex-col sm:flex-row gap-4 justify-between items-center">
-      <div class="flex gap-2">
-        <button onclick="filterProducts('all')" class="bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all">Wszystkie</button>
-        <button onclick="filterProducts('promo')" class="bg-white border text-slate-600 text-xs font-bold px-4 py-2 rounded-xl hover:border-brand transition-all">Promocje 🔥</button>
-        <button onclick="filterProducts('box')" class="bg-white border text-slate-600 text-xs font-bold px-4 py-2 rounded-xl hover:border-brand transition-all">Boxy 📦</button>
+      <div class="flex gap-2" id="filter-buttons">
+        <button id="btn-all" onclick="filterProducts('all')" class="filter-btn bg-slate-900 text-white text-xs font-extrabold px-5 py-2.5 rounded-2xl transition-all shadow-sm">Wszystkie</button>
+        <button id="btn-promo" onclick="filterProducts('promo')" class="filter-btn bg-white border border-slate-200 text-slate-700 hover:border-brand text-xs font-bold px-5 py-2.5 rounded-2xl transition-all shadow-sm">Promocje 🔥</button>
+        <button id="btn-box" onclick="filterProducts('box')" class="filter-btn bg-white border border-slate-200 text-slate-700 hover:border-brand text-xs font-bold px-5 py-2.5 rounded-2xl transition-all shadow-sm">Boxy 📦</button>
       </div>
 
       <div class="relative w-full sm:w-72">
-        <input type="text" id="search-input" onkeyup="searchProducts()" placeholder="Szukaj produktu..." class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-brand shadow-sm">
+        <input type="text" id="search-input" onkeyup="searchProducts()" placeholder="Szukaj produktu..." class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-brand shadow-sm">
       </div>
     </div>
 
+    <!-- NAGŁÓWEK SEKCJII I KOSZYK -->
     <header class="max-w-[1400px] mx-auto px-6 pt-6 pb-4 flex justify-between items-end border-b border-slate-200/60">
       <h1 class="text-xl font-black tracking-tight text-slate-900 uppercase">KATALOG PRODUKTÓW</h1>
       <button onclick="openCartModal()" class="text-xs font-bold text-brand hover:text-brand-hover uppercase tracking-wider flex items-center gap-1 cursor-pointer">
@@ -121,10 +134,12 @@
       </button>
     </header>
 
+    <!-- PRODUKTY GRID -->
     <main class="max-w-[1400px] mx-auto px-6 py-8">
       <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6"></div>
     </main>
 
+    <!-- OPINIE -->
     <section class="max-w-[1400px] mx-auto px-6 py-10 border-t border-slate-200/60">
       <div class="text-center mb-8">
         <span class="text-xs font-bold text-brand uppercase tracking-widest">Opinie społeczności</span>
@@ -162,6 +177,7 @@
     </section>
   </div>
 
+  <!-- MODAL KOSZYKA Z INSTRUKCJĄ TICKETA -->
   <div id="cart-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative border border-slate-100">
       <h2 class="text-lg font-black text-slate-900 mb-4 border-b pb-3 uppercase">Twój Koszyk</h2>
@@ -177,41 +193,26 @@
       </button>
 
       <div id="token-result" class="hidden mt-4 bg-brand-light/50 p-4 rounded-2xl border border-brand/20 text-center">
-        <p class="text-xs text-slate-700 font-medium mb-1">Wyślij komendę na Discordzie:</p>
+        <p class="text-xs text-slate-700 font-bold mb-1">Dokończ zamówienie na Discordzie!</p>
+        <p class="text-[11px] text-slate-500 mb-2">Skopiuj komendę, otwórz **Ticket / Kanał zamówień** na naszym Discordzie i ją wklej:</p>
+        
         <code id="final-code" class="block font-mono font-bold text-sm text-brand bg-white p-2.5 rounded-xl border border-brand/20 my-2 select-all">/zamowienie id:XXXXX</code>
-        <button onclick="copyCode()" class="text-xs bg-slate-900 text-white font-bold px-4 py-2 rounded-lg cursor-pointer">Kopiuj Komendę</button>
+        
+        <div class="flex gap-2 mt-3">
+          <button onclick="copyCode()" class="flex-1 text-xs bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl cursor-pointer transition-colors">
+            📋 Kopiuj Komendę
+          </button>
+          <a href="https://discord.gg/y2xdvzx34V" target="_blank" class="flex-1 text-xs bg-discord hover:bg-discord-hover text-white font-bold py-2.5 rounded-xl text-center cursor-pointer transition-colors flex items-center justify-center gap-1">
+            💬 Otwórz Ticket
+          </a>
+        </div>
       </div>
 
       <button onclick="closeCartModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 font-black text-lg cursor-pointer">✕</button>
     </div>
   </div>
 
-  <div id="admin-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative">
-      <h2 class="text-lg font-black text-slate-900 mb-4 border-b pb-3 uppercase flex items-center gap-2">
-        🔒 Panel Administracyjny
-      </h2>
-
-      <form onsubmit="handleAddProduct(event)" class="space-y-3 mb-6">
-        <h3 class="text-xs font-bold text-slate-500 uppercase">Dodaj nowy produkt</h3>
-        <input type="text" id="p-name" placeholder="Nazwa produktu" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand">
-        <div class="grid grid-cols-2 gap-2">
-          <input type="number" step="0.01" id="p-price" placeholder="Cena (PLN)" required class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand">
-          <input type="number" step="0.01" id="p-oldprice" placeholder="Stara cena (opcjonalnie)" class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand">
-        </div>
-        <input type="url" id="p-img" placeholder="Link do obrazka (URL)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs focus:outline-none focus:border-brand">
-        <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-3 rounded-xl uppercase tracking-wider cursor-pointer">
-          + Dodaj Produkt
-        </button>
-      </form>
-
-      <h3 class="text-xs font-bold text-slate-500 uppercase mb-2">Zarządzaj obecnymi produktami</h3>
-      <div id="admin-products-list" class="space-y-2 max-h-40 overflow-y-auto text-xs pr-1"></div>
-
-      <button onclick="toggleAdminModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 font-black text-lg cursor-pointer">✕</button>
-    </div>
-  </div>
-
+  <!-- COOKIES BANNER -->
   <div id="cookie-banner" class="fixed bottom-4 left-4 right-4 z-40 max-w-[1400px] mx-auto">
     <div class="bg-white/95 backdrop-blur-md border border-slate-200/80 p-4 rounded-2xl shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
       <div class="text-xs text-slate-600">
@@ -219,8 +220,8 @@
         Nasza strona korzysta z plików cookies. <a href="#" class="text-brand font-semibold hover:underline">Dowiedz się więcej</a>
       </div>
       <div class="flex items-center gap-3 shrink-0">
-        <button onclick="closeCookies()" class="text-xs text-slate-500 font-bold px-4 py-2">Odrzuć</button>
-        <button onclick="closeCookies()" class="bg-brand text-white text-xs font-extrabold px-6 py-2.5 rounded-xl shadow-md shadow-brand/20">Akceptuję</button>
+        <button onclick="closeCookies()" class="text-xs text-slate-500 font-bold px-4 py-2 cursor-pointer">Odrzuć</button>
+        <button onclick="closeCookies()" class="bg-brand text-white text-xs font-extrabold px-6 py-2.5 rounded-xl shadow-md shadow-brand/20 cursor-pointer">Akceptuję</button>
       </div>
     </div>
   </div>
@@ -229,6 +230,7 @@
     let products = [];
     let displayedProducts = [];
     let cart = [];
+    let currentFilter = 'all';
 
     async function loadProductsFromJSON() {
       try {
@@ -241,17 +243,7 @@
       } catch (e) {
         products = [];
       }
-      displayedProducts = [...products];
-      renderProducts();
-    }
-
-    function accessAdminModal() {
-      const password = prompt("Wprowadź hasło administratora:");
-      if (password === "lbk2026") {
-        toggleAdminModal();
-      } else if (password !== null) {
-        alert("Błędne hasło! Dostęp zabroniony.");
-      }
+      filterProducts('all');
     }
 
     function renderProducts() {
@@ -259,17 +251,19 @@
       let html = '';
       
       if (displayedProducts.length === 0) {
-        grid.innerHTML = '<p class="col-span-full text-center text-slate-400 py-10">Brak dostępnych produktów w sklepie.</p>';
+        grid.innerHTML = '<p class="col-span-full text-center text-slate-400 py-10 font-semibold">Brak dostępnych produktów w tej kategorii.</p>';
         return;
       }
 
       displayedProducts.forEach(p => {
         const price = typeof p.price === 'number' ? p.price : parseFloat(p.price);
         const oldPrice = p.oldPrice ? (typeof p.oldPrice === 'number' ? p.oldPrice : parseFloat(p.oldPrice)) : null;
+        const isBox = (p.badge && p.badge.toLowerCase().includes('box')) || p.name.toLowerCase().includes('box');
+        const badgeText = p.badge || (isBox ? 'BOX' : null);
 
         html += `
           <div class="group bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-xl hover:border-brand/30 transition-all duration-300 flex flex-col justify-between relative">
-            ${p.badge ? `<span class="absolute top-3 left-3 bg-slate-900 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider z-10 shadow-sm">${p.badge}</span>` : ''}
+            ${badgeText ? `<span class="absolute top-3 left-3 bg-slate-900 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider z-10 shadow-sm">${badgeText}</span>` : ''}
             <div>
               <div class="w-full h-44 bg-slate-50 rounded-xl mb-3 overflow-hidden flex items-center justify-center p-3 group-hover:bg-brand-light/30 transition-colors">
                 <img src="${p.img || 'https://via.placeholder.com/200'}" alt="${p.name}" class="max-h-full object-contain group-hover:scale-105 transition-transform duration-300">
@@ -279,7 +273,7 @@
               </h3>
               <div class="flex items-center gap-1 text-amber-400 text-xs mb-2">
                 <span>★★★★★</span>
-                <span class="text-slate-400 text-[10px] font-medium">(1)</span>
+                <span class="text-slate-400 text-[10px] font-medium">(5)</span>
               </div>
             </div>
             <div>
@@ -299,38 +293,57 @@
 
     function searchProducts() {
       const query = document.getElementById('search-input').value.toLowerCase();
-      displayedProducts = products.filter(p => p.name.toLowerCase().includes(query));
+      displayedProducts = products.filter(p => {
+        const matchesQuery = p.name.toLowerCase().includes(query);
+        if (currentFilter === 'promo') {
+          return matchesQuery && p.oldPrice !== null && p.oldPrice !== undefined && p.oldPrice > 0;
+        } else if (currentFilter === 'box') {
+          return matchesQuery && (p.name.toLowerCase().includes('box') || (p.badge && p.badge.toLowerCase().includes('box')));
+        }
+        return matchesQuery;
+      });
       renderProducts();
     }
 
     function filterProducts(type) {
+      currentFilter = type;
+      
+      // Aktualizacja stylów przycisków
+      const btns = {
+        all: document.getElementById('btn-all'),
+        promo: document.getElementById('btn-promo'),
+        box: document.getElementById('btn-box')
+      };
+
+      Object.keys(btns).forEach(key => {
+        if (btns[key]) {
+          if (key === type) {
+            btns[key].className = "filter-btn bg-slate-900 text-white text-xs font-extrabold px-5 py-2.5 rounded-2xl transition-all shadow-sm";
+          } else {
+            btns[key].className = "filter-btn bg-white border border-slate-200 text-slate-700 hover:border-brand text-xs font-bold px-5 py-2.5 rounded-2xl transition-all shadow-sm";
+          }
+        }
+      });
+
       if (type === 'promo') {
-        displayedProducts = products.filter(p => p.oldPrice !== null && p.oldPrice !== undefined);
+        displayedProducts = products.filter(p => p.oldPrice !== null && p.oldPrice !== undefined && p.oldPrice > 0);
       } else if (type === 'box') {
-        displayedProducts = products.filter(p => p.name.toLowerCase().includes('box'));
+        displayedProducts = products.filter(p => p.name.toLowerCase().includes('box') || (p.badge && p.badge.toLowerCase().includes('box')));
       } else {
         displayedProducts = [...products];
       }
+      
       renderProducts();
-    }
-
-    function handleAddProduct(e) {
-      e.preventDefault();
-      alert("Aby dodać produkt na stałe, użyj komendy /dodaj na serwerze Discord!");
-    }
-
-    function renderAdminList() {
-      const list = document.getElementById('admin-products-list');
-      list.innerHTML = products.map(p => `
-        <div class="flex justify-between items-center bg-slate-50 p-2 rounded-xl border">
-          <span class="font-bold truncate max-w-[200px]">${p.name}</span>
-          <span class="text-xs text-slate-400">ID: ${p.id}</span>
-        </div>
-      `).join('');
     }
 
     function addToCart(title, price) {
       cart.push({ title, price });
+      document.getElementById('cart-count').innerText = cart.length;
+      openCartModal();
+    }
+
+    function removeFromCart(index) {
+      cart.splice(index, 1);
       document.getElementById('cart-count').innerText = cart.length;
       openCartModal();
     }
@@ -345,15 +358,19 @@
         totalEl.innerText = '0,00 PLN';
         btn.disabled = true;
         btn.className = "w-full bg-slate-200 text-slate-400 font-extrabold text-xs py-3.5 rounded-xl uppercase tracking-wider cursor-not-allowed";
+        document.getElementById('token-result').classList.add('hidden');
       } else {
         listEl.innerHTML = '';
         let total = 0;
-        cart.forEach((item) => {
+        cart.forEach((item, idx) => {
           total += item.price;
           listEl.innerHTML += `
             <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl border border-slate-100">
               <span class="font-bold text-slate-800 truncate pr-2">${item.title}</span>
-              <span class="font-black text-slate-900 shrink-0">${item.price.toFixed(2)} PLN</span>
+              <div class="flex items-center gap-2">
+                <span class="font-black text-slate-900 shrink-0">${item.price.toFixed(2)} PLN</span>
+                <button onclick="removeFromCart(${idx})" class="text-rose-500 font-bold hover:text-rose-700 px-1">✕</button>
+              </div>
             </div>
           `;
         });
@@ -366,11 +383,6 @@
     }
 
     function closeCartModal() { document.getElementById('cart-modal').classList.add('hidden'); }
-    function toggleAdminModal() { 
-      const el = document.getElementById('admin-modal');
-      el.classList.toggle('hidden');
-      if(!el.classList.contains('hidden')) renderAdminList();
-    }
 
     function generateDiscordToken() {
       const code = 'LBK-' + Math.random().toString(36).substring(2, 7).toUpperCase();
@@ -380,7 +392,7 @@
 
     function copyCode() {
       navigator.clipboard.writeText(document.getElementById('final-code').innerText);
-      alert('Skopiowano komendę do schowka!');
+      alert('Skopiowano komendę do schowka! Przejdź na Discorda i wklej ją na kanale zamówień/ticket.');
     }
 
     function closeCookies() { document.getElementById('cookie-banner').style.display = 'none'; }
