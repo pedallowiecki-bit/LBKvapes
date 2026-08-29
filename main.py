@@ -32,7 +32,7 @@ DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO = os.getenv("GITHUB_REPO")
 
-# ID Kategorii zamówień
+# ID Kategorii na Discordzie dla ticketów zamówień
 CATEGORY_ID = 1543241155951599669
 
 FILE_PATH = "products.json"
@@ -179,7 +179,7 @@ async def usun(interaction: discord.Interaction, product_id: int):
     else:
         await interaction.followup.send("❌ Błąd zapisu na GitHubie.")
 
-# KOMENDA: /zamowienie (TICKET SYSTEM)
+# KOMENDA: /zamowienie (TICKET SYSTEM ZE STRONY WWW)
 @bot.tree.command(name="zamowienie", description="Realizacja zamówienia ze strony WWW")
 @app_commands.describe(id="Kod zamówienia ze strony (np. LBK-X82A)")
 async def zamowienie(interaction: discord.Interaction, id: str):
@@ -188,21 +188,21 @@ async def zamowienie(interaction: discord.Interaction, id: str):
     guild = interaction.guild
     user = interaction.user
 
-    # Pobieranie bota
+    # Pobieranie bota (z zabezpieczeniem przed None)
     bot_member = guild.me
     if not bot_member:
         bot_member = await guild.fetch_member(bot.user.id)
 
     category = guild.get_channel(CATEGORY_ID)
 
-    # Uprawnienia: Dostęp mają wyłącznie Użytkownik, Bot oraz osoby z uprawnieniem Administratora
+    # Domyślny brak dostępu (@everyone = False)
     overwrites = {
         guild.default_role: discord.PermissionOverwrite(read_messages=False),
         user: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True),
         bot_member: discord.PermissionOverwrite(read_messages=True, send_messages=True)
     }
 
-    # Przyznawanie widoczności wszystkim profilom/rolom posiadającym uprawnienie Administratora
+    # Przyznanie dostępu KAŻDEJ roli, która ma uprawnienie 'Administrator'
     for role in guild.roles:
         if role.permissions.administrator:
             overwrites[role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
@@ -234,7 +234,7 @@ async def zamowienie(interaction: discord.Interaction, id: str):
         )
         embed.set_footer(text="LBKPETS • System Zamówień")
 
-        await ticket_channel.send(content=f"{user.mention} | Wzywam Administrację", embed=embed)
+        await ticket_channel.send(content=f"{user.mention} | Powiadomiono Administrację", embed=embed)
 
     except Exception as e:
         await interaction.followup.send(f"❌ Wystąpił błąd podczas tworzenia ticketu: {e}", ephemeral=True)
