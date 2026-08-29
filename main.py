@@ -2,179 +2,152 @@ import os
 import json
 import base64
 import requests
-import threading
-import asyncio
-from http.server import HTTPServer, BaseHTTPRequestHandler
 import discord
-from discord.ext import commands
 from discord import app_commands
+from discord.ext import commands
 
-# ID RÓL Z DISCORDA
-ADMIN_ROLE_ID = 1518638158961709153
-CLIENT_ROLE_ID = 1518633914925580438
-# ZMIENNE ŚRODOWISKOWE
+# Zmienne środowiskowe z panelu Render
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
-GITHUB_TOKEN = os.getenv("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")
-GITHUB_REPO = os.getenv("pedallowiecki-bit/serwer-mc")
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+GITHUB_REPO = os.getenv("GITHUB_REPO")
+
 FILE_PATH = "products.json"
+GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{FILE_PATH}"
 
-# SERWER HTTP DLA RENDERA
-class KeepAliveHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/html; charset=utf-8')
-        self.end_headers()
-        self.wfile.write(b"LBKPETS Bot is running!")
-
-def run_http_server():
-    port = int(os.getenv("PORT", 10000))
-    server = HTTPServer(('0.0.0.0', port), KeepAliveHandler)
-    server.serve_forever()
-
-# Uruchomienie serwera WWW w osobnym wątku
-threading.Thread(target=run_http_server, daemon=True).start()
-
-# INTENTY BOTA
 intents = discord.Intents.default()
-intents.message_content = True
-intents.members = True
-
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-def update_github_json(new_products, commit_msg):
-    url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{FILE_PATH}"
-    headers = {
-        "Authorization": f"token {GITHUB_TOKEN}",
-        "Accept": "application/vnd.github.v3+json"
-    }
-    
-    res = requests.get(url, headers=headers)
-    sha = res.json().get("sha", "") if res.status_code == 200 else ""
-    
-    content_str = json.dumps(new_products, indent=2, ensure_ascii=False)
-    content_b64 = base64.b64encode(content_str.encode("utf-8")).decode("utf-8")
+def get_github_file():
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+    res = requests.get(GITHUB_API_URL, headers=headers)
+    if res.status_code == 200:
+        data = res.json()
+        content = requests.get(data['download_url']).text
+        return json.loads(content), data['sha']
+    return [], None
+
+def update_github_file(products, sha, commit_message):
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+    content_json = json.dumps(products, indent=2, ensure_ascii=False)
+    encoded_content = base64.b64encode(content_json.encode('utf-8')).decode('utf-8')
     
     payload = {
-        "message": f"🤖 {commit_msg}",
-        "content": content_b64,
+        "message": commit_message,
+        "content": encoded_content,
         "sha": sha
     }
     
-    put_res = requests.put(url, headers=headers, json=payload)
-    return put_res.status_code in [200, 201]
-
-def get_current_products():
-    raw_url = f"https://raw.githubusercontent.com/{GITHUB_REPO}/main/{FILE_PATH}"
-    res = requests.get(raw_url)
-    return res.json() if res.status_code == 200 else []
+    res = requests.put(GITHUB_API_URL, headers=headers, json=payload)
+    return res.status_code in [200, 201]
 
 @bot.event
 async def on_ready():
     print(f"✅ Bot jest ONLINE jako: {bot.user}")
     try:
         synced = await bot.tree.sync()
-        print(f"⚡ Zsynchronizowano komendy slash ({len(synced)}).")
+        print(f"🔄 Zsynchronizowano {len(synced)} komend(y) slash!")
     except Exception as e:
         print(f"❌ Błąd synchronizacji komend: {e}")
 
-# KOMENDY ADMINA
+# KOMENDA: /sklep
+@bot.tree.command(name="sklep", description="Wyświetla aktualne produkty ze sklepu")
+async def sklep(interaction: discord.Interaction):
+    await interaction.response.defer()
+    products, _ = get_github_file()
+    
+    if not products:
+        await interaction.followup.send("🛍️ Sklep jest obecnie pusty.")
+        return
+
+    embed = discord.Embed(
+        title="🛍️ Oferta Sklepu LBKPETS",
+        description="Oto lista dostępnych produktów:",
+        color=discord.Color.blue()
+    )
+    
+    for p in products:
+        price = p.get('price', 0)
+        old_price = f"~~{p.get('oldPrice')} PLN~~ " if p.get('oldPrice') else ""
+        badge = f"[{p.get('badge')}] " if p.get('badge') else ""
+        embed.add_field(
+            name=f"{badge}{p.get('name')}",
+            value=f"Cena: {old_price}**{price} PLN**\nID: `{p.get('id')}`",
+            inline=False
+        )
+    
+    await interaction.followup.send(embed=embed)
+
+# KOMENDA: /dodaj
 @bot.tree.command(name="dodaj", description="[ADMIN] Dodaj nowy produkt do sklepu")
-@app_commands.describe(
-    nazwa="Nazwa produktu",
-    cena="Cena w PLN",
-    obrazek="URL do zdjęcia",
-    stara_cena="Opcjonalna stara cena",
-    badge="Opcjonalna plakietka (np. HOT 🔥)"
-)
+@app_commands.checks.has_permissions(administrator=True)
 async def dodaj(
     interaction: discord.Interaction, 
     nazwa: str, 
     cena: float, 
-    obrazek: str, 
     stara_cena: float = None, 
-    badge: str = None
+    odznaka: str = None, 
+    obrazek: str = None
 ):
-    user_role_ids = [role.id for role in interaction.user.roles]
-    if ADMIN_ROLE_ID not in user_role_ids:
-        await interaction.response.send_message("❌ Komenda tylko dla Admina!", ephemeral=True)
+    await interaction.response.defer(ephemeral=True)
+    products, sha = get_github_file()
+    
+    if sha is None:
+        await interaction.followup.send("❌ Nie można połączyć się z GitHubem. Sprawdź token i nazwę repozytorium w Renderze.")
         return
 
-    await interaction.response.defer(thinking=True)
-    products = get_current_products()
-
-    nowy_produkt = {
-        "id": int(interaction.id),
+    new_product = {
+        "id": int(discord.utils.utcnow().timestamp()),
         "name": nazwa,
         "price": cena,
         "oldPrice": stara_cena,
-        "badge": badge,
-        "img": obrazek
+        "badge": odznaka,
+        "img": obrazek or "https://via.placeholder.com/200"
     }
-    products.append(nowy_produkt)
 
-    if update_github_json(products, f"Dodano produkt: {nazwa}"):
-        embed = discord.Embed(title="✅ Dodano Nowy Produkt!", color=0x00a6ff)
-        embed.add_field(name="Nazwa", value=nazwa, inline=False)
-        embed.add_field(name="Cena", value=f"{cena:.2f} PLN", inline=True)
-        if stara_cena:
-            embed.add_field(name="Stara Cena", value=f"{stara_cena:.2f} PLN", inline=True)
-        if badge:
-            embed.add_field(name="Plakietka", value=badge, inline=True)
-        embed.set_thumbnail(url=obrazek)
-        await interaction.followup.send(embed=embed)
+    products.append(new_product)
+    
+    if update_github_file(products, sha, f"Dodano produkt: {nazwa}"):
+        await interaction.followup.send(f"✅ Pomyślnie dodano produkt **{nazwa}**!")
     else:
-        await interaction.followup.send("❌ Błąd zapisu w GitHubie.")
+        await interaction.followup.send("❌ Błąd podczas zapisu na GitHubie.")
 
+# KOMENDA: /usun
 @bot.tree.command(name="usun", description="[ADMIN] Usuń produkt ze sklepu po ID")
-async def usun(interaction: discord.Interaction, product_id: str):
-    user_role_ids = [role.id for role in interaction.user.roles]
-    if ADMIN_ROLE_ID not in user_role_ids:
-        await interaction.response.send_message("❌ Brak uprawnień admina!", ephemeral=True)
+@app_commands.checks.has_permissions(administrator=True)
+async def usun(interaction: discord.Interaction, product_id: int):
+    await interaction.response.defer(ephemeral=True)
+    products, sha = get_github_file()
+    
+    if sha is None:
+        await interaction.followup.send("❌ Nie można połączyć się z GitHubem.")
         return
 
-    await interaction.response.defer(thinking=True)
-    products = get_current_products()
-    new_products = [p for p in products if str(p.get("id")) != product_id]
+    new_products = [p for p in products if p.get('id') != product_id]
 
     if len(products) == len(new_products):
-        await interaction.followup.send("❌ Nie znaleziono produktu o podanym ID.")
+        await interaction.followup.send(f"❌ Nie znaleziono produktu o ID `{product_id}`.")
         return
 
-    if update_github_json(new_products, f"Usunięto produkt ID: {product_id}"):
-        await interaction.followup.send(f"🗑️ Usunięto produkt o ID: `{product_id}`")
+    if update_github_file(new_products, sha, f"Usunięto produkt ID: {product_id}"):
+        await interaction.followup.send(f"✅ Usunięto produkt o ID `{product_id}`.")
     else:
-        await interaction.followup.send("❌ Błąd zapisu w GitHubie.")
+        await interaction.followup.send("❌ Błąd podczas zapisu na GitHubie.")
 
-# KOMENDY KLIENTA
-@bot.tree.command(name="sklep", description="[KLIENT] Przeglądaj aktualną ofertę sklepu")
-async def sklep(interaction: discord.Interaction):
-    user_role_ids = [role.id for role in interaction.user.roles]
-    if CLIENT_ROLE_ID not in user_role_ids and ADMIN_ROLE_ID not in user_role_ids:
-        await interaction.response.send_message("❌ Nie posiadasz rangi Klienta!", ephemeral=True)
-        return
-
-    products = get_current_products()
-    if not products:
-        await interaction.response.send_message("🛒 Sklep jest pusty.", ephemeral=True)
-        return
-
-    embed = discord.Embed(title="🛍️ Oferta Sklepu LBKPETS", color=0x00a6ff)
-    for p in products[:10]:
-        cena_str = f"{p['price']:.2f} PLN"
-        if p.get('oldPrice'):
-            cena_str += f" ~({p['oldPrice']:.2f} PLN)~"
-        embed.add_field(
-            name=f"{p.get('badge', '')} {p['name']}".strip(),
-            value=f"Cena: **{cena_str}** | ID: `{p['id']}`",
-            inline=False
-        )
-
+# KOMENDA: /zamowienie
+@bot.tree.command(name="zamowienie", description="Realizacja zamówienia ze strony WWW")
+async def zamowienie(interaction: discord.Interaction, id: str):
+    embed = discord.Embed(
+        title="🛒 Otrzymano nowe zamówienie!",
+        description=f"Klient {interaction.user.mention} przesłał kod zamówienia: **{id}**",
+        color=discord.Color.green()
+    )
     await interaction.response.send_message(embed=embed)
 
-# URUCHOMIENIE BOTA
-if __name__ == "__main__":
-    if not DISCORD_TOKEN:
-        print("❌ CRITICAL ERROR: Zmienna DISCORD_TOKEN nie została ustawiona w Renderze!")
-    else:
-        print("🚀 Uruchamianie bota Discord...")
-        bot.run(DISCORD_TOKEN)
+# Obsługa błędu braku uprawnień admina
+@dodaj.error
+@usun.error
+async def admin_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
+    if isinstance(error, app_commands.MissingPermissions):
+        await interaction.response.send_message("❌ Musisz posiadać uprawnienie **Administrator** w roli na Discordzie, aby użyć tej komendy!", ephemeral=True)
+
+bot.run(DISCORD_TOKEN)
