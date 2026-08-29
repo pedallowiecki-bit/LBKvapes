@@ -2,10 +2,33 @@ import os
 import json
 import base64
 import requests
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 import discord
 from discord import app_commands
 from discord.ext import commands
 
+# --- MINIMALNY SERWER DLA RENDERA (Zapobiega 'Deploy failed') ---
+class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(b"Bot status: ONLINE")
+
+    def log_message(self, format, *args):
+        return
+
+def run_web_server():
+    port = int(os.environ.get("PORT", 10000))
+    server = HTTPServer(('0.0.0.0', port), SimpleHTTPRequestHandler)
+    print(f"🌐 Serwer portu {port} uruchomiony.")
+    server.serve_forever()
+
+# Uruchomienie serwera WWW w tle
+threading.Thread(target=run_web_server, daemon=True).start()
+
+# --- DANE BOTA DISCORD ---
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO = os.getenv("GITHUB_REPO")
@@ -42,7 +65,6 @@ def update_github_file(products, sha, commit_message):
 @bot.event
 async def on_ready():
     print(f"✅ Bot jest ONLINE jako: {bot.user}")
-    # Ustawienie statusu na Online z informacją o sklepie
     await bot.change_presence(
         status=discord.Status.online,
         activity=discord.Game(name="/sklep | LBKPETS")
