@@ -12,7 +12,6 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-# --- ZMIENNE ŚRODOWISKOWE ---
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO = os.getenv("GITHUB_REPO")
@@ -89,7 +88,6 @@ def update_github_orders(orders, commit_message):
     res = requests.put(ORDERS_GITHUB_API_URL, headers=get_headers(), json=payload)
     return res.status_code in [200, 201]
 
-# --- SERWER HTTP OBSŁUGUJĄCY RENDER ORAZ ZAPYTANIA ZE STRONY ---
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
@@ -115,7 +113,6 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             try:
                 data = json.loads(post_data.decode('utf-8'))
                 
-                # Pobieranie danych wysłanych ze strony (uwzględniając discord, email, paczkomat, telefon)
                 discord_user = data.get('discord', 'Nie podano').strip()
                 email = data.get('email', data.get('gmail', 'Nie podano')).strip()
                 phone = data.get('phone', data.get('tel', 'Nie podano')).strip()
@@ -203,7 +200,6 @@ async def on_ready():
     except Exception as e:
         print(f"❌ Błąd synchronizacji: {e}")
 
-# KOMENDA: /sklep
 @bot.tree.command(name="sklep", description="Wyświetla aktualne produkty ze sklepu")
 async def sklep(interaction: discord.Interaction):
     await interaction.response.defer()
@@ -236,7 +232,6 @@ async def sklep(interaction: discord.Interaction):
     
     await interaction.followup.send(embed=embed)
 
-# KOMENDA: /dodaj
 @bot.tree.command(name="dodaj", description="Dodaj nowy produkt do sklepu")
 @app_commands.describe(
     id_produktu="Unikalne ID produktu",
@@ -286,7 +281,6 @@ async def dodaj(
     else:
         await interaction.followup.send("❌ Błąd zapisu na GitHubie.")
 
-# KOMENDA: /usun
 @bot.tree.command(name="usun", description="Usuń produkt ze sklepu po ID")
 @app_commands.describe(product_id="ID produktu")
 @app_commands.default_permissions(administrator=True)
@@ -309,7 +303,6 @@ async def usun(interaction: discord.Interaction, product_id: str):
     else:
         await interaction.followup.send("❌ Błąd zapisu na GitHubie.")
 
-# KOMENDA: /zamowienie (OBSŁUGUJE KOSZYK ZE STRONY)
 @bot.tree.command(name="zamowienie", description="Otwórz ticket na podstawie koszyka ze strony")
 @app_commands.describe(order_id="ID zamówienia wygenerowane w koszyku (np. LBK-9LYGP)")
 async def zamowienie(interaction: discord.Interaction, order_id: str):
@@ -378,7 +371,6 @@ async def zamowienie(interaction: discord.Interaction, order_id: str):
         embed.add_field(name="💬 Konto Discord", value=user.mention, inline=True)
         embed.add_field(name="🆔 ID Zamówienia", value=f"`{order_id}`", inline=False)
         
-        # Nowe pola z danymi klienta
         embed.add_field(name="📧 Email / Gmail", value=f"`{email}`", inline=True)
         embed.add_field(name="📞 Nr Telefonu", value=f"`{phone}`", inline=True)
         embed.add_field(name="📦 Wybrany Paczkomat", value=f"`{paczkomat}`", inline=False)
@@ -404,7 +396,6 @@ async def zamowienie(interaction: discord.Interaction, order_id: str):
     except Exception as e:
         await interaction.followup.send(f"❌ Wystąpił błąd podczas tworzenia ticketu: {e}", ephemeral=True)
 
-# KOMENDA: /zamknij
 @bot.tree.command(name="zamknij", description="Zamyka i usuwa bieżący ticket")
 async def zamknij(interaction: discord.Interaction):
     if "ticket-" in interaction.channel.name:
@@ -414,7 +405,6 @@ async def zamknij(interaction: discord.Interaction):
     else:
         await interaction.response.send_message("❌ Tej komendy możesz użyć tylko na kanale ticketu.", ephemeral=True)
 
-# KOMENDA: /restart
 @bot.tree.command(name="restart", description="Restartuje bota")
 @app_commands.default_permissions(administrator=True)
 async def restart(interaction: discord.Interaction):
