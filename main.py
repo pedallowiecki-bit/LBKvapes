@@ -115,12 +115,12 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             try:
                 data = json.loads(post_data.decode('utf-8'))
                 
-                if isinstance(data, list):
-                    cart_items = data
-                    discord_user = "Nie podano"
-                else:
-                    discord_user = data.get('discord', '').strip()
-                    cart_items = data.get('items', [])
+                # Pobieranie danych wysłanych ze strony (uwzględniając discord, email, paczkomat, telefon)
+                discord_user = data.get('discord', 'Nie podano').strip()
+                email = data.get('email', data.get('gmail', 'Nie podano')).strip()
+                phone = data.get('phone', data.get('tel', 'Nie podano')).strip()
+                paczkomat = data.get('paczkomat', 'Nie podano').strip()
+                cart_items = data.get('items', [])
 
                 if not discord_user:
                     self.send_response(400)
@@ -147,6 +147,9 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
                 new_order = {
                     "id": order_id,
                     "discord": discord_user,
+                    "email": email,
+                    "phone": phone,
+                    "paczkomat": paczkomat,
                     "items": cart_items,
                     "total": sum(item.get('price', 0) for item in cart_items)
                 }
@@ -332,6 +335,10 @@ async def zamowienie(interaction: discord.Interaction, order_id: str):
     try:
         items = order.get('items', [])
         discord_customer = order.get('discord', 'Nie podano')
+        email = order.get('email', 'Nie podano')
+        phone = order.get('phone', 'Nie podano')
+        paczkomat = order.get('paczkomat', 'Nie podano')
+        
         products_total = order.get('total', sum(i.get('price', 0) for i in items))
         dostawa = 15.0 if products_total < 120 else 0.0
         suma = products_total + dostawa
@@ -371,6 +378,11 @@ async def zamowienie(interaction: discord.Interaction, order_id: str):
         embed.add_field(name="💬 Konto Discord", value=user.mention, inline=True)
         embed.add_field(name="🆔 ID Zamówienia", value=f"`{order_id}`", inline=False)
         
+        # Nowe pola z danymi klienta
+        embed.add_field(name="📧 Email / Gmail", value=f"`{email}`", inline=True)
+        embed.add_field(name="📞 Nr Telefonu", value=f"`{phone}`", inline=True)
+        embed.add_field(name="📦 Wybrany Paczkomat", value=f"`{paczkomat}`", inline=False)
+        
         items_text = ""
         for idx, item in enumerate(items, 1):
             items_text += f"{idx}. **{item.get('title')}** - `{item.get('price'):.2f} PLN`\n"
@@ -381,8 +393,8 @@ async def zamowienie(interaction: discord.Interaction, order_id: str):
         embed.add_field(name="💰 Łączna kwota", value=f"**{suma:.2f} PLN**", inline=False)
 
         embed.add_field(
-            name="📌 Instrukcja", 
-            value="1. Podaj metodę płatności (**BLIK / PSC / Crypto / Przelew**).\n2. Poczekaj na administrację.", 
+            name="📌 Instrukcja Płatności", 
+            value="1. Wybierz i potwierdź metodę płatności tutaj na czacie (**BLIK / PSC / Crypto / Przelew**).\n2. Poczekaj na instrukcje od administracji.", 
             inline=False
         )
         embed.set_footer(text="LBKPETS • System Zamówień")
