@@ -389,8 +389,7 @@
       btn.disabled = true;
 
       try {
-        // ZASTĄP 'https://nazwa-twojej-apki.onrender.com' FAKTYCZNYM ADRESEM SWOJEJ APLIKACJI Z RENDER.COM
-        const response = await fetch('https://nazwa-twojej-apki.onrender.com/create-order', {
+        const response = await fetch('https://lbk.onrender.com/create-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(cart)
