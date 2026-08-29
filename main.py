@@ -3,6 +3,7 @@ import json
 import base64
 import requests
 import threading
+import asyncio
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import discord
 from discord import app_commands
@@ -183,6 +184,9 @@ async def usun(interaction: discord.Interaction, product_id: int):
 @bot.tree.command(name="zamowienie", description="Realizacja zamówienia ze strony WWW")
 @app_commands.describe(id="Kod zamówienia ze strony (np. LBK-X82A)")
 async def zamowienie(interaction: discord.Interaction, id: str):
+    # POPRAWKA: defer() informuje Discorda, że przetwarzasz komendę (odnosi sukces do 15s)
+    await interaction.response.defer(ephemeral=True)
+
     guild = interaction.guild
     user = interaction.user
     
@@ -198,36 +202,54 @@ async def zamowienie(interaction: discord.Interaction, id: str):
     if admin_role:
         overwrites[admin_role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
 
-    # Tworzenie ukrytego kanału
-    channel_name = f"ticket-{user.name}".lower().replace(" ", "-")
-    ticket_channel = await guild.create_text_channel(
-        name=channel_name,
-        category=category,
-        overwrites=overwrites
-    )
+    try:
+        # Tworzenie ukrytego kanału
+        channel_name = f"ticket-{user.name}".lower().replace(" ", "-")
+        ticket_channel = await guild.create_text_channel(
+            name=channel_name,
+            category=category,
+            overwrites=overwrites
+        )
 
-    # Odpowiedź widoczna tylko dla klienta (ephemeral)
-    await interaction.response.send_message(
-        f"✅ **Otworzono prywatny ticket!** Przejdź na kanał: {ticket_channel.mention}", 
-        ephemeral=True
-    )
+        # Odpowiedź wysyłana przez followup po wykonaniu defer()
+        await interaction.followup.send(
+            f"✅ **Otworzono prywatny ticket!** Przejdź na kanał: {ticket_channel.mention}", 
+            ephemeral=True
+        )
 
-    # Szablon wiadomości w nowym kąciku zamówień
-    embed = discord.Embed(
-        title=f"🛒 Nowe Zamówienie: `{id.upper()}`",
-        description=f"Witaj {user.mention}!\nOtworzyliśmy Twój prywatny ticket dotyczący zamówienia ze strony **LBKPETS**.",
-        color=discord.Color.green()
-    )
-    embed.add_field(name="👤 Kupujący", value=user.mention, inline=True)
-    embed.add_field(name="🔑 Kod Zamówienia", value=f"`{id.upper()}`", inline=True)
-    embed.add_field(
-        name="📌 Instrukcja dla klienta", 
-        value="1. Podaj na tym kanale preferowaną metodę płatności (**BLIK / PSC / Crypto / Przelew**).\n2. Poczekaj na weryfikację przez administrację (szczegóły produktów zostały automatycznie wysłane na kanał logów).", 
-        inline=False
-    )
-    embed.set_footer(text="LBKPETS • System Zamówień")
+        # Szablon wiadomości w nowym kąciku zamówień
+        embed = discord.Embed(
+            title=f"🛒 Nowe Zamówienie: `{id.upper()}`",
+            description=f"Witaj {user.mention}!\nOtworzyliśmy Twój prywatny ticket dotyczący zamówienia ze strony **LBKPETS**.",
+            color=discord.Color.green()
+        )
+        embed.add_field(name="👤 Kupujący", value=user.mention, inline=True)
+        embed.add_field(name="🔑 Kod Zamówienia", value=f"`{id.upper()}`", inline=True)
+        embed.add_field(
+            name="📌 Instrukcja dla klienta", 
+            value="1. Podaj na tym kanale preferowaną metodę płatności (**BLIK / PSC / Crypto / Przelew**).\n2. Poczekaj na weryfikację przez administrację.", 
+            inline=False
+        )
+        embed.set_footer(text="LBKPETS • System Zamówień")
 
-    admin_ping = admin_role.mention if admin_role else ""
-    await ticket_channel.send(content=f"{user.mention} {admin_ping}", embed=embed)
+        admin_ping = admin_role.mention if admin_role else ""
+        await ticket_channel.send(content=f"{user.mention} {admin_ping}", embed=embed)
 
-bot.run(DISCORD_TOKEN)
+    except Exception as e:
+        await interaction.followup.send(f"❌ Wystąpił błąd podczas tworzenia ticketu: {e}", ephemeral=True)
+
+# KOMENDA: /zamknij
+@bot.tree.command(name="zamknij", description="Zamyka i usuwa bieżący ticket")
+async def zamknij(interaction: discord.Interaction):
+    if "ticket-" in interaction.channel.name:
+        await interaction.response.send_message("🔒 **Zamykanie ticketu za 5 sekund...**")
+        await asyncio.sleep(5)
+        await interaction.channel.delete()
+    else:
+        await interaction.response.send_message("❌ Tej komendy możesz użyć tylko na kanale ticketu.", ephemeral=True)
+
+if __name__ == "__main__":
+    if DISCORD_TOKEN:
+        bot.run(DISCORD_TOKEN)
+    else:
+        print("❌ Brak zmiennej DISCORD_TOKEN!")
