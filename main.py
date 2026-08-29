@@ -8,7 +8,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-# --- MINIMALNY SERWER DLA RENDERA (Zapobiega 'Deploy failed') ---
+# --- SERWER UTRZYMUJĄCY BOTA AKTYWNEGO W RENDERZE ---
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
@@ -22,13 +22,11 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 def run_web_server():
     port = int(os.environ.get("PORT", 10000))
     server = HTTPServer(('0.0.0.0', port), SimpleHTTPRequestHandler)
-    print(f"🌐 Serwer portu {port} uruchomiony.")
     server.serve_forever()
 
-# Uruchomienie serwera WWW w tle
 threading.Thread(target=run_web_server, daemon=True).start()
 
-# --- DANE BOTA DISCORD ---
+# --- ZMIENNE ŚRODOWISKOWE ---
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO = os.getenv("GITHUB_REPO")
@@ -39,17 +37,31 @@ GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{FILE_PAT
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+def get_headers():
+    token = GITHUB_TOKEN.strip() if GITHUB_TOKEN else ""
+    return {
+        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github.v3+json",
+        "User-Agent": "DiscordBot-LBK"
+    }
+
 def get_github_file():
-    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
-    res = requests.get(GITHUB_API_URL, headers=headers)
-    if res.status_code == 200:
-        data = res.json()
-        content = requests.get(data['download_url']).text
-        return json.loads(content), data['sha']
-    return [], None
+    if not GITHUB_TOKEN or not GITHUB_REPO:
+        return [], None, "Brak zmiennych GITHUB w Renderze!"
+
+    try:
+        res = requests.get(GITHUB_API_URL, headers=get_headers())
+        if res.status_code == 200:
+            data = res.json()
+            download_url = data.get('download_url')
+            file_res = requests.get(download_url, headers={"User-Agent": "DiscordBot-LBK"})
+            return json.loads(file_res.text), data.get('sha'), None
+        else:
+            return [], None, f"GitHub API zwrócił błąd: {res.status_code}"
+    except Exception as e:
+        return [], None, f"Błąd połączenia: {str(e)}"
 
 def update_github_file(products, sha, commit_message):
-    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
     content_json = json.dumps(products, indent=2, ensure_ascii=False)
     encoded_content = base64.b64encode(content_json.encode('utf-8')).decode('utf-8')
     
@@ -59,7 +71,7 @@ def update_github_file(products, sha, commit_message):
         "sha": sha
     }
     
-    res = requests.put(GITHUB_API_URL, headers=headers, json=payload)
+    res = requests.put(GITHUB_API_URL, headers=get_headers(), json=payload)
     return res.status_code in [200, 201]
 
 @bot.event
@@ -75,11 +87,16 @@ async def on_ready():
     except Exception as e:
         print(f"❌ Błąd synchronizacji: {e}")
 
+# KOMENDA: /sklep
 @bot.tree.command(name="sklep", description="Wyświetla aktualne produkty ze sklepu")
 async def sklep(interaction: discord.Interaction):
     await interaction.response.defer()
-    products, _ = get_github_file()
+    products, _, error = get_github_file()
     
+    if error:
+        await interaction.followup.send(f"❌ {error}")
+        return
+
     if not products:
         await interaction.followup.send("🛍️ Sklep jest obecnie pusty.")
         return
@@ -102,6 +119,7 @@ async def sklep(interaction: discord.Interaction):
     
     await interaction.followup.send(embed=embed)
 
+# KOMENDA: /dodaj
 @bot.tree.command(name="dodaj", description="Dodaj nowy produkt do sklepu")
 @app_commands.default_permissions(administrator=True)
 async def dodaj(
@@ -113,10 +131,10 @@ async def dodaj(
     obrazek: str = None
 ):
     await interaction.response.defer(ephemeral=True)
-    products, sha = get_github_file()
+    products, sha, error = get_github_file()
     
-    if sha is None:
-        await interaction.followup.send("❌ Błąd połączenia z GitHubem. Sprawdź zmienne w Renderze!")
+    if error:
+        await interaction.followup.send(f"❌ {error}")
         return
 
     new_product = {
@@ -133,16 +151,17 @@ async def dodaj(
     if update_github_file(products, sha, f"Dodano produkt: {nazwa}"):
         await interaction.followup.send(f"✅ Pomyślnie dodano produkt **{nazwa}**!")
     else:
-        await interaction.followup.send("❌ Błąd podczas zapisu na GitHubie.")
+        await interaction.followup.send("❌ Błąd zapisu na GitHubie (sprawdź token).")
 
+# KOMENDA: /usun
 @bot.tree.command(name="usun", description="Usuń produkt ze sklepu po ID")
 @app_commands.default_permissions(administrator=True)
 async def usun(interaction: discord.Interaction, product_id: int):
     await interaction.response.defer(ephemeral=True)
-    products, sha = get_github_file()
+    products, sha, error = get_github_file()
     
-    if sha is None:
-        await interaction.followup.send("❌ Błąd połączenia z GitHubem.")
+    if error:
+        await interaction.followup.send(f"❌ {error}")
         return
 
     new_products = [p for p in products if p.get('id') != product_id]
@@ -154,8 +173,9 @@ async def usun(interaction: discord.Interaction, product_id: int):
     if update_github_file(new_products, sha, f"Usunięto produkt ID: {product_id}"):
         await interaction.followup.send(f"✅ Usunięto produkt o ID `{product_id}`.")
     else:
-        await interaction.followup.send("❌ Błąd podczas zapisu na GitHubie.")
+        await interaction.followup.send("❌ Błąd zapisu na GitHubie.")
 
+# KOMENDA: /zamowienie
 @bot.tree.command(name="zamowienie", description="Realizacja zamówienia ze strony WWW")
 async def zamowienie(interaction: discord.Interaction, id: str):
     embed = discord.Embed(
