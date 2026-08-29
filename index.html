@@ -1,1 +1,55 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sklep Serwera</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #121212; color: #fff; padding: 20px; text-align: center; }
+        .grid { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 30px; }
+        .card { background: #1e1e1e; border-radius: 10px; padding: 15px; width: 220px; border: 1px solid #333; text-align: left; }
+        .card img { width: 100%; height: 150px; object-fit: cover; border-radius: 8px; }
+        .price { color: #00a6ff; font-weight: bold; font-size: 1.2em; }
+        .old-price { text-decoration: line-through; color: #888; margin-left: 5px; font-size: 0.9em; }
+        .badge { background: #ff4757; color: white; padding: 3px 8px; border-radius: 5px; font-size: 0.8em; }
+    </style>
+</head>
+<body>
 
+    <h1>🛍️ Sklep Serwera</h1>
+    <div id="products-container" class="grid">Ładowanie produktów...</div>
+
+    <script>
+        async function loadProducts() {
+            try {
+                const response = await fetch('products.json?t=' + new Date().getTime());
+                const products = await response.json();
+                
+                const container = document.getElementById('products-container');
+                container.innerHTML = '';
+
+                if (!products || products.length === 0) {
+                    container.innerHTML = '<p>Brak produktów w sklepie.</p>';
+                    return;
+                }
+
+                products.forEach(p => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <img src="${p.img}" alt="${p.name}">
+                        <h3>${p.badge ? `<span class="badge">${p.badge}</span> ` : ''}${p.name}</h3>
+                        <p class="price">${p.price.toFixed(2)} PLN ${p.oldPrice ? `<span class="old-price">${p.oldPrice.toFixed(2)} PLN</span>` : ''}</p>
+                        <small>ID Koszyka: <code>${p.id}</code></small>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (err) {
+                document.getElementById('products-container').innerHTML = '<p>Błąd ładowania produktów lub pusty plik.</p>';
+            }
+        }
+
+        loadProducts();
+    </script>
+</body>
+</html>
