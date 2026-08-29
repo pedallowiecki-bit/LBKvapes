@@ -6,7 +6,6 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-# Zmienne środowiskowe z panelu Render
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO = os.getenv("GITHUB_REPO")
@@ -43,13 +42,17 @@ def update_github_file(products, sha, commit_message):
 @bot.event
 async def on_ready():
     print(f"✅ Bot jest ONLINE jako: {bot.user}")
+    # Ustawienie statusu na Online z informacją o sklepie
+    await bot.change_presence(
+        status=discord.Status.online,
+        activity=discord.Game(name="/sklep | LBKPETS")
+    )
     try:
         synced = await bot.tree.sync()
-        print(f"🔄 Zsynchronizowano {len(synced)} komend(y) slash!")
+        print(f"🔄 Zsynchronizowano {len(synced)} komend!")
     except Exception as e:
-        print(f"❌ Błąd synchronizacji komend: {e}")
+        print(f"❌ Błąd synchronizacji: {e}")
 
-# KOMENDA: /sklep
 @bot.tree.command(name="sklep", description="Wyświetla aktualne produkty ze sklepu")
 async def sklep(interaction: discord.Interaction):
     await interaction.response.defer()
@@ -77,9 +80,8 @@ async def sklep(interaction: discord.Interaction):
     
     await interaction.followup.send(embed=embed)
 
-# KOMENDA: /dodaj
-@bot.tree.command(name="dodaj", description="[ADMIN] Dodaj nowy produkt do sklepu")
-@app_commands.checks.has_permissions(administrator=True)
+@bot.tree.command(name="dodaj", description="Dodaj nowy produkt do sklepu")
+@app_commands.default_permissions(administrator=True)
 async def dodaj(
     interaction: discord.Interaction, 
     nazwa: str, 
@@ -92,7 +94,7 @@ async def dodaj(
     products, sha = get_github_file()
     
     if sha is None:
-        await interaction.followup.send("❌ Nie można połączyć się z GitHubem. Sprawdź token i nazwę repozytorium w Renderze.")
+        await interaction.followup.send("❌ Błąd połączenia z GitHubem. Sprawdź zmienne w Renderze!")
         return
 
     new_product = {
@@ -111,15 +113,14 @@ async def dodaj(
     else:
         await interaction.followup.send("❌ Błąd podczas zapisu na GitHubie.")
 
-# KOMENDA: /usun
-@bot.tree.command(name="usun", description="[ADMIN] Usuń produkt ze sklepu po ID")
-@app_commands.checks.has_permissions(administrator=True)
+@bot.tree.command(name="usun", description="Usuń produkt ze sklepu po ID")
+@app_commands.default_permissions(administrator=True)
 async def usun(interaction: discord.Interaction, product_id: int):
     await interaction.response.defer(ephemeral=True)
     products, sha = get_github_file()
     
     if sha is None:
-        await interaction.followup.send("❌ Nie można połączyć się z GitHubem.")
+        await interaction.followup.send("❌ Błąd połączenia z GitHubem.")
         return
 
     new_products = [p for p in products if p.get('id') != product_id]
@@ -133,7 +134,6 @@ async def usun(interaction: discord.Interaction, product_id: int):
     else:
         await interaction.followup.send("❌ Błąd podczas zapisu na GitHubie.")
 
-# KOMENDA: /zamowienie
 @bot.tree.command(name="zamowienie", description="Realizacja zamówienia ze strony WWW")
 async def zamowienie(interaction: discord.Interaction, id: str):
     embed = discord.Embed(
@@ -142,12 +142,5 @@ async def zamowienie(interaction: discord.Interaction, id: str):
         color=discord.Color.green()
     )
     await interaction.response.send_message(embed=embed)
-
-# Obsługa błędu braku uprawnień admina
-@dodaj.error
-@usun.error
-async def admin_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
-    if isinstance(error, app_commands.MissingPermissions):
-        await interaction.response.send_message("❌ Musisz posiadać uprawnienie **Administrator** w roli na Discordzie, aby użyć tej komendy!", ephemeral=True)
 
 bot.run(DISCORD_TOKEN)
