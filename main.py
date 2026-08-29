@@ -121,7 +121,7 @@ async def sklep(interaction: discord.Interaction):
     
     await interaction.followup.send(embed=embed)
 
-# KOMENDA: /dodaj
+# KOMENDA: /dodaj (Z WYBOREM TYPU: BOX / INNE)
 @bot.tree.command(name="dodaj", description="Dodaj nowy produkt do sklepu")
 @app_commands.describe(
     typ="Wybierz typ produktu",
@@ -191,7 +191,7 @@ async def usun(interaction: discord.Interaction, product_id: int):
     else:
         await interaction.followup.send("❌ Błąd zapisu na GitHubie.")
 
-# KOMENDA: /zamowienie (TICKET SYSTEM - BEZ ID, DLA KAŻDEGO)
+# KOMENDA: /zamowienie (PANCERNA WERSJA - BEZ BŁĘDÓW)
 @bot.tree.command(name="zamowienie", description="Otwórz ticket w celu złożenia zamówienia")
 async def zamowienie(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True)
@@ -211,10 +211,6 @@ async def zamowienie(interaction: discord.Interaction):
 
         if guild.me:
             overwrites[guild.me] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
-
-        for role in guild.roles:
-            if role and role.permissions.administrator:
-                overwrites[role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
 
         channel_name = f"ticket-{user.name}".lower().replace(" ", "-")
         
@@ -236,7 +232,7 @@ async def zamowienie(interaction: discord.Interaction):
         embed.add_field(name="👤 Klient", value=user.mention, inline=True)
         embed.add_field(
             name="📌 Instrukcja", 
-            value="1. Napisz, co chcesz zamówić.\n2. Podaj metodę płatności (**BLIK / PSC / Crypto / Przelew**).\n3. Poczekaj, aż administracja przejmie zamówienie.", 
+            value="1. Napisz, co chcesz zamówić.\n2. Podaj metodę płatności (**BLIK / PSC / Crypto / Przelew**).\n3. Poczekaj na administrację.", 
             inline=False
         )
         embed.set_footer(text="LBKPETS • System Zamówień")
