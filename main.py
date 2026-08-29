@@ -1,30 +1,30 @@
+# main.py (Flask + Discord Bot w jednym pliku na Render.com)
 import os
 import json
 import base64
-import requests
 import threading
-import asyncio
-import sys
 import random
 import string
-from http.server import HTTPServer, BaseHTTPRequestHandler
+import asyncio
+import requests
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 import discord
 from discord import app_commands
 from discord.ext import commands
 
+app = Flask(__name__)
+CORS(app)
+
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-GITHUB_REPO = os.getenv("GITHUB_REPO")
+GITHUB_REPO = os.getenv("GITHUB_REPO")  # np. nazwa-uzytkownika/nazwa-repo
 
 FILE_PATH = "products.json"
 ORDERS_FILE_PATH = "orders.json"
 
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{FILE_PATH}"
 ORDERS_GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{ORDERS_FILE_PATH}"
-
-intents = discord.Intents.default()
-intents.members = True
-bot = commands.Bot(command_prefix="!", intents=intents)
 
 def get_headers():
     token = GITHUB_TOKEN.strip() if GITHUB_TOKEN else ""
@@ -35,43 +35,26 @@ def get_headers():
     }
 
 def get_github_file():
-    if not GITHUB_TOKEN or not GITHUB_REPO:
-        return [], None, "Brak zmiennych GITHUB w Renderze!"
     try:
         res = requests.get(GITHUB_API_URL, headers=get_headers())
         if res.status_code == 200:
             data = res.json()
-            download_url = data.get('download_url')
-            file_res = requests.get(download_url, headers={"User-Agent": "DiscordBot-LBK"})
+            file_res = requests.get(data.get('download_url'), headers={"User-Agent": "DiscordBot-LBK"})
             return json.loads(file_res.text), data.get('sha'), None
-        else:
-            return [], None, f"GitHub API zwrócił błąd: {res.status_code}"
+        return [], None, "Brak pliku products.json"
     except Exception as e:
-        return [], None, f"Błąd połączenia: {str(e)}"
-
-def update_github_file(products, sha, commit_message):
-    content_json = json.dumps(products, indent=2, ensure_ascii=False)
-    encoded_content = base64.b64encode(content_json.encode('utf-8')).decode('utf-8')
-    payload = {
-        "message": commit_message,
-        "content": encoded_content,
-        "sha": sha
-    }
-    res = requests.put(GITHUB_API_URL, headers=get_headers(), json=payload)
-    return res.status_code in [200, 201]
+        return [], None, str(e)
 
 def get_github_orders():
     try:
         res = requests.get(ORDERS_GITHUB_API_URL, headers=get_headers())
         if res.status_code == 200:
             data = res.json()
-            download_url = data.get('download_url')
-            file_res = requests.get(download_url, headers={"User-Agent": "DiscordBot-LBK"})
+            file_res = requests.get(data.get('download_url'), headers={"User-Agent": "DiscordBot-LBK"})
             return json.loads(file_res.text), data.get('sha'), None
         elif res.status_code == 404:
             return [], None, None
-        else:
-            return [], None, f"GitHub API error: {res.status_code}"
+        return [], None, f"Error: {res.status_code}"
     except Exception as e:
         return [], None, str(e)
 
@@ -79,121 +62,69 @@ def update_github_orders(orders, commit_message):
     _, current_sha, _ = get_github_orders()
     content_json = json.dumps(orders, indent=2, ensure_ascii=False)
     encoded_content = base64.b64encode(content_json.encode('utf-8')).decode('utf-8')
-    payload = {
-        "message": commit_message,
-        "content": encoded_content,
-    }
+    payload = {"message": commit_message, "content": encoded_content}
     if current_sha:
         payload["sha"] = current_sha
     res = requests.put(ORDERS_GITHUB_API_URL, headers=get_headers(), json=payload)
     return res.status_code in [200, 201]
 
-class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
-    def do_OPTIONS(self):
-        self.send_response(200)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
-        self.end_headers()
+@app.route("/", methods=["GET"])
+def home():
+    return "Bot and Web Server are ONLINE", 200
 
-    def do_GET(self):
-        if self.path == '/' or self.path == '':
-            self.send_response(200)
-            self.send_header('Content-type', 'text/html')
-            self.end_headers()
-            self.wfile.write(b"Bot status: ONLINE")
-        else:
-            self.send_response(404)
-            self.end_headers()
+@app.route("/create-order", methods=["POST", "OPTIONS"])
+def create_order():
+    if request.method == "OPTIONS":
+        return jsonify({}), 200
+    
+    data = request.json
+    if not data:
+        return jsonify({"success": False, "error": "Brak danych"}), 400
 
-    def do_POST(self):
-        if self.path == '/create-order':
-            content_length = int(self.headers.get('Content-Length', 0))
-            post_data = self.rfile.read(content_length)
-            try:
-                data = json.loads(post_data.decode('utf-8'))
-                
-                discord_user = data.get('discord', 'Nie podano').strip()
-                email = data.get('email', data.get('gmail', 'Nie podano')).strip()
-                phone = data.get('phone', data.get('tel', 'Nie podano')).strip()
-                paczkomat = data.get('paczkomat', 'Nie podano').strip()
-                cart_items = data.get('items', [])
+    discord_user = data.get('discord', '').strip()
+    email = data.get('email', '').strip()
+    phone = data.get('phone', '').strip()
+    paczkomat = data.get('paczkomat', '').strip()
+    cart_items = data.get('items', [])
 
-                if not discord_user:
-                    self.send_response(400)
-                    self.send_header('Content-type', 'application/json')
-                    self.send_header('Access-Control-Allow-Origin', '*')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({"error": "Musisz podać swój nick Discord!"}).encode('utf-8'))
-                    return
+    if not discord_user or not cart_items:
+        return jsonify({"success": False, "error": "Brak wymaganych danych lub pusty koszyk"}), 400
 
-                if not cart_items:
-                    self.send_response(400)
-                    self.send_header('Content-type', 'application/json')
-                    self.send_header('Access-Control-Allow-Origin', '*')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({"error": "Pusty koszyk"}).encode('utf-8'))
-                    return
+    order_id = 'LBK-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
+    
+    orders, _, _ = get_github_orders()
+    if not isinstance(orders, list):
+        orders = []
 
-                order_id = 'LBK-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
-                
-                orders, _, _ = get_github_orders()
-                if not isinstance(orders, list):
-                    orders = []
+    new_order = {
+        "id": order_id,
+        "discord": discord_user,
+        "email": email,
+        "phone": phone,
+        "paczkomat": paczkomat,
+        "items": cart_items,
+        "total": sum(item.get('price', 0) for item in cart_items)
+    }
+    orders.append(new_order)
 
-                new_order = {
-                    "id": order_id,
-                    "discord": discord_user,
-                    "email": email,
-                    "phone": phone,
-                    "paczkomat": paczkomat,
-                    "items": cart_items,
-                    "total": sum(item.get('price', 0) for item in cart_items)
-                }
-                orders.append(new_order)
+    success = update_github_orders(orders, f"Nowe zamówienie {order_id} dla {discord_user}")
 
-                success = update_github_orders(orders, f"Nowe zamówienie {order_id} dla {discord_user}")
+    if success:
+        return jsonify({"success": True, "order_id": order_id})
+    else:
+        return jsonify({"success": False, "error": "Błąd zapisu na GitHubie"}), 500
 
-                if success:
-                    self.send_response(200)
-                    self.send_header('Content-type', 'application/json')
-                    self.send_header('Access-Control-Allow-Origin', '*')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({"success": True, "order_id": order_id}).encode('utf-8'))
-                else:
-                    self.send_response(500)
-                    self.send_header('Content-type', 'application/json')
-                    self.send_header('Access-Control-Allow-Origin', '*')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({"error": "Błąd zapisu zamówienia"}).encode('utf-8'))
-
-            except Exception as e:
-                self.send_response(400)
-                self.send_header('Content-type', 'application/json')
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.end_headers()
-                self.wfile.write(json.dumps({"error": str(e)}).encode('utf-8'))
-        else:
-            self.send_response(404)
-            self.end_headers()
-
-    def log_message(self, format, *args):
-        return
-
-def run_web_server():
+def run_flask():
     port = int(os.environ.get("PORT", 10000))
-    server = HTTPServer(('0.0.0.0', port), SimpleHTTPRequestHandler)
-    server.serve_forever()
+    app.run(host="0.0.0.0", port=port)
 
-threading.Thread(target=run_web_server, daemon=True).start()
+intents = discord.Intents.default()
+intents.members = True
+bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
     print(f"✅ Bot jest ONLINE jako: {bot.user}")
-    await bot.change_presence(
-        status=discord.Status.online,
-        activity=discord.Game(name="/sklep | LBKPETS")
-    )
     try:
         synced = await bot.tree.sync()
         print(f"🔄 Zsynchronizowano {len(synced)} komend!")
@@ -204,215 +135,68 @@ async def on_ready():
 async def sklep(interaction: discord.Interaction):
     await interaction.response.defer()
     products, _, error = get_github_file()
-    
     if error:
         await interaction.followup.send(f"❌ {error}")
         return
-
     if not products:
         await interaction.followup.send("🛍️ Sklep jest obecnie pusty.")
         return
 
-    embed = discord.Embed(
-        title="🛍️ Oferta Sklepu LBKPETS",
-        description="Oto lista dostępnych produktów:",
-        color=discord.Color.blue()
-    )
-    
+    embed = discord.Embed(title="🛍️ Oferta Sklepu LBKPETS", color=discord.Color.blue())
     for p in products:
         price = p.get('price', 0)
-        old_price = f"~~{p.get('oldPrice')} PLN~~ " if p.get('oldPrice') else ""
-        badge = f"[{p.get('badge')}] " if p.get('badge') else ""
-        typ = f"Typ: {p.get('type')}\n" if p.get('type') else ""
-        embed.add_field(
-            name=f"{badge}{p.get('name')}",
-            value=f"{typ}Cena: {old_price}**{price} PLN**\nID: `{p.get('id')}`",
-            inline=False
-        )
-    
+        embed.add_field(name=p.get('name'), value=f"Cena: **{price} PLN**\nID: `{p.get('id')}`", inline=False)
     await interaction.followup.send(embed=embed)
 
-@bot.tree.command(name="dodaj", description="Dodaj nowy produkt do sklepu")
-@app_commands.describe(
-    id_produktu="Unikalne ID produktu",
-    typ="Wybierz typ produktu",
-    nazwa="Nazwa produktu",
-    cena="Cena produktu",
-    stara_cena="Poprzednia cena (opcjonalnie)",
-    odznaka="Tekst odznaki np. PROMOCJA (opcjonalnie)",
-    obrazek="Link do obrazka (opcjonalnie)"
-)
-@app_commands.choices(typ=[
-    app_commands.Choice(name="Box", value="Box"),
-    app_commands.Choice(name="Inne", value="Inne")
-])
-@app_commands.default_permissions(administrator=True)
-async def dodaj(
-    interaction: discord.Interaction, 
-    id_produktu: str,
-    typ: app_commands.Choice[str],
-    nazwa: str, 
-    cena: float, 
-    stara_cena: float = None, 
-    odznaka: str = None, 
-    obrazek: str = None
-):
-    await interaction.response.defer(ephemeral=True)
-    products, sha, error = get_github_file()
-    
-    if error:
-        await interaction.followup.send(f"❌ {error}")
-        return
-
-    new_product = {
-        "id": id_produktu,
-        "type": typ.value,
-        "name": nazwa,
-        "price": cena,
-        "oldPrice": stara_cena,
-        "badge": odznaka,
-        "img": obrazek or "https://via.placeholder.com/200"
-    }
-
-    products.append(new_product)
-    
-    if update_github_file(products, sha, f"Dodano produkt ({typ.value}): {nazwa}"):
-        await interaction.followup.send(f"✅ Pomyślnie dodano produkt **{nazwa}** z ID `{id_produktu}`!")
-    else:
-        await interaction.followup.send("❌ Błąd zapisu na GitHubie.")
-
-@bot.tree.command(name="usun", description="Usuń produkt ze sklepu po ID")
-@app_commands.describe(product_id="ID produktu")
-@app_commands.default_permissions(administrator=True)
-async def usun(interaction: discord.Interaction, product_id: str):
-    await interaction.response.defer(ephemeral=True)
-    products, sha, error = get_github_file()
-    
-    if error:
-        await interaction.followup.send(f"❌ {error}")
-        return
-
-    new_products = [p for p in products if str(p.get('id')) != product_id]
-
-    if len(products) == len(new_products):
-        await interaction.followup.send(f"❌ Nie znaleziono produktu o ID `{product_id}`.")
-        return
-
-    if update_github_file(new_products, sha, f"Usunięto produkt ID: {product_id}"):
-        await interaction.followup.send(f"✅ Usunięto produkt o ID `{product_id}`.")
-    else:
-        await interaction.followup.send("❌ Błąd zapisu na GitHubie.")
-
-@bot.tree.command(name="zamowienie", description="Otwórz ticket na podstawie koszyka ze strony")
-@app_commands.describe(order_id="ID zamówienia wygenerowane w koszyku (np. LBK-9LYGP)")
+@bot.tree.command(name="zamowienie", description="Otwórz ticket na podstawie ID zamówienia")
+@app_commands.describe(order_id="ID zamówienia z koszyka np. LBK-XXXXX")
 async def zamowienie(interaction: discord.Interaction, order_id: str):
     await interaction.response.defer(ephemeral=True)
-
     orders, _, error = get_github_orders()
-    if error and not orders:
-        await interaction.followup.send(f"❌ Błąd wczytywania zamówień: {error}", ephemeral=True)
-        return
-
     order = next((o for o in orders if str(o.get('id')).upper() == order_id.upper()), None)
     if not order:
-        await interaction.followup.send(f"❌ Nie znaleziono aktywnego zamówienia o ID `{order_id}`.", ephemeral=True)
+        await interaction.followup.send(f"❌ Nie znaleziono zamówienia o ID `{order_id}`.", ephemeral=True)
         return
 
     guild = interaction.guild
     user = interaction.user
+    items = order.get('items', [])
+    
+    channel_name = f"ticket-{user.name}".lower().replace(" ", "-")
+    overwrites = {
+        guild.default_role: discord.PermissionOverwrite(read_messages=False),
+        user: discord.PermissionOverwrite(read_messages=True, send_messages=True),
+        guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
+    }
+    ticket_channel = await guild.create_text_channel(name=channel_name, overwrites=overwrites)
 
-    if not guild:
-        await interaction.followup.send("❌ Tej komendy można używać tylko na serwerze.", ephemeral=True)
-        return
+    remaining_orders = [o for o in orders if str(o.get('id')).upper() != order_id.upper()]
+    update_github_orders(remaining_orders, f"Zrealizowano zamówienie {order_id}")
 
-    try:
-        items = order.get('items', [])
-        discord_customer = order.get('discord', 'Nie podano')
-        email = order.get('email', 'Nie podano')
-        phone = order.get('phone', 'Nie podano')
-        paczkomat = order.get('paczkomat', 'Nie podano')
-        
-        products_total = order.get('total', sum(i.get('price', 0) for i in items))
-        dostawa = 15.0 if products_total < 120 else 0.0
-        suma = products_total + dostawa
+    await interaction.followup.send(f"✅ Otworzono ticket: {ticket_channel.mention}", ephemeral=True)
 
-        raw_overwrites = {
-            guild.default_role: discord.PermissionOverwrite(read_messages=False),
-            user: discord.PermissionOverwrite(read_messages=True, send_messages=True, attach_files=True),
-            guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
-        }
+    embed = discord.Embed(title="🛒 Nowy Ticket Zamówienia", color=discord.Color.green())
+    embed.add_field(name="👤 Klient", value=f"`{order.get('discord')}`", inline=True)
+    embed.add_field(name="🆔 ID", value=f"`{order_id}`", inline=True)
+    embed.add_field(name="📧 Email", value=f"`{order.get('email')}`", inline=True)
+    embed.add_field(name="📞 Telefon", value=f"`{order.get('phone')}`", inline=True)
+    embed.add_field(name="📦 Paczkomat", value=f"`{order.get('paczkomat')}`", inline=False)
+    
+    items_str = "\n".join([f"- {i.get('title')} ({i.get('price')} PLN)" for i in items])
+    embed.add_field(name="Produkty", value=items_str or "Brak", inline=False)
+    embed.add_field(name="Suma", value=f"**{order.get('total')} PLN**", inline=False)
+    
+    await ticket_channel.send(content=f"{user.mention}", embed=embed)
 
-        overwrites = {
-            target: perm for target, perm in raw_overwrites.items() 
-            if target is not None and hasattr(target, 'id')
-        }
-
-        channel_name = f"ticket-{user.name}".lower().replace(" ", "-")
-        
-        ticket_channel = await guild.create_text_channel(
-            name=channel_name,
-            overwrites=overwrites
-        )
-
-        remaining_orders = [o for o in orders if str(o.get('id')).upper() != order_id.upper()]
-        update_github_orders(remaining_orders, f"Zrealizowano zamówienie {order_id}")
-
-        await interaction.followup.send(
-            f"✅ **Otworzono prywatny ticket!** Przejdź na kanał: {ticket_channel.mention}", 
-            ephemeral=True
-        )
-
-        embed = discord.Embed(
-            title="🛒 Nowe Zamówienie / Ticket",
-            description=f"Witaj {user.mention}!\nOtworzyliśmy Twój prywatny ticket dotyczący zakupu w sklepie **LBKPETS**.",
-            color=discord.Color.green()
-        )
-        embed.add_field(name="👤 Klient (z formularza)", value=f"`{discord_customer}`", inline=True)
-        embed.add_field(name="💬 Konto Discord", value=user.mention, inline=True)
-        embed.add_field(name="🆔 ID Zamówienia", value=f"`{order_id}`", inline=False)
-        
-        embed.add_field(name="📧 Email / Gmail", value=f"`{email}`", inline=True)
-        embed.add_field(name="📞 Nr Telefonu", value=f"`{phone}`", inline=True)
-        embed.add_field(name="📦 Wybrany Paczkomat", value=f"`{paczkomat}`", inline=False)
-        
-        items_text = ""
-        for idx, item in enumerate(items, 1):
-            items_text += f"{idx}. **{item.get('title')}** - `{item.get('price'):.2f} PLN`\n"
-        
-        embed.add_field(name="📦 Produkty w koszyku", value=items_text or "Brak produktów", inline=False)
-        embed.add_field(name="💵 Wartość produktów", value=f"{products_total:.2f} PLN", inline=True)
-        embed.add_field(name="🚚 Dostawa", value=f"{dostawa:.2f} PLN" + (" (Darmowa!)" if dostawa == 0 else ""), inline=True)
-        embed.add_field(name="💰 Łączna kwota", value=f"**{suma:.2f} PLN**", inline=False)
-
-        embed.add_field(
-            name="📌 Instrukcja Płatności", 
-            value="1. Wybierz i potwierdź metodę płatności tutaj na czacie (**BLIK / PSC / Crypto / Przelew**).\n2. Poczekaj na instrukcje od administracji.", 
-            inline=False
-        )
-        embed.set_footer(text="LBKPETS • System Zamówień")
-
-        await ticket_channel.send(content=f"{user.mention} | Powiadomiono Administrację", embed=embed)
-
-    except Exception as e:
-        await interaction.followup.send(f"❌ Wystąpił błąd podczas tworzenia ticketu: {e}", ephemeral=True)
-
-@bot.tree.command(name="zamknij", description="Zamyka i usuwa bieżący ticket")
+@bot.tree.command(name="zamknij", description="Zamyka ticket")
 async def zamknij(interaction: discord.Interaction):
     if "ticket-" in interaction.channel.name:
-        await interaction.response.send_message("🔒 **Zamykanie ticketu za 5 sekund...**")
-        await asyncio.sleep(5)
+        await interaction.response.send_message("🔒 Zamykanie ticketu za 3 sekundy...")
+        await asyncio.sleep(3)
         await interaction.channel.delete()
     else:
-        await interaction.response.send_message("❌ Tej komendy możesz użyć tylko na kanale ticketu.", ephemeral=True)
-
-@bot.tree.command(name="restart", description="Restartuje bota")
-@app_commands.default_permissions(administrator=True)
-async def restart(interaction: discord.Interaction):
-    await interaction.response.send_message("🔄 **Restartowanie bota...**", ephemeral=True)
-    os.execv(sys.executable, ['python'] + sys.argv)
+        await interaction.response.send_message("❌ Tylko na kanale ticketu.", ephemeral=True)
 
 if __name__ == "__main__":
-    if DISCORD_TOKEN:
-        bot.run(DISCORD_TOKEN)
-    else:
-        print("❌ Brak zmiennej DISCORD_TOKEN!")
+    threading.Thread(target=run_flask, daemon=True).start()
+    bot.run(DISCORD_TOKEN)
