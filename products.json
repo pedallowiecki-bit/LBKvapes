@@ -15,5 +15,14 @@
     "oldPrice": 111111.0,
     "badge": "2",
     "img": "https://cdn.discordapp.com/attachments/1259871675877556275/1471304310074642497/attachment-13.gif?ex=6a94242b&is=6a92d2ab&hm=9a529fd704d9bb5c2e43278ca774d8fb5f6ee1b0dd0a70ff4dd981b2d7bd29ae&"
+  },
+  {
+    "id": "01",
+    "type": "Inne",
+    "name": "augustyn cwelik",
+    "price": 20.0,
+    "oldPrice": 40.0,
+    "badge": "4",
+    "img": "https://cdn.discordapp.com/attachments/1430560916570771546/1464017234077814898/synkurwy.gif?ex=6a9a970c&is=6a99458c&hm=77f1c3bf0aeeb2424a2abd9e65a799e398ed66d9a1873fd27e0cc955c3f04d1b&"
   }
 ]
