@@ -18,13 +18,43 @@ CORS(app)
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO = os.getenv("GITHUB_REPO")  # np. nazwa-uzytkownika/nazwa-repo
-GUILD_ID = os.getenv("GUILD_ID")        # ID serwera Discord (opcjonalnie dla szybkiej synchronizacji komend)
+GUILD_ID = os.getenv("GUILD_ID")        # ID serwera Discord (opcjonalnie)
 
 FILE_PATH = "products.json"
 ORDERS_FILE_PATH = "orders.json"
 
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{FILE_PATH}"
 ORDERS_GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{ORDERS_FILE_PATH}"
+
+# Domyślne wzory produktów z rozbudowanymi listami (minimum 9 smaków dla vape i snus)
+DEFAULT_PRODUCTS = [
+    {
+        "id": "VAPE-001",
+        "type": "Inne",
+        "name": "ELFBAR ICE KING SUMMER 40k",
+        "price": 88.0,
+        "oldPrice": 100.0,
+        "badge": "Bestseller",
+        "img": "https://www.vapes24h.net/api/uploads/1780853828329-376936261.png",
+        "smaki": [
+            "Watermelon Ice", "Strawberry Kiwi", "Blueberry Ice", "Peach Mango", 
+            "Blue Razz Lemonade", "Strawberry Watermelon", "Cherry Cola", "Double Apple", "Kiwi Passion Fruit Guava"
+        ]
+    },
+    {
+        "id": "SNUS-001",
+        "type": "snus",
+        "name": "CUBA BLACK LINE ULTRA",
+        "price": 25.0,
+        "oldPrice": None,
+        "badge": "Nowość",
+        "img": "https://vapespot.pl/_next/image?url=https%3A%2F%2Fi.imgur.com%2FbB5ZytT.png&w=640&q=75",
+        "smaki": [
+            "Cherry", "Pineapple", "Strong Mint", "Blackberry", 
+            "Cool Mint", "Double Freeze", "Blueberry", "Forest Berries", "Lemonade"
+        ]
+    }
+]
 
 def get_headers():
     token = GITHUB_TOKEN.strip() if GITHUB_TOKEN else ""
@@ -40,12 +70,15 @@ def get_github_file():
         if res.status_code == 200:
             data = res.json()
             file_res = requests.get(data.get('download_url'), headers={"User-Agent": "DiscordBot-LBK"})
-            return json.loads(file_res.text), data.get('sha'), None
+            content = json.loads(file_res.text)
+            if not content:
+                return DEFAULT_PRODUCTS, data.get('sha'), None
+            return content, data.get('sha'), None
         elif res.status_code == 404:
-            return [], None, None
-        return [], None, f"Brak pliku products.json ({res.status_code})"
+            return DEFAULT_PRODUCTS, None, None
+        return DEFAULT_PRODUCTS, None, f"Brak pliku products.json ({res.status_code})"
     except Exception as e:
-        return [], None, str(e)
+        return DEFAULT_PRODUCTS, None, str(e)
 
 def update_github_file(products, commit_message):
     _, current_sha, _ = get_github_file()
@@ -155,15 +188,21 @@ def create_order():
 
             ticket_channel = await guild.create_text_channel(name=channel_name, overwrites=overwrites)
 
-            embed = discord.Embed(title="🛒 Nowy Ticket Zamówienia (Sklep)", color=discord.Color.green())
+            embed = discord.Embed(title="🛒 Nowy Ticket Zamówienia (Strona WWW)", color=discord.Color.green())
             embed.add_field(name="👤 Klient", value=f"`{discord_user}` {member.mention if member else ''}", inline=True)
             embed.add_field(name="🆔 ID Zamówienia", value=f"`{order_id}`", inline=True)
             embed.add_field(name="📧 Email", value=f"`{email}`", inline=True)
             embed.add_field(name="📞 Telefon", value=f"`{phone}`", inline=True)
             embed.add_field(name="📦 Paczkomat", value=f"`{paczkomat}`", inline=False)
             
-            items_str = "\n".join([f"- **{i.get('title', i.get('name', 'Produkt'))}** - {i.get('price', 0)} PLN" for i in cart_items])
-            embed.add_field(name="Zamówione produkty (z uwzględnieniem smaków):", value=items_str or "Brak", inline=False)
+            items_desc = []
+            for i in cart_items:
+                title = i.get('title', i.get('name', 'Produkt'))
+                price = i.get('price', 0)
+                selected_taste = i.get('selectedTaste', i.get('smak', 'Brak'))
+                items_desc.append(f"• **{title}** | Smak: `{selected_taste}` | **{price} PLN**")
+
+            embed.add_field(name="Zamówione Produkty", value="\n".join(items_desc) or "Brak", inline=False)
             embed.add_field(name="Suma", value=f"**{total} PLN**", inline=False)
             
             ping_content = member.mention if member else f"@{discord_user}"
@@ -197,55 +236,78 @@ async def on_ready():
     except Exception as e:
         print(f"❌ Błąd synchronizacji: {e}")
 
-@bot.tree.command(name="sklep", description="Wyświetla aktualne produkty ze sklepu (w tym snusy, opisy i smaki)")
+@bot.tree.command(name="sklep", description="Wyświetla pełną ofertę sklepu z uwzględnieniem podziału na kategorie i smaki")
 async def sklep(interaction: discord.Interaction):
     await interaction.response.defer()
     products, _, error = get_github_file()
+    
     if error and "Brak pliku" not in error:
-        await interaction.followup.send(f"❌ {error}")
+        await interaction.followup.send(f"❌ Błąd: {error}")
         return
     if not products:
         await interaction.followup.send("🛍️ Sklep jest obecnie pusty.")
         return
 
     embed = discord.Embed(title="🛍️ Oferta Sklepu LBKPETS", color=discord.Color.blue())
+    
     for p in products:
+        name = p.get('name', 'Brak nazwy')
+        p_id = p.get('id', 'Brak')
         price = p.get('price', 0)
-        desc = p.get('description', p.get('opis', 'Brak opisu'))
+        old_price = p.get('oldPrice')
+        badge = p.get('badge')
+        p_type = p.get('type', 'Inne')
         smaki = p.get('smaki', [])
-        smaki_str = ", ".join(smaki) if smaki else "Standardowy"
         
-        val = f"Cena: **{price} PLN**\n"
-        val += f"Opis: *{desc}*\n"
-        val += f"Smaki: `{smaki_str}`\n"
-        val += f"ID: `{p.get('id')}`"
+        if old_price:
+            price_str = f"~~{old_price} PLN~~ ➔ **{price} PLN**"
+        else:
+            price_str = f"**{price} PLN**"
+
+        badge_str = f" [{badge}]" if badge else ""
+        smaki_str = ", ".join(smaki) if smaki else "Brak"
+
+        field_name = f"{name}{badge_str}"
+        field_val = f"• **Typ:** `{p_type}`\n• **Cena:** {price_str}\n• **Smaki/Warianty ({len(smaki)}):** `{smaki_str}`\n• **ID:** `{p_id}`"
         
-        embed.add_field(name=p.get('name'), value=val, inline=False)
+        embed.add_field(name=field_name, value=field_val, inline=False)
+        
     await interaction.followup.send(embed=embed)
 
-@bot.tree.command(name="dodaj", description="Dodaje nowy produkt lub snus do sklepu z opisem i smakami")
+@bot.tree.command(name="dodaj", description="Dodaje nowy produkt lub snus do sklepu na GitHubie")
 @app_commands.describe(
     nazwa="Nazwa produktu", 
     cena="Cena w PLN", 
-    typ="Typ produktu np. snus lub box", 
-    opis="Krótki opis produktu", 
-    smaki="Dostępne smaki po rozdzieleniu przecinkiem np. Mięta,Truskawka", 
+    typ="Typ: np. snus lub Inne", 
+    stara_cena="Stara cena (opcjonalnie)", 
+    badge="Etykieta np. Nowość, Bestseller (opcjonalnie)", 
+    smaki="Smaki oddzielone przecinkiem (np. min. 9 smaków)", 
+    img="Link URL do zdjęcia produktu",
     product_id="Unikalne ID (opcjonalnie)"
 )
 @app_commands.default_permissions(administrator=True)
-async def dodaj(interaction: discord.Interaction, nazwa: str, cena: float, typ: str = "snus", opis: str = "Wysokiej jakości produkt", smaki: str = "Mięta, Lodowy", product_id: str = None):
+async def dodaj(
+    interaction: discord.Interaction, 
+    nazwa: str, 
+    cena: float, 
+    typ: str = "Inne", 
+    stara_cena: float = None, 
+    badge: str = None, 
+    smaki: str = "Watermelon Ice, Strawberry Kiwi, Blueberry Ice, Peach Mango, Blue Razz Lemonade, Strawberry Watermelon, Cherry Cola, Double Apple, Kiwi Passion Fruit Guava", 
+    img: str = "", 
+    product_id: str = None
+):
     await interaction.response.defer(ephemeral=True)
     
     products, _, error = get_github_file()
     if error and "Brak pliku" not in error and "404" not in error:
-        await interaction.followup.send(f"❌ Błąd pobierania produktów z GitHuba: {error}", ephemeral=True)
-        return
+        products = DEFAULT_PRODUCTS
         
     if not isinstance(products, list):
         products = []
         
     if not product_id:
-        product_id = 'PRD-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+        product_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
         
     if any(str(p.get('id')).upper() == product_id.upper() for p in products):
         await interaction.followup.send(f"❌ Produkt o ID `{product_id}` już istnieje!", ephemeral=True)
@@ -255,24 +317,25 @@ async def dodaj(interaction: discord.Interaction, nazwa: str, cena: float, typ: 
 
     new_product = {
         "id": product_id,
+        "type": typ.lower(),
         "name": nazwa,
         "price": cena,
-        "type": typ.lower(),
-        "description": opis,
-        "smaki": smaki_list,
-        "img": ""
+        "oldPrice": stara_cena if stara_cena else None,
+        "badge": badge if badge else None,
+        "img": img if img else "",
+        "smaki": smaki_list
     }
     
     products.append(new_product)
-    success = update_github_file(products, f"Dodano produkt/snus {nazwa} ({product_id}) przez Discord")
+    success = update_github_file(products, f"Dodano produkt {nazwa} ({product_id}) przez komendę Discord")
     
     if success:
-        await interaction.followup.send(f"✅ Pomyślnie dodano do sklepu!\n* **Nazwa:** {nazwa}\n* **Typ:** {typ}\n* **Cena:** {cena} PLN\n* **Opis:** {opis}\n* **Smaki:** {', '.join(smaki_list)}\n* **ID:** `{product_id}`", ephemeral=True)
+        await interaction.followup.send(f"✅ Pomyślnie dodano produkt do bazy!\n* **Nazwa:** {nazwa}\n* **Typ:** {typ}\n* **Cena:** {cena} PLN\n* **Liczba smaków:** {len(smaki_list)}\n* **ID:** `{product_id}`", ephemeral=True)
     else:
-        await interaction.followup.send("❌ Błąd podczas zapisu produktu na GitHubie.", ephemeral=True)
+        await interaction.followup.send("❌ Błąd podczas zapisu pliku `products.json` na GitHubie.", ephemeral=True)
 
 @bot.tree.command(name="zamowienie", description="Otwórz ticket na podstawie ID zamówienia")
-@app_commands.describe(order_id="ID zamówienia z koszyka np. LBK-XXXXX")
+@app_commands.describe(order_id="ID zamówienia np. LBK-XXXXX")
 async def zamowienie(interaction: discord.Interaction, order_id: str):
     await interaction.response.defer(ephemeral=True)
     orders, _, error = get_github_orders()
@@ -296,44 +359,48 @@ async def zamowienie(interaction: discord.Interaction, order_id: str):
     ticket_channel = await guild.create_text_channel(name=channel_name, overwrites=overwrites)
 
     remaining_orders = [o for o in orders if str(o.get('id')).upper() != order_id.upper()]
-    update_github_orders(remaining_orders, f"Zrealizowano zamówienie {order_id} przez komendę")
+    update_github_orders(remaining_orders, f"Zrealizowano zamówienie {order_id}")
 
     await interaction.followup.send(f"✅ Otworzono ticket: {ticket_channel.mention}", ephemeral=True)
 
-    embed = discord.Embed(title="🛒 Nowy Ticket Zamówienia", color=discord.Color.green())
+    embed = discord.Embed(title="🛒 Ticket Zamówienia", color=discord.Color.green())
     embed.add_field(name="👤 Klient", value=f"`{order.get('discord')}` {user.mention}", inline=True)
     embed.add_field(name="🆔 ID", value=f"`{order_id}`", inline=True)
     embed.add_field(name="📧 Email", value=f"`{order.get('email')}`", inline=True)
     embed.add_field(name="📞 Telefon", value=f"`{order.get('phone')}`", inline=True)
     embed.add_field(name="📦 Paczkomat", value=f"`{order.get('paczkomat')}`", inline=False)
     
-    items_str = "\n".join([f"- **{i.get('title', i.get('name', 'Produkt'))}** ({i.get('price', 0)} PLN)" for i in items])
-    embed.add_field(name="Zakupione produkty (ze smakami):", value=items_str or "Brak", inline=False)
+    items_desc = []
+    for i in items:
+        title = i.get('title', i.get('name', 'Produkt'))
+        price = i.get('price', 0)
+        taste = i.get('selectedTaste', i.get('smak', 'Brak'))
+        items_desc.append(f"• **{title}** | Smak: `{taste}` | **{price} PLN**")
+
+    embed.add_field(name="Produkty", value="\n".join(items_desc) or "Brak", inline=False)
     embed.add_field(name="Suma", value=f"**{order.get('total')} PLN**", inline=False)
     
     await ticket_channel.send(content=user.mention, embed=embed)
 
-@bot.tree.command(name="zamknij", description="Zamyka ticket")
+@bot.tree.command(name="zamknij", description="Zamyka aktualny ticket")
 async def zamknij(interaction: discord.Interaction):
     if "ticket-" in interaction.channel.name:
         await interaction.response.send_message("🔒 Zamykanie ticketu za 3 sekundy...")
         await asyncio.sleep(3)
         await interaction.channel.delete()
     else:
-        await interaction.response.send_message("❌ Tylko na kanale ticketu.", ephemeral=True)
+        await interaction.response.send_message("❌ Ta komenda działa tylko na kanale ticketu.", ephemeral=True)
 
-@bot.tree.command(name="rr", description="Restartuje bota i wysyła powiadomienie")
+@bot.tree.command(name="rr", description="Restartuje bota i aplikację")
 @app_commands.default_permissions(administrator=True)
 async def rr(interaction: discord.Interaction):
-    await interaction.response.send_message("🔄 Wykonuję restart bota i aplikacji...", ephemeral=True)
-    
-    restart_channel_id = 1545521609408905296
+    await interaction.response.send_message("🔄 Wykonuję restart systemu bota...", ephemeral=True)
     try:
-        channel = bot.get_channel(restart_channel_id) or await bot.fetch_channel(restart_channel_id)
+        channel = bot.get_channel(1545521609408905296) or await bot.fetch_channel(1545521609408905296)
         if channel:
-            await channel.send("⚠️ **Bot przechodzi ponowny restart systemu (`/rr`).** Za chwilę wracam do trybu online!")
+            await channel.send("⚠️ **Bot restartuje się (`/rr`).**")
     except Exception as e:
-        print(f"Nie udało się wysłać powiadomienia o restarcie: {e}")
+        print(f"Błąd powiadomienia o restarcie: {e}")
 
     await asyncio.sleep(1)
     os._exit(0)
