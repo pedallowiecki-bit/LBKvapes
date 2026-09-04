@@ -17,16 +17,20 @@ CORS(app)
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-GITHUB_REPO = os.getenv("GITHUB_REPO")  # np. nazwa-uzytkownika/nazwa-repo
-GUILD_ID = os.getenv("GUILD_ID")        # ID serwera Discord (opcjonalnie)
+GITHUB_REPO = os.getenv("GITHUB_REPO")
+GUILD_ID = os.getenv("GUILD_ID")
+ADMIN_CHANNEL_ID = os.getenv("ADMIN_CHANNEL_ID")
 
 FILE_PATH = "products.json"
 ORDERS_FILE_PATH = "orders.json"
+PROMOS_FILE_PATH = "promos.json"
+REVIEWS_FILE_PATH = "reviews.json"
 
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{FILE_PATH}"
 ORDERS_GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{ORDERS_FILE_PATH}"
+PROMOS_GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{PROMOS_FILE_PATH}"
+REVIEWS_GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{REVIEWS_FILE_PATH}"
 
-# Domyślne wzory produktów z rozbudowanymi listami (minimum 9 smaków dla vape i snus)
 DEFAULT_PRODUCTS = [
     {
         "id": "VAPE-001",
@@ -113,9 +117,81 @@ def update_github_orders(orders, commit_message):
     res = requests.put(ORDERS_GITHUB_API_URL, headers=get_headers(), json=payload)
     return res.status_code in [200, 201]
 
+def get_github_promos():
+    try:
+        res = requests.get(PROMOS_GITHUB_API_URL, headers=get_headers())
+        if res.status_code == 200:
+            data = res.json()
+            file_res = requests.get(data.get('download_url'), headers={"User-Agent": "DiscordBot-LBK"})
+            return json.loads(file_res.text), data.get('sha'), None
+        elif res.status_code == 404:
+            return {}, None, None
+        return {}, None, f"Error: {res.status_code}"
+    except Exception as e:
+        return {}, None, str(e)
+
+def update_github_promos(promos, commit_message):
+    _, current_sha, _ = get_github_promos()
+    content_json = json.dumps(promos, indent=2, ensure_ascii=False)
+    encoded_content = base64.b64encode(content_json.encode('utf-8')).decode('utf-8')
+    payload = {"message": commit_message, "content": encoded_content}
+    if current_sha:
+        payload["sha"] = current_sha
+    res = requests.put(PROMOS_GITHUB_API_URL, headers=get_headers(), json=payload)
+    return res.status_code in [200, 201]
+
+def get_github_reviews():
+    try:
+        res = requests.get(REVIEWS_GITHUB_API_URL, headers=get_headers())
+        if res.status_code == 200:
+            data = res.json()
+            file_res = requests.get(data.get('download_url'), headers={"User-Agent": "DiscordBot-LBK"})
+            return json.loads(file_res.text), data.get('sha'), None
+        elif res.status_code == 404:
+            return [], None, None
+        return [], None, f"Error: {res.status_code}"
+    except Exception as e:
+        return [], None, str(e)
+
+def update_github_reviews(reviews, commit_message):
+    _, current_sha, _ = get_github_reviews()
+    content_json = json.dumps(reviews, indent=2, ensure_ascii=False)
+    encoded_content = base64.b64encode(content_json.encode('utf-8')).decode('utf-8')
+    payload = {"message": commit_message, "content": encoded_content}
+    if current_sha:
+        payload["sha"] = current_sha
+    res = requests.put(REVIEWS_GITHUB_API_URL, headers=get_headers(), json=payload)
+    return res.status_code in [200, 201]
+
 @app.route("/", methods=["GET"])
 def home():
     return "Bot and Web Server are ONLINE", 200
+
+@app.route("/reviews", methods=["GET", "OPTIONS"])
+def reviews_endpoint():
+    if request.method == "OPTIONS":
+        return jsonify({}), 200
+    reviews, _, _ = get_github_reviews()
+    if not isinstance(reviews, list):
+        reviews = []
+    return jsonify({"success": True, "reviews": reviews}), 200
+
+@app.route("/check-promo", methods=["POST", "OPTIONS"])
+def check_promo():
+    if request.method == "OPTIONS":
+        return jsonify({}), 200
+    data = request.json
+    if not data:
+        return jsonify({"success": False, "error": "Brak danych"}), 400
+    
+    code = data.get('code', '').strip().upper()
+    promos, _, _ = get_github_promos()
+    if not isinstance(promos, dict):
+        promos = {}
+        
+    if code in promos:
+        return jsonify({"success": True, "discount": promos[code]})
+    return jsonify({"success": False, "error": "Nie znaleziono takiego kodu rabatowego"}), 404
 
 @app.route("/create-order", methods=["POST", "OPTIONS"])
 def create_order():
@@ -221,9 +297,91 @@ intents.members = True
 intents.guilds = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+class ReviewModal(discord.ui.Modal, title="Oceń nasz sklep"):
+    ocena = discord.ui.TextInput(
+        label="Ocena (liczba od 1 do 5)",
+        placeholder="np. 5",
+        max_length=1,
+        required=True
+    )
+    opinia = discord.ui.TextInput(
+        label="Twoja opinia o zakupach",
+        style=discord.TextStyle.paragraph,
+        placeholder="Napisz kilka zdań o obsłudze i produktach...",
+        required=True
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.send_message("✅ Twoja opinia została przesłana do weryfikacji przez administrację!", ephemeral=True)
+        
+        admin_channel = None
+        if ADMIN_CHANNEL_ID:
+            admin_channel = interaction.guild.get_channel(int(ADMIN_CHANNEL_ID))
+        if not admin_channel:
+            admin_channel = interaction.channel
+
+        embed = discord.Embed(title="⭐ Nowa Opinia do Weryfikacji", color=discord.Color.gold())
+        embed.add_field(name="👤 Użytkownik", value=interaction.user.mention, inline=True)
+        embed.add_field(name="🌟 Ocena", value=f"`{self.ocena.value} / 5`", inline=True)
+        embed.add_field(name="💬 Treść opinii", value=self.opinia.value, inline=False)
+
+        view = AdminReviewView(interaction.user.name, self.ocena.value, self.opinia.value)
+        if admin_channel:
+            await admin_channel.send(embed=embed, view=view)
+
+class ReviewButtonView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="📝 Oceń sklep", style=discord.ButtonStyle.green, custom_id="open_review_modal_btn")
+    async def open_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(ReviewModal())
+
+class AdminReviewView(discord.ui.View):
+    def __init__(self, user_name, ocena, opinia):
+        super().__init__(timeout=None)
+        self.user_name = user_name
+        self.ocena = ocena
+        self.opinia = opinia
+
+    @discord.ui.button(label="Zaakceptuj", style=discord.ButtonStyle.green, custom_id="accept_review_btn")
+    async def accept(self, interaction: discord.Interaction, button: discord.ui.Button):
+        reviews, _, _ = get_github_reviews()
+        if not isinstance(reviews, list):
+            reviews = []
+        
+        new_review = {
+            "user": self.user_name,
+            "rating": self.ocena,
+            "comment": self.opinia
+        }
+        reviews.append(new_review)
+        update_github_reviews(reviews, f"Zaakceptowano opinię od {self.user_name}")
+
+        for child in self.children:
+            child.disabled = True
+        
+        embed = interaction.message.embeds[0]
+        embed.color = discord.Color.green()
+        embed.title = "✅ Zaakceptowana Opinia Sklepu"
+        await interaction.message.edit(embed=embed, view=self)
+        await interaction.response.send_message("✅ Opinia została zaakceptowana i zapisana!", ephemeral=True)
+
+    @discord.ui.button(label="Odrzuć", style=discord.ButtonStyle.red, custom_id="reject_review_btn")
+    async def reject(self, interaction: discord.Interaction, button: discord.ui.Button):
+        for child in self.children:
+            child.disabled = True
+            
+        embed = interaction.message.embeds[0]
+        embed.color = discord.Color.red()
+        embed.title = "❌ Odrzucona Opinia Sklepu"
+        await interaction.message.edit(embed=embed, view=self)
+        await interaction.response.send_message("❌ Opinia została odrzucona.", ephemeral=True)
+
 @bot.event
 async def on_ready():
     print(f"✅ Bot jest ONLINE jako: {bot.user}")
+    bot.add_view(ReviewButtonView())
     try:
         if GUILD_ID:
             guild_obj = discord.Object(id=int(GUILD_ID))
@@ -333,6 +491,39 @@ async def dodaj(
         await interaction.followup.send(f"✅ Pomyślnie dodano produkt do bazy!\n* **Nazwa:** {nazwa}\n* **Typ:** {typ}\n* **Cena:** {cena} PLN\n* **Liczba smaków:** {len(smaki_list)}\n* **ID:** `{product_id}`", ephemeral=True)
     else:
         await interaction.followup.send("❌ Błąd podczas zapisu pliku `products.json` na GitHubie.", ephemeral=True)
+
+@bot.tree.command(name="promo", description="Tworzy lub aktualizuje kod rabatowy na sklepie")
+@app_commands.describe(kod="Nazwa kodu rabatowego np. LATO20", procent="Wartość rabatu w procentach np. 15")
+@app_commands.default_permissions(administrator=True)
+async def promo(interaction: discord.Interaction, kod: str, procent: float):
+    await interaction.response.defer(ephemeral=True)
+    code_upper = kod.strip().upper()
+    
+    promos, _, error = get_github_promos()
+    if not isinstance(promos, dict):
+        promos = {}
+        
+    promos[code_upper] = procent
+    success = update_github_promos(promos, f"Dodano/zaktualizowano kod rabatowy {code_upper} ({procent}%)")
+    
+    if success:
+        embed = discord.Embed(title="🎟️ Nowy Kod Rabatowy Utworzony", color=discord.Color.gold())
+        embed.add_field(name="Kod Promocyjny", value=f"`{code_upper}`", inline=True)
+        embed.add_field(name="Wysokość Rabatu", value=f"**{procent}%**", inline=True)
+        await interaction.followup.send(embed=embed, ephemeral=True)
+    else:
+        await interaction.followup.send("❌ Błąd podczas zapisu kodu rabatowego na GitHubie.", ephemeral=True)
+
+@bot.tree.command(name="start_ocen", description="Wysyła panel wystawiania opinii na tym kanale")
+@app_commands.default_permissions(administrator=True)
+async def start_ocen(interaction: discord.Interaction):
+    embed = discord.Embed(
+        title="⭐ Oceń zakupy w naszym sklepie!",
+        description="Jesteś zadowolony z transakcji? Kliknij poniższy przycisk, aby podzielić się swoją opinią z innymi.",
+        color=discord.Color.blurple()
+    )
+    await interaction.channel.send(embed=embed, view=ReviewButtonView())
+    await interaction.response.send_message("✅ Panel opinii został pomyślnie wysłany na ten kanał!", ephemeral=True)
 
 @bot.tree.command(name="zamowienie", description="Otwórz ticket na podstawie ID zamówienia")
 @app_commands.describe(order_id="ID zamówienia np. LBK-XXXXX")
