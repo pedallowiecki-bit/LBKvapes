@@ -14,7 +14,7 @@
         extend: {
           fontFamily: { sans: ['Inter', 'sans-serif'] },
           colors: {
-            brand: { DEFAULT: '#00a6ff', hover: '#008ce0', light: '#e6f6ff' },
+            brand: { DEFAULT: '#00b4d8', hover: '#0096c7', light: '#03045e' },
             discord: { DEFAULT: '#5865F2', hover: '#4752C4' }
           }
         }
@@ -22,28 +22,28 @@
     }
   </script>
 </head>
-<body class="bg-[#fafbfc] text-slate-800 font-sans min-h-screen flex flex-col justify-between antialiased pb-24" onload="loadProductsFromJSON(); loadReviews();">
+<body class="bg-[#030b1e] text-cyan-100 font-sans min-h-screen flex flex-col justify-between antialiased pb-24" onload="loadProductsFromJSON(); loadReviews();">
 
   <!-- 18+ WERYFIKACJA WIEKU MODAL -->
-  <div id="age-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border border-slate-100">
+  <div id="age-modal" class="fixed inset-0 bg-[#020817]/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="bg-[#0a192f] text-cyan-100 rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border border-cyan-500/30">
       <div class="text-3xl mb-3">🔞</div>
-      <h2 class="text-lg font-black text-slate-900 mb-2 uppercase">Weryfikacja wieku</h2>
-      <p class="text-xs text-slate-600 font-medium mb-6">Czy masz ukończone 18 lat?</p>
+      <h2 class="text-lg font-black text-cyan-300 mb-2 uppercase">Weryfikacja wieku</h2>
+      <p class="text-xs text-cyan-200/80 font-medium mb-6">Czy masz ukończone 18 lat?</p>
       <div class="flex gap-3">
-        <button onclick="verifyAge(false)" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-extrabold py-3 rounded-xl uppercase transition-colors cursor-pointer">Nie</button>
+        <button onclick="verifyAge(false)" class="flex-1 bg-cyan-950 hover:bg-cyan-900 text-cyan-300 border border-cyan-800 text-xs font-extrabold py-3 rounded-xl uppercase transition-colors cursor-pointer">Nie</button>
         <button onclick="verifyAge(true)" class="flex-1 bg-brand hover:bg-brand-hover text-white text-xs font-extrabold py-3 rounded-xl uppercase transition-colors shadow-md shadow-brand/20 cursor-pointer">Tak</button>
       </div>
     </div>
   </div>
 
   <!-- TOP BAR Z DISCORDEM I TIMEREM -->
-  <div class="bg-slate-900 text-slate-300 text-xs py-2.5 px-6 border-b border-slate-800">
+  <div class="bg-[#020817] text-cyan-300 text-xs py-2.5 px-6 border-b border-cyan-900/50">
     <div class="max-w-[1400px] mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
       <div class="flex items-center gap-2">
-        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span>
-      
+        <span class="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+        <span>Głęboka woda, najlepsze oferty!</span>
+      </div>
       <div class="flex items-center gap-4">
         <a href="https://discord.gg/y2xdvzx34V" target="_blank" class="bg-discord hover:bg-discord-hover text-white font-extrabold px-3.5 py-1 rounded-lg flex items-center gap-1.5 transition-all shadow-md shadow-discord/20 text-[11px]">
           <svg class="w-4 h-4 fill-current" viewBox="0 0 127.14 96.36"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a74.57,74.57,0,0,0,64.3,0c.87.69,1.76,1.37,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,45.91,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,45.91,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
@@ -56,41 +56,41 @@
   <div>
     <!-- HERO BANNER -->
     <section class="max-w-[1400px] mx-auto px-6 pt-8 pb-4">
-      <div class="bg-white rounded-3xl border border-slate-200/80 p-6 md:p-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-8">
+      <div class="bg-[#0a192f] text-cyan-100 rounded-3xl border border-cyan-500/20 p-6 md:p-8 shadow-lg flex flex-col md:flex-row items-center justify-between gap-8">
         <div class="flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-left">
-          <div class="w-24 h-24 md:w-28 md:h-28 bg-slate-50 rounded-2xl flex items-center justify-center p-3 border border-slate-100 shrink-0 shadow-inner">
-            <div class="w-full h-full bg-gradient-to-tr from-cyan-600 to-teal-400 rounded-xl flex flex-col items-center justify-center shadow-md transform -rotate-2">
+          <div class="w-24 h-24 md:w-28 md:h-28 bg-[#020817] rounded-2xl flex items-center justify-center p-3 border border-cyan-800/50 shrink-0 shadow-inner">
+            <div class="w-full h-full bg-gradient-to-tr from-blue-600 to-cyan-400 rounded-xl flex flex-col items-center justify-center shadow-md transform -rotate-2">
               <span class="text-white font-black text-2xl tracking-tighter">LBK</span>
-              <span class="text-[9px] font-bold text-white uppercase tracking-widest -mt-1">PETS</span>
+              <span class="text-[9px] font-bold text-cyan-100 uppercase tracking-widest -mt-1">PETS</span>
             </div>
           </div>
 
           <div class="max-w-xl">
             <span class="text-xs font-bold text-brand uppercase tracking-widest block mb-1">O naszej marce</span>
-            <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tight mb-2">Kim jesteśmy?</h2>
-            <p class="text-xs md:text-sm text-slate-600 font-medium leading-relaxed">
+            <h2 class="text-2xl font-black text-white uppercase tracking-tight mb-2">Kim jesteśmy?</h2>
+            <p class="text-xs md:text-sm text-cyan-200/80 font-medium leading-relaxed">
               LBKPETS to Twój zaufany sklep internetowy. Zaczynaliśmy od społeczności na Discordzie, a dziś oferujemy w pełni profesjonalny asortyment, szybką dostawę i pełną gwarancję satysfakcji.
             </p>
           </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-1 lg:grid-cols-3 gap-3 w-full md:w-auto shrink-0">
-          <div class="bg-slate-50 border border-slate-100 p-3.5 rounded-2xl text-center flex flex-col items-center justify-center">
+          <div class="bg-[#020817] border border-cyan-900/50 p-3.5 rounded-2xl text-center flex flex-col items-center justify-center">
             <span class="text-lg mb-0.5">⚡</span>
-            <strong class="text-xs font-black text-slate-900 block">Wysyłka 24h</strong>
-            <span class="text-[10px] text-slate-500 font-medium">Ekspresowa realizacja</span>
+            <strong class="text-xs font-black text-cyan-200 block">Wysyłka 24h</strong>
+            <span class="text-[10px] text-cyan-400/70 font-medium">Ekspresowa realizacja</span>
           </div>
 
-          <div class="bg-brand-light/60 border border-brand/20 p-3.5 rounded-2xl text-center flex flex-col items-center justify-center">
+          <div class="bg-cyan-950/60 border border-cyan-500/30 p-3.5 rounded-2xl text-center flex flex-col items-center justify-center">
             <span class="text-lg mb-0.5">📦</span>
             <strong class="text-xs font-black text-brand block">Darmowa dostawa</strong>
-            <span class="text-[10px] text-slate-600 font-medium">Zamówienia od 120 PLN</span>
+            <span class="text-[10px] text-cyan-200 font-medium">Zamówienia od 120 PLN</span>
           </div>
 
-          <div class="bg-slate-50 border border-slate-100 p-3.5 rounded-2xl text-center flex flex-col items-center justify-center">
+          <div class="bg-[#020817] border border-cyan-900/50 p-3.5 rounded-2xl text-center flex flex-col items-center justify-center">
             <span class="text-lg mb-0.5">🛡️</span>
-            <strong class="text-xs font-black text-slate-900 block">100% Pewność</strong>
-            <span class="text-[10px] text-slate-500 font-medium">Bezpieczne zakupy</span>
+            <strong class="text-xs font-black text-cyan-200 block">100% Pewność</strong>
+            <span class="text-[10px] text-cyan-400/70 font-medium">Bezpieczne zakupy</span>
           </div>
         </div>
       </div>
@@ -99,33 +99,33 @@
     <!-- KATEGORIE -->
     <section class="max-w-[1400px] mx-auto px-6 py-4">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div onclick="filterProducts('all')" class="cursor-pointer bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-5 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md">
+        <div onclick="filterProducts('all')" class="cursor-pointer bg-gradient-to-br from-[#020817] to-[#0a192f] border border-cyan-900/50 text-cyan-100 rounded-2xl p-5 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md">
           <div>
             <span class="text-[10px] font-bold text-brand uppercase tracking-wider block">Kategoria</span>
-            <h3 class="text-base font-black">Wszystkie</h3>
+            <h3 class="text-base font-black text-white">Wszystkie</h3>
           </div>
-          <span class="text-2xl">🔥</span>
+          <span class="text-2xl">🌊</span>
         </div>
 
-        <div onclick="filterProducts('snus')" class="cursor-pointer bg-gradient-to-br from-emerald-600 to-teal-700 text-white rounded-2xl p-5 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md shadow-emerald-600/20">
+        <div onclick="filterProducts('snus')" class="cursor-pointer bg-gradient-to-br from-teal-900 to-cyan-900 border border-teal-500/30 text-white rounded-2xl p-5 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md shadow-teal-900/20">
           <div>
-            <span class="text-[10px] font-bold text-emerald-100 uppercase tracking-wider block">Nikotynowe</span>
+            <span class="text-[10px] font-bold text-teal-200 uppercase tracking-wider block">Nikotynowe</span>
             <h3 class="text-base font-black">Snusy 🍃</h3>
           </div>
           <span class="text-2xl">🍃</span>
         </div>
 
-        <div onclick="filterProducts('box')" class="cursor-pointer bg-gradient-to-br from-brand to-cyan-600 text-white rounded-2xl p-5 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md shadow-brand/20">
+        <div onclick="filterProducts('box')" class="cursor-pointer bg-gradient-to-br from-blue-900 to-cyan-800 border border-cyan-400/30 text-white rounded-2xl p-5 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md shadow-blue-900/20">
           <div>
-            <span class="text-[10px] font-bold text-cyan-100 uppercase tracking-wider block">Zestawy i Hurt</span>
+            <span class="text-[10px] font-bold text-cyan-200 uppercase tracking-wider block">Zestawy i Hurt</span>
             <h3 class="text-base font-black">BOXY (10 SZT)</h3>
           </div>
           <span class="text-2xl">📦</span>
         </div>
 
-        <div onclick="filterProducts('promo')" class="cursor-pointer bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-2xl p-5 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md shadow-amber-500/20">
+        <div onclick="filterProducts('promo')" class="cursor-pointer bg-gradient-to-br from-sky-900 to-indigo-950 border border-sky-500/30 text-white rounded-2xl p-5 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md shadow-sky-900/20">
           <div>
-            <span class="text-[10px] font-bold text-amber-100 uppercase tracking-wider block">Super Okazje</span>
+            <span class="text-[10px] font-bold text-sky-200 uppercase tracking-wider block">Super Okazje</span>
             <h3 class="text-base font-black">Promocje %</h3>
           </div>
           <span class="text-2xl">💎</span>
@@ -136,20 +136,20 @@
     <!-- PRZYCISKI FILTROWANIA I WYSZUKIWARKA -->
     <div class="max-w-[1400px] mx-auto px-6 pt-4 flex flex-col sm:flex-row gap-4 justify-between items-center">
       <div class="flex flex-wrap gap-2" id="filter-buttons">
-        <button id="btn-all" onclick="filterProducts('all')" class="filter-btn bg-slate-900 text-white text-xs font-extrabold px-5 py-2.5 rounded-2xl transition-all shadow-sm">Wszystkie</button>
-        <button id="btn-snus" onclick="filterProducts('snus')" class="filter-btn bg-white border border-slate-200 text-slate-700 hover:border-brand text-xs font-bold px-5 py-2.5 rounded-2xl transition-all shadow-sm">Snusy 🍃</button>
-        <button id="btn-promo" onclick="filterProducts('promo')" class="filter-btn bg-white border border-slate-200 text-slate-700 hover:border-brand text-xs font-bold px-5 py-2.5 rounded-2xl transition-all shadow-sm">Promocje 🔥</button>
-        <button id="btn-box" onclick="filterProducts('box')" class="filter-btn bg-white border border-slate-200 text-slate-700 hover:border-brand text-xs font-bold px-5 py-2.5 rounded-2xl transition-all shadow-sm">Boxy 📦</button>
+        <button id="btn-all" onclick="filterProducts('all')" class="filter-btn bg-[#0a192f] text-white border border-cyan-500/30 text-xs font-extrabold px-5 py-2.5 rounded-2xl transition-all shadow-sm">Wszystkie</button>
+        <button id="btn-snus" onclick="filterProducts('snus')" class="filter-btn bg-[#0a192f] border border-cyan-900/50 text-cyan-200 hover:border-brand text-xs font-bold px-5 py-2.5 rounded-2xl transition-all shadow-sm">Snusy 🍃</button>
+        <button id="btn-promo" onclick="filterProducts('promo')" class="filter-btn bg-[#0a192f] border border-cyan-900/50 text-cyan-200 hover:border-brand text-xs font-bold px-5 py-2.5 rounded-2xl transition-all shadow-sm">Promocje 🔥</button>
+        <button id="btn-box" onclick="filterProducts('box')" class="filter-btn bg-[#0a192f] border border-cyan-900/50 text-cyan-200 hover:border-brand text-xs font-bold px-5 py-2.5 rounded-2xl transition-all shadow-sm">Boxy 📦</button>
       </div>
 
       <div class="relative w-full sm:w-72">
-        <input type="text" id="search-input" onkeyup="searchProducts()" placeholder="Szukaj produktu..." class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-brand shadow-sm">
+        <input type="text" id="search-input" onkeyup="searchProducts()" placeholder="Szukaj produktu..." class="w-full bg-[#0a192f] text-cyan-100 placeholder-cyan-400/50 border border-cyan-900/60 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-brand shadow-sm">
       </div>
     </div>
 
     <!-- NAGŁÓWEK SEKCJII I KOSZYK -->
-    <header class="max-w-[1400px] mx-auto px-6 pt-6 pb-4 flex justify-between items-end border-b border-slate-200/60">
-      <h1 class="text-xl font-black tracking-tight text-slate-900 uppercase">KATALOG PRODUKTÓW</h1>
+    <header class="max-w-[1400px] mx-auto px-6 pt-6 pb-4 flex justify-between items-end border-b border-cyan-900/50">
+      <h1 class="text-xl font-black tracking-tight text-white uppercase">KATALOG PRODUKTÓW</h1>
       <button onclick="openCartModal()" class="text-xs font-bold text-brand hover:text-brand-hover uppercase tracking-wider flex items-center gap-1 cursor-pointer">
         ZOBACZ KOSZYK (<span id="cart-count">0</span>) <span class="text-sm">&rsaquo;</span>
       </button>
@@ -161,94 +161,94 @@
     </main>
 
     <!-- OPINIE (DYNAMICSZNIE POBIERANE Z BACKENDU) -->
-    <section class="max-w-[1400px] mx-auto px-6 py-10 border-t border-slate-200/60">
+    <section class="max-w-[1400px] mx-auto px-6 py-10 border-t border-cyan-900/50">
       <div class="text-center mb-8">
         <span class="text-xs font-bold text-brand uppercase tracking-widest">Opinie społeczności</span>
-        <h2 class="text-xl font-black text-slate-900 uppercase">Co mówią o nas klienci z Discorda?</h2>
+        <h2 class="text-xl font-black text-white uppercase">Co mówią o nas klienci z Discorda?</h2>
       </div>
 
       <div id="reviews-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <p class="col-span-full text-center text-slate-400 py-4">Ładowanie opinii...</p>
+        <p class="col-span-full text-center text-cyan-400/70 py-4">Ładowanie opinii...</p>
       </div>
     </section>
   </div>
 
   <!-- MODAL SZCZEGÓŁÓW PRODUKTU (OPIS I SMAK) -->
-  <div id="product-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative border border-slate-100">
+  <div id="product-modal" class="hidden fixed inset-0 bg-[#020817]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-[#0a192f] text-cyan-100 rounded-3xl max-w-md w-full p-6 shadow-2xl relative border border-cyan-500/30">
       <div class="flex flex-col items-center text-center">
-        <div class="w-48 h-48 bg-slate-50 rounded-2xl mb-4 overflow-hidden flex items-center justify-center p-3 border border-slate-100">
+        <div class="w-48 h-48 bg-[#020817] rounded-2xl mb-4 overflow-hidden flex items-center justify-center p-3 border border-cyan-900/50">
           <img id="modal-product-img" src="" alt="" class="max-h-full object-contain">
         </div>
-        <h2 id="modal-product-title" class="text-base font-black text-slate-900 uppercase mb-2"></h2>
-        <p id="modal-product-desc" class="text-xs text-slate-600 font-medium mb-4 leading-relaxed text-left w-full bg-slate-50 p-3 rounded-xl border border-slate-100"></p>
+        <h2 id="modal-product-title" class="text-base font-black text-white uppercase mb-2"></h2>
+        <p id="modal-product-desc" class="text-xs text-cyan-200/80 font-medium mb-4 leading-relaxed text-left w-full bg-[#020817] p-3 rounded-xl border border-cyan-900/50"></p>
         
         <div id="modal-flavor-container" class="w-full mb-4 text-left hidden">
-          <label class="block text-[11px] font-extrabold text-slate-700 uppercase mb-1">Wybierz smak:</label>
-          <select id="modal-flavor-select" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-brand cursor-pointer">
+          <label class="block text-[11px] font-extrabold text-cyan-300 uppercase mb-1">Wybierz smak:</label>
+          <select id="modal-flavor-select" class="w-full bg-[#020817] border border-cyan-900/60 rounded-xl px-3 py-2 text-xs font-bold text-cyan-100 focus:outline-none focus:border-brand cursor-pointer">
           </select>
         </div>
 
         <div class="flex items-center justify-between w-full mb-5">
-          <span class="text-xs font-bold text-slate-500 uppercase">Cena:</span>
-          <span id="modal-product-price" class="text-lg font-black text-slate-900">0.00 PLN</span>
+          <span class="text-xs font-bold text-cyan-300 uppercase">Cena:</span>
+          <span id="modal-product-price" class="text-lg font-black text-white">0.00 PLN</span>
         </div>
 
         <button id="modal-add-btn" class="w-full bg-brand hover:bg-brand-hover text-white text-xs font-extrabold py-3.5 rounded-xl uppercase tracking-wider transition-all shadow-md shadow-brand/20 cursor-pointer">
           DODAJ DO KOSZYKA
         </button>
       </div>
-      <button onclick="closeProductModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 font-black text-lg cursor-pointer">✕</button>
+      <button onclick="closeProductModal()" class="absolute top-5 right-5 text-cyan-400 hover:text-white font-black text-lg cursor-pointer">✕</button>
     </div>
   </div>
 
   <!-- MODAL KOSZYKA Z DANYMI ZAMÓWIENIA -->
-  <div id="cart-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative border border-slate-100">
-      <h2 class="text-lg font-black text-slate-900 mb-4 border-b pb-3 uppercase">Twój Koszyk i Dane Zamówienia</h2>
+  <div id="cart-modal" class="hidden fixed inset-0 bg-[#020817]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-[#0a192f] text-cyan-100 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative border border-cyan-500/30">
+      <h2 class="text-lg font-black text-white mb-4 border-b border-cyan-900/50 pb-3 uppercase">Twój Koszyk i Dane Zamówienia</h2>
       <div id="cart-list" class="space-y-2 max-h-32 overflow-y-auto mb-4 text-xs pr-1"></div>
 
       <!-- POLA DANYCH KLIENTA -->
-      <div class="space-y-3 mb-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+      <div class="space-y-3 mb-4 bg-[#020817] p-4 rounded-2xl border border-cyan-900/50">
         <div>
-          <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Twój nick na Discordzie:</label>
-          <input type="text" id="discord-nick" placeholder="np. nazwa_uzytkownika" oninput="checkCartForm()" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand">
+          <label class="block text-[11px] font-bold text-cyan-300 uppercase mb-1">Twój nick na Discordzie:</label>
+          <input type="text" id="discord-nick" placeholder="np. nazwa_uzytkownika" oninput="checkCartForm()" class="w-full bg-[#0a192f] text-cyan-100 placeholder-cyan-500/50 border border-cyan-900/60 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand">
         </div>
         
         <div>
-          <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Adres E-mail (Gmail):</label>
-          <input type="email" id="customer-email" placeholder="np. imie@gmail.com" oninput="checkCartForm()" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand">
+          <label class="block text-[11px] font-bold text-cyan-300 uppercase mb-1">Adres E-mail (Gmail):</label>
+          <input type="email" id="customer-email" placeholder="np. imie@gmail.com" oninput="checkCartForm()" class="w-full bg-[#0a192f] text-cyan-100 placeholder-cyan-500/50 border border-cyan-900/60 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand">
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <div>
-            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Numer Telefonu:</label>
-            <input type="tel" id="customer-phone" placeholder="np. 500600700" oninput="checkCartForm()" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand">
+            <label class="block text-[11px] font-bold text-cyan-300 uppercase mb-1">Numer Telefonu:</label>
+            <input type="tel" id="customer-phone" placeholder="np. 500600700" oninput="checkCartForm()" class="w-full bg-[#0a192f] text-cyan-100 placeholder-cyan-500/50 border border-cyan-900/60 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand">
           </div>
           <div>
-            <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Paczkomat (kod np. WAW01M):</label>
-            <input type="text" id="customer-paczkomat" placeholder="np. WAW01M" oninput="checkCartForm()" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand">
+            <label class="block text-[11px] font-bold text-cyan-300 uppercase mb-1">Paczkomat (kod np. WAW01M):</label>
+            <input type="text" id="customer-paczkomat" placeholder="np. WAW01M" oninput="checkCartForm()" class="w-full bg-[#0a192f] text-cyan-100 placeholder-cyan-500/50 border border-cyan-900/60 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand">
           </div>
         </div>
       </div>
 
-      <div class="flex justify-between font-black text-base border-t pt-3 mb-5">
+      <div class="flex justify-between font-black text-base border-t border-cyan-900/50 pt-3 mb-5">
         <span>ŁĄCZNIE:</span>
         <span id="cart-total" class="text-brand">0,00 PLN</span>
       </div>
 
-      <button onclick="submitOrder()" id="gen-btn" disabled class="w-full bg-slate-200 text-slate-400 font-extrabold text-xs py-3.5 rounded-xl uppercase tracking-wider cursor-not-allowed">
+      <button onclick="submitOrder()" id="gen-btn" disabled class="w-full bg-cyan-950 text-cyan-500 font-extrabold text-xs py-3.5 rounded-xl uppercase tracking-wider cursor-not-allowed border border-cyan-900">
         Złóż zamówienie i przejdź na Discorda
       </button>
 
-      <div id="token-result" class="hidden mt-4 bg-brand-light/50 p-4 rounded-2xl border border-brand/20 text-center">
-        <p class="text-xs text-slate-700 font-bold mb-1">✅ Zamówienie zapisane pomyślnie na GitHubie!</p>
-        <p class="text-[11px] text-slate-500 mb-2">Skopiuj poniższą komendę, przejdź na nasz serwer Discord i wklej ją:</p>
+      <div id="token-result" class="hidden mt-4 bg-cyan-950/80 p-4 rounded-2xl border border-cyan-500/30 text-center">
+        <p class="text-xs text-cyan-200 font-bold mb-1">✅ Zamówienie zapisane pomyślnie na GitHubie!</p>
+        <p class="text-[11px] text-cyan-400 mb-2">Skopiuj poniższą komendę, przejdź na nasz serwer Discord i wklej ją:</p>
         
-        <code id="final-code" class="block font-mono font-bold text-sm text-brand bg-white p-2.5 rounded-xl border border-brand/20 my-2 select-all">/zamowienie order_id:LBK-XXXXX</code>
+        <code id="final-code" class="block font-mono font-bold text-sm text-cyan-300 bg-[#020817] p-2.5 rounded-xl border border-cyan-500/30 my-2 select-all">/zamowienie order_id:LBK-XXXXX</code>
         
         <div class="flex gap-2 mt-3">
-          <button onclick="copyCode()" class="flex-1 text-xs bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl cursor-pointer transition-colors">
+          <button onclick="copyCode()" class="flex-1 text-xs bg-[#020817] hover:bg-cyan-950 text-cyan-200 border border-cyan-800 font-bold py-2.5 rounded-xl cursor-pointer transition-colors">
             📋 Kopiuj Komendę
           </button>
           <a href="https://discord.gg/y2xdvzx34V" target="_blank" class="flex-1 text-xs bg-discord hover:bg-discord-hover text-white font-bold py-2.5 rounded-xl text-center cursor-pointer transition-colors flex items-center justify-center gap-1">
@@ -257,19 +257,19 @@
         </div>
       </div>
 
-      <button onclick="closeCartModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 font-black text-lg cursor-pointer">✕</button>
+      <button onclick="closeCartModal()" class="absolute top-5 right-5 text-cyan-400 hover:text-white font-black text-lg cursor-pointer">✕</button>
     </div>
   </div>
 
   <!-- COOKIES BANNER -->
   <div id="cookie-banner" class="fixed bottom-4 left-4 right-4 z-40 max-w-[1400px] mx-auto">
-    <div class="bg-white/95 backdrop-blur-md border border-slate-200/80 p-4 rounded-2xl shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div class="text-xs text-slate-600">
-        <strong class="text-slate-900 font-bold block mb-0.5">Polityka plików cookies</strong>
+    <div class="bg-[#0a192f]/95 backdrop-blur-md border border-cyan-500/30 p-4 rounded-2xl shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-cyan-100">
+      <div class="text-xs text-cyan-200/80">
+        <strong class="text-white font-bold block mb-0.5">Polityka plików cookies</strong>
         Nasza strona korzysta z plików cookies. <a href="#" class="text-brand font-semibold hover:underline">Dowiedz się więcej</a>
       </div>
       <div class="flex items-center gap-3 shrink-0">
-        <button onclick="closeCookies()" class="text-xs text-slate-500 font-bold px-4 py-2 cursor-pointer">Odrzuć</button>
+        <button onclick="closeCookies()" class="text-xs text-cyan-400 font-bold px-4 py-2 cursor-pointer hover:text-white">Odrzuć</button>
         <button onclick="closeCookies()" class="bg-brand text-white text-xs font-extrabold px-6 py-2.5 rounded-xl shadow-md shadow-brand/20 cursor-pointer">Akceptuję</button>
       </div>
     </div>
@@ -318,23 +318,23 @@
             const stars = '★'.repeat(Math.min(Math.max(ratingNum, 1), 5));
             
             reviewsContainer.innerHTML += `
-              <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
+              <div class="bg-[#0a192f] text-cyan-100 p-5 rounded-2xl border border-cyan-900/50 shadow-sm flex flex-col justify-between">
                 <div>
                   <div class="flex items-center gap-1 text-amber-400 text-xs mb-2">${stars}</div>
-                  <p class="text-xs text-slate-600 font-medium mb-3">"${rev.comment}"</p>
+                  <p class="text-xs text-cyan-200/80 font-medium mb-3">"${rev.comment}"</p>
                 </div>
-                <div class="flex items-center justify-between text-[11px] pt-3 border-t border-slate-100">
-                  <strong class="text-slate-900">@${rev.user}</strong>
-                  <span class="text-emerald-500 font-bold">Zweryfikowany zakup</span>
+                <div class="flex items-center justify-between text-[11px] pt-3 border-t border-cyan-900/50">
+                  <strong class="text-white">@${rev.user}</strong>
+                  <span class="text-cyan-400 font-bold">Zweryfikowany zakup</span>
                 </div>
               </div>
             `;
           });
         } else {
-          reviewsContainer.innerHTML = '<p class="col-span-full text-center text-slate-400 py-6">Brak opinii. Bądź pierwszy i oceń nas na Discordzie!</p>';
+          reviewsContainer.innerHTML = '<p class="col-span-full text-center text-cyan-400/65 py-6">Brak opinii. Bądź pierwszy i oceń nas na Discordzie!</p>';
         }
       } catch (e) {
-        document.getElementById('reviews-container').innerHTML = '<p class="col-span-full text-center text-slate-400 py-6">Nie udało się pobrać opinii.</p>';
+        document.getElementById('reviews-container').innerHTML = '<p class="col-span-full text-center text-cyan-400/65 py-6">Nie udało się pobrać opinii.</p>';
       }
     }
 
@@ -343,7 +343,7 @@
       let html = '';
       
       if (displayedProducts.length === 0) {
-        grid.innerHTML = '<p class="col-span-full text-center text-slate-400 py-10 font-semibold">Brak dostępnych produktów w tej kategorii.</p>';
+        grid.innerHTML = '<p class="col-span-full text-center text-cyan-400/65 py-10 font-semibold">Brak dostępnych produktów w tej kategorii.</p>';
         return;
       }
 
@@ -354,27 +354,27 @@
         const badgeText = p.badge || (isBox ? 'BOX' : null);
 
         html += `
-          <div class="group bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-xl hover:border-brand/30 transition-all duration-300 flex flex-col justify-between relative">
-            ${badgeText ? `<span class="absolute top-3 left-3 bg-slate-900 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider z-10 shadow-sm">${badgeText}</span>` : ''}
+          <div class="group bg-[#0a192f] text-cyan-100 rounded-2xl p-4 border border-cyan-900/50 shadow-sm hover:shadow-xl hover:border-brand/50 transition-all duration-300 flex flex-col justify-between relative">
+            ${badgeText ? `<span class="absolute top-3 left-3 bg-[#020817] text-cyan-300 border border-cyan-500/30 text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider z-10 shadow-sm">${badgeText}</span>` : ''}
             
             <div class="cursor-pointer" onclick="openProductModal('${p.id}')">
-              <div class="w-full h-44 bg-slate-50 rounded-xl mb-3 overflow-hidden flex items-center justify-center p-3 group-hover:bg-brand-light/30 transition-colors">
+              <div class="w-full h-44 bg-[#020817] rounded-xl mb-3 overflow-hidden flex items-center justify-center p-3 border border-cyan-900/30 group-hover:bg-cyan-950/40 transition-colors">
                 <img src="${p.img || 'https://via.placeholder.com/200'}" alt="${p.name}" class="max-h-full object-contain group-hover:scale-105 transition-transform duration-300">
               </div>
-              <h3 class="text-xs font-bold text-slate-800 uppercase leading-snug mb-1 min-h-[32px] group-hover:text-brand transition-colors">
+              <h3 class="text-xs font-bold text-cyan-100 uppercase leading-snug mb-1 min-h-[32px] group-hover:text-brand transition-colors">
                 ${p.name}
               </h3>
               <div class="flex items-center gap-1 text-amber-400 text-xs mb-2">
                 <span>★★★★★</span>
-                <span class="text-slate-400 text-[10px] font-medium">(5)</span>
+                <span class="text-cyan-400/60 text-[10px] font-medium">(5)</span>
               </div>
             </div>
 
             <div>
               <div class="mb-3 flex items-center justify-between">
                 <div>
-                  <span class="text-base font-black text-slate-900">${price.toFixed(2)} <span class="text-xs font-bold">PLN</span></span>
-                  ${oldPrice ? `<span class="text-xs text-slate-400 line-through block font-medium">${oldPrice.toFixed(2)} PLN</span>` : ''}
+                  <span class="text-base font-black text-white">${price.toFixed(2)} <span class="text-xs font-bold text-cyan-300">PLN</span></span>
+                  ${oldPrice ? `<span class="text-xs text-cyan-400/60 line-through block font-medium">${oldPrice.toFixed(2)} PLN</span>` : ''}
                 </div>
                 <button onclick="openProductModal('${p.id}')" class="text-[11px] font-bold text-brand hover:underline cursor-pointer">Zobacz opis &rsaquo;</button>
               </div>
@@ -403,7 +403,7 @@
       const flavorSelect = document.getElementById('modal-flavor-select');
 
       if (p.smaki && Array.isArray(p.smaki) && p.smaki.length > 0) {
-        flavorSelect.innerHTML = p.smaki.map(s => `<option value="${s}">${s}</option>`).join('');
+        flavorSelect.innerHTML = p.smaki.map(s => `<option value="${s}" class="bg-[#0a192f] text-cyan-100">${s}</option>`).join('');
         flavorContainer.classList.remove('hidden');
       } else {
         flavorContainer.classList.add('hidden');
@@ -463,9 +463,9 @@
       Object.keys(btns).forEach(key => {
         if (btns[key]) {
           if (key === type) {
-            btns[key].className = "filter-btn bg-slate-900 text-white text-xs font-extrabold px-5 py-2.5 rounded-2xl transition-all shadow-sm";
+            btns[key].className = "filter-btn bg-[#020817] text-white border border-cyan-500/50 text-xs font-extrabold px-5 py-2.5 rounded-2xl transition-all shadow-sm";
           } else {
-            btns[key].className = "filter-btn bg-white border border-slate-200 text-slate-700 hover:border-brand text-xs font-bold px-5 py-2.5 rounded-2xl transition-all shadow-sm";
+            btns[key].className = "filter-btn bg-[#0a192f] border border-cyan-900/50 text-cyan-200 hover:border-brand text-xs font-bold px-5 py-2.5 rounded-2xl transition-all shadow-sm";
           }
         }
       });
@@ -503,7 +503,7 @@
         btn.className = "w-full bg-brand hover:bg-brand-hover text-white font-extrabold text-xs py-3.5 rounded-xl uppercase tracking-wider cursor-pointer shadow-md shadow-brand/20 transition-all";
       } else {
         btn.disabled = true;
-        btn.className = "w-full bg-slate-200 text-slate-400 font-extrabold text-xs py-3.5 rounded-xl uppercase tracking-wider cursor-not-allowed";
+        btn.className = "w-full bg-cyan-950 text-cyan-500 font-extrabold text-xs py-3.5 rounded-xl uppercase tracking-wider cursor-not-allowed border border-cyan-900";
       }
     }
 
@@ -512,7 +512,7 @@
       const totalEl = document.getElementById('cart-total');
       
       if (cart.length === 0) {
-        listEl.innerHTML = '<p class="text-slate-400 italic text-center py-4">Koszyk jest pusty.</p>';
+        listEl.innerHTML = '<p class="text-cyan-400/60 italic text-center py-4">Koszyk jest pusty.</p>';
         totalEl.innerText = '0,00 PLN';
         document.getElementById('token-result').classList.add('hidden');
       } else {
@@ -521,11 +521,11 @@
         cart.forEach((item, idx) => {
           total += item.price;
           listEl.innerHTML += `
-            <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-              <span class="font-bold text-slate-800 truncate pr-2">${item.title}</span>
+            <div class="flex justify-between items-center bg-[#020817] p-2.5 rounded-xl border border-cyan-900/50">
+              <span class="font-bold text-cyan-100 truncate pr-2">${item.title}</span>
               <div class="flex items-center gap-2">
-                <span class="font-black text-slate-900 shrink-0">${item.price.toFixed(2)} PLN</span>
-                <button onclick="removeFromCart(${idx})" class="text-rose-500 font-bold hover:text-rose-700 px-1 cursor-pointer">✕</button>
+                <span class="font-black text-white shrink-0">${item.price.toFixed(2)} PLN</span>
+                <button onclick="removeFromCart(${idx})" class="text-rose-400 font-bold hover:text-rose-300 px-1 cursor-pointer">✕</button>
               </div>
             </div>
           `;
@@ -577,21 +577,11 @@
           btn.disabled = false;
           btn.innerText = "Złóż zamówienie i przejdź na Discorda";
         }
-      } catch (err) {
-        alert('Błąd połączenia z serwerem.');
+      } catch (e) {
+        alert('Wystąpił błąd sieci.');
         btn.disabled = false;
         btn.innerText = "Złóż zamówienie i przejdź na Discorda";
       }
-    }
-
-    function copyCode() {
-      const codeText = document.getElementById('final-code').innerText;
-      navigator.clipboard.writeText(codeText);
-      alert('Skopiowano komendę do schowka!');
-    }
-
-    function closeCookies() {
-      document.getElementById('cookie-banner').style.display = 'none';
     }
   </script>
 </body>
