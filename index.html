@@ -99,13 +99,21 @@
 
     <!-- KATEGORIE -->
     <section class="max-w-[1400px] mx-auto px-6 py-4">
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div onclick="filterProducts('all')" class="cursor-pointer bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-5 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md">
           <div>
             <span class="text-[10px] font-bold text-brand uppercase tracking-wider block">Kategoria</span>
-            <h3 class="text-base font-black">Wszystkie Produkty</h3>
+            <h3 class="text-base font-black">Wszystkie</h3>
           </div>
           <span class="text-2xl">🔥</span>
+        </div>
+
+        <div onclick="filterProducts('snus')" class="cursor-pointer bg-gradient-to-br from-emerald-600 to-teal-700 text-white rounded-2xl p-5 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md shadow-emerald-600/20">
+          <div>
+            <span class="text-[10px] font-bold text-emerald-100 uppercase tracking-wider block">Nikotynowe</span>
+            <h3 class="text-base font-black">Snusy 🍃</h3>
+          </div>
+          <span class="text-2xl">🍃</span>
         </div>
 
         <div onclick="filterProducts('box')" class="cursor-pointer bg-gradient-to-br from-brand to-cyan-600 text-white rounded-2xl p-5 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md shadow-brand/20">
@@ -128,8 +136,9 @@
 
     <!-- PRZYCISKI FILTROWANIA I WYSZUKIWARKA -->
     <div class="max-w-[1400px] mx-auto px-6 pt-4 flex flex-col sm:flex-row gap-4 justify-between items-center">
-      <div class="flex gap-2" id="filter-buttons">
+      <div class="flex flex-wrap gap-2" id="filter-buttons">
         <button id="btn-all" onclick="filterProducts('all')" class="filter-btn bg-slate-900 text-white text-xs font-extrabold px-5 py-2.5 rounded-2xl transition-all shadow-sm">Wszystkie</button>
+        <button id="btn-snus" onclick="filterProducts('snus')" class="filter-btn bg-white border border-slate-200 text-slate-700 hover:border-brand text-xs font-bold px-5 py-2.5 rounded-2xl transition-all shadow-sm">Snusy 🍃</button>
         <button id="btn-promo" onclick="filterProducts('promo')" class="filter-btn bg-white border border-slate-200 text-slate-700 hover:border-brand text-xs font-bold px-5 py-2.5 rounded-2xl transition-all shadow-sm">Promocje 🔥</button>
         <button id="btn-box" onclick="filterProducts('box')" class="filter-btn bg-white border border-slate-200 text-slate-700 hover:border-brand text-xs font-bold px-5 py-2.5 rounded-2xl transition-all shadow-sm">Boxy 📦</button>
       </div>
@@ -306,6 +315,19 @@
         const isBox = (p.badge && p.badge.toLowerCase().includes('box')) || p.name.toLowerCase().includes('box');
         const badgeText = p.badge || (isBox ? 'BOX' : null);
 
+        // Obsługa listy smaków dla produktu
+        let flavorsHtml = '';
+        if (p.smaki && Array.isArray(p.smaki) && p.smaki.length > 0) {
+          flavorsHtml = `
+            <div class="mb-2 text-left">
+              <label class="block text-[10px] font-extrabold text-slate-500 uppercase mb-1">Wybierz smak:</label>
+              <select id="flavor-${p.id}" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-[11px] font-bold text-slate-800 focus:outline-none focus:border-brand cursor-pointer">
+                ${p.smaki.map(s => `<option value="${s}">${s}</option>`).join('')}
+              </select>
+            </div>
+          `;
+        }
+
         html += `
           <div class="group bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-xl hover:border-brand/30 transition-all duration-300 flex flex-col justify-between relative">
             ${badgeText ? `<span class="absolute top-3 left-3 bg-slate-900 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider z-10 shadow-sm">${badgeText}</span>` : ''}
@@ -322,11 +344,12 @@
               </div>
             </div>
             <div>
+              ${flavorsHtml}
               <div class="mb-3">
                 <span class="text-base font-black text-slate-900">${price.toFixed(2)} <span class="text-xs font-bold">PLN</span></span>
                 ${oldPrice ? `<span class="text-xs text-slate-400 line-through block font-medium">${oldPrice.toFixed(2)} PLN</span>` : ''}
               </div>
-              <button onclick="addToCart('${p.name.replace(/'/g, "\\'")}', ${price})" class="w-full bg-brand hover:bg-brand-hover text-white text-xs font-extrabold py-3 rounded-xl uppercase tracking-wider transition-all duration-200 shadow-md shadow-brand/20 active:scale-95 cursor-pointer">
+              <button onclick="addToCart('${p.name.replace(/'/g, "\\'")}', ${price}, '${p.id}')" class="w-full bg-brand hover:bg-brand-hover text-white text-xs font-extrabold py-3 rounded-xl uppercase tracking-wider transition-all duration-200 shadow-md shadow-brand/20 active:scale-95 cursor-pointer">
                 DODAJ DO KOSZYKA
               </button>
             </div>
@@ -340,10 +363,14 @@
       const query = document.getElementById('search-input').value.toLowerCase();
       displayedProducts = products.filter(p => {
         const matchesQuery = p.name.toLowerCase().includes(query);
+        const isSnus = (p.type && p.type.toLowerCase() === 'snus') || p.name.toLowerCase().includes('cuba') || p.name.toLowerCase().includes('snus') || p.name.toLowerCase().includes('bit') || p.name.toLowerCase().includes('rabit');
+        
         if (currentFilter === 'promo') {
           return matchesQuery && p.oldPrice !== null && p.oldPrice !== undefined && p.oldPrice > 0;
         } else if (currentFilter === 'box') {
           return matchesQuery && (p.name.toLowerCase().includes('box') || (p.badge && p.badge.toLowerCase().includes('box')));
+        } else if (currentFilter === 'snus') {
+          return matchesQuery && isSnus;
         }
         return matchesQuery;
       });
@@ -355,6 +382,7 @@
       
       const btns = {
         all: document.getElementById('btn-all'),
+        snus: document.getElementById('btn-snus'),
         promo: document.getElementById('btn-promo'),
         box: document.getElementById('btn-box')
       };
@@ -373,6 +401,10 @@
         displayedProducts = products.filter(p => p.oldPrice !== null && p.oldPrice !== undefined && p.oldPrice > 0);
       } else if (type === 'box') {
         displayedProducts = products.filter(p => p.name.toLowerCase().includes('box') || (p.badge && p.badge.toLowerCase().includes('box')));
+      } else if (type === 'snus') {
+        displayedProducts = products.filter(p => {
+          return (p.type && p.type.toLowerCase() === 'snus') || p.name.toLowerCase().includes('cuba') || p.name.toLowerCase().includes('snus') || p.name.toLowerCase().includes('bit') || p.name.toLowerCase().includes('rabit');
+        });
       } else {
         displayedProducts = [...products];
       }
@@ -380,8 +412,15 @@
       renderProducts();
     }
 
-    function addToCart(title, price) {
-      cart.push({ title, price });
+    function addToCart(title, price, id) {
+      let selectedFlavor = '';
+      const selectEl = document.getElementById(`flavor-${id}`);
+      if (selectEl) {
+        selectedFlavor = selectEl.value;
+      }
+      const finalTitle = selectedFlavor ? `${title} (${selectedFlavor})` : title;
+
+      cart.push({ title: finalTitle, price });
       document.getElementById('cart-count').innerText = cart.length;
       openCartModal();
     }
@@ -454,7 +493,6 @@
       btn.innerText = "Wysyłanie zamówienia...";
 
       try {
-        // Prawidłowy adres backendu na Renderze
         const backendUrl = 'https://lbk.onrender.com/create-order';
 
         const response = await fetch(backendUrl, {
