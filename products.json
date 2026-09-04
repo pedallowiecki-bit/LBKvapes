@@ -78,9 +78,7 @@
     "badge": "Nowość",
     "img": "https://vapespot.pl/_next/image?url=https%3A%2F%2Fi.imgur.com%2FbB5ZytT.png&w=640&q=75",
     "smaki": ["Cherry", "Pineapple", "Strong Mint", "Blackberry"]
-  }
-]
-[
+  },
   {
     "id": "VAP-201",
     "type": "Inne",
@@ -159,7 +157,7 @@
     "oldPrice": null,
     "badge": null,
     "img": "https://vapespot.pl/_next/image?url=https%3A%2F%2Fi.imgur.com%2F4Aq7Fj3.png&w=640&q=75",
-    "smaki": ["0.15 ,0.2 Ω,0.3 Ω]
+    "smaki": ["0.15Ω", "0.2Ω", "0.3Ω"]
   },
   {
     "id": "VAP-210",
@@ -190,14 +188,12 @@
     "badge": null,
     "img": "https://vapespot.pl/_next/image?url=https%3A%2F%2Fi.imgur.com%2FyQU2PIf.png&w=640&q=75",
     "smaki": ["9 kolorów"]
-  }
-]
-[
+  },
   {
     "id": "SNUS-101",
     "type": "snus",
     "name": "CUBA BLACK 66 MG",
-    "price": 29,
+    "price": 29.0,
     "oldPrice": null,
     "badge": null,
     "img": "https://vapespot.pl/_next/image?url=https%3A%2F%2Fi.imgur.com%2FbB5ZytT.png&w=640&q=75",
@@ -207,7 +203,7 @@
     "id": "SNUS-102",
     "type": "snus",
     "name": "SNUSY MINI (ON!)",
-    "price": 11,
+    "price": 11.0,
     "oldPrice": null,
     "badge": null,
     "img": "https://vapespot.pl/_next/image?url=https%3A%2F%2Fi.imgur.com%2FJtHMUSf.png&w=640&q=75",
@@ -217,7 +213,7 @@
     "id": "SNUS-103",
     "type": "snus",
     "name": "RABBIT",
-    "price": 16,
+    "price": 16.0,
     "oldPrice": null,
     "badge": null,
     "img": "https://vapespot.pl/_next/image?url=https%3A%2F%2Fi.imgur.com%2FG6uMyp1.png&w=640&q=75",
@@ -227,7 +223,7 @@
     "id": "SNUS-104",
     "type": "snus",
     "name": "BIT 20 MG (EFEKT 50 MG)",
-    "price": 15,
+    "price": 15.0,
     "oldPrice": null,
     "badge": null,
     "img": "https://vapespot.pl/_next/image?url=https%3A%2F%2Fi.imgur.com%2Fjqt70pQ.png&w=640&q=75",
