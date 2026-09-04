@@ -192,3 +192,45 @@
     "smaki": ["9 kolorów"]
   }
 ]
+[
+  {
+    "id": "SNUS-101",
+    "type": "snus",
+    "name": "CUBA BLACK 66 MG",
+    "price": 29,
+    "oldPrice": null,
+    "badge": null,
+    "img": "https://vapespot.pl/_next/image?url=https%3A%2F%2Fi.imgur.com%2FbB5ZytT.png&w=640&q=75",
+    "smaki": ["Black Currant", "Wariant 2", "Wariant 3", "Wariant 4", "Wariant 5", "Wariant 6", "Wariant 7"]
+  },
+  {
+    "id": "SNUS-102",
+    "type": "snus",
+    "name": "SNUSY MINI (ON!)",
+    "price": 11,
+    "oldPrice": null,
+    "badge": null,
+    "img": "https://vapespot.pl/_next/image?url=https%3A%2F%2Fi.imgur.com%2FJtHMUSf.png&w=640&q=75",
+    "smaki": ["Mint 3 mg", "Sweet Mint 3 mg", "Mint 6 mg", "Tropical Spice 6 mg", "Mint 3 mg", "Spearmint 6 mg"]
+  },
+  {
+    "id": "SNUS-103",
+    "type": "snus",
+    "name": "RABBIT",
+    "price": 16,
+    "oldPrice": null,
+    "badge": null,
+    "img": "https://vapespot.pl/_next/image?url=https%3A%2F%2Fi.imgur.com%2FG6uMyp1.png&w=640&q=75",
+    "smaki": ["Blue Ice"]
+  },
+  {
+    "id": "SNUS-104",
+    "type": "snus",
+    "name": "BIT 20 MG (EFEKT 50 MG)",
+    "price": 15,
+    "oldPrice": null,
+    "badge": null,
+    "img": "https://vapespot.pl/_next/image?url=https%3A%2F%2Fi.imgur.com%2Fjqt70pQ.png&w=640&q=75",
+    "smaki": ["Cold Mint", "Strong"]
+  }
+]
