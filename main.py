@@ -155,15 +155,15 @@ def create_order():
 
             ticket_channel = await guild.create_text_channel(name=channel_name, overwrites=overwrites)
 
-            embed = discord.Embed(title="🛒 Nowy Ticket Zamówienia", color=discord.Color.green())
+            embed = discord.Embed(title="🛒 Nowy Ticket Zamówienia (Sklep)", color=discord.Color.green())
             embed.add_field(name="👤 Klient", value=f"`{discord_user}` {member.mention if member else ''}", inline=True)
             embed.add_field(name="🆔 ID Zamówienia", value=f"`{order_id}`", inline=True)
             embed.add_field(name="📧 Email", value=f"`{email}`", inline=True)
             embed.add_field(name="📞 Telefon", value=f"`{phone}`", inline=True)
             embed.add_field(name="📦 Paczkomat", value=f"`{paczkomat}`", inline=False)
             
-            items_str = "\n".join([f"- {i.get('title', i.get('name', 'Produkt'))} ({i.get('price', 0)} PLN)" for i in cart_items])
-            embed.add_field(name="Produkty", value=items_str or "Brak", inline=False)
+            items_str = "\n".join([f"- **{i.get('title', i.get('name', 'Produkt'))}** - {i.get('price', 0)} PLN" for i in cart_items])
+            embed.add_field(name="Zamówione produkty (z uwzględnieniem smaków):", value=items_str or "Brak", inline=False)
             embed.add_field(name="Suma", value=f"**{total} PLN**", inline=False)
             
             ping_content = member.mention if member else f"@{discord_user}"
@@ -197,7 +197,7 @@ async def on_ready():
     except Exception as e:
         print(f"❌ Błąd synchronizacji: {e}")
 
-@bot.tree.command(name="sklep", description="Wyświetla aktualne produkty ze sklepu")
+@bot.tree.command(name="sklep", description="Wyświetla aktualne produkty ze sklepu (w tym snusy, opisy i smaki)")
 async def sklep(interaction: discord.Interaction):
     await interaction.response.defer()
     products, _, error = get_github_file()
@@ -211,13 +211,29 @@ async def sklep(interaction: discord.Interaction):
     embed = discord.Embed(title="🛍️ Oferta Sklepu LBKPETS", color=discord.Color.blue())
     for p in products:
         price = p.get('price', 0)
-        embed.add_field(name=p.get('name'), value=f"Cena: **{price} PLN**\nID: `{p.get('id')}`", inline=False)
+        desc = p.get('description', p.get('opis', 'Brak opisu'))
+        smaki = p.get('smaki', [])
+        smaki_str = ", ".join(smaki) if smaki else "Standardowy"
+        
+        val = f"Cena: **{price} PLN**\n"
+        val += f"Opis: *{desc}*\n"
+        val += f"Smaki: `{smaki_str}`\n"
+        val += f"ID: `{p.get('id')}`"
+        
+        embed.add_field(name=p.get('name'), value=val, inline=False)
     await interaction.followup.send(embed=embed)
 
-@bot.tree.command(name="dodaj", description="Dodaje nowy produkt do sklepu (tylko dla administracji)")
-@app_commands.describe(nazwa="Nazwa produktu", cena="Cena w PLN", product_id="Unikalne ID produktu (opcjonalnie)")
+@bot.tree.command(name="dodaj", description="Dodaje nowy produkt lub snus do sklepu z opisem i smakami")
+@app_commands.describe(
+    nazwa="Nazwa produktu", 
+    cena="Cena w PLN", 
+    typ="Typ produktu np. snus lub box", 
+    opis="Krótki opis produktu", 
+    smaki="Dostępne smaki po rozdzieleniu przecinkiem np. Mięta,Truskawka", 
+    product_id="Unikalne ID (opcjonalnie)"
+)
 @app_commands.default_permissions(administrator=True)
-async def dodaj(interaction: discord.Interaction, nazwa: str, cena: float, product_id: str = None):
+async def dodaj(interaction: discord.Interaction, nazwa: str, cena: float, typ: str = "snus", opis: str = "Wysokiej jakości produkt", smaki: str = "Mięta, Lodowy", product_id: str = None):
     await interaction.response.defer(ephemeral=True)
     
     products, _, error = get_github_file()
@@ -235,17 +251,23 @@ async def dodaj(interaction: discord.Interaction, nazwa: str, cena: float, produ
         await interaction.followup.send(f"❌ Produkt o ID `{product_id}` już istnieje!", ephemeral=True)
         return
         
+    smaki_list = [s.strip() for s in smaki.split(",") if s.strip()]
+
     new_product = {
         "id": product_id,
         "name": nazwa,
-        "price": cena
+        "price": cena,
+        "type": typ.lower(),
+        "description": opis,
+        "smaki": smaki_list,
+        "img": ""
     }
     
     products.append(new_product)
-    success = update_github_file(products, f"Dodano produkt {nazwa} ({product_id}) przez Discord")
+    success = update_github_file(products, f"Dodano produkt/snus {nazwa} ({product_id}) przez Discord")
     
     if success:
-        await interaction.followup.send(f"✅ Pomyślnie dodano produkt do sklepu!\n* **Nazwa:** {nazwa}\n* **Cena:** {cena} PLN\n* **ID:** `{product_id}`", ephemeral=True)
+        await interaction.followup.send(f"✅ Pomyślnie dodano do sklepu!\n* **Nazwa:** {nazwa}\n* **Typ:** {typ}\n* **Cena:** {cena} PLN\n* **Opis:** {opis}\n* **Smaki:** {', '.join(smaki_list)}\n* **ID:** `{product_id}`", ephemeral=True)
     else:
         await interaction.followup.send("❌ Błąd podczas zapisu produktu na GitHubie.", ephemeral=True)
 
@@ -285,8 +307,8 @@ async def zamowienie(interaction: discord.Interaction, order_id: str):
     embed.add_field(name="📞 Telefon", value=f"`{order.get('phone')}`", inline=True)
     embed.add_field(name="📦 Paczkomat", value=f"`{order.get('paczkomat')}`", inline=False)
     
-    items_str = "\n".join([f"- {i.get('title', i.get('name', 'Produkt'))} ({i.get('price', 0)} PLN)" for i in items])
-    embed.add_field(name="Produkty", value=items_str or "Brak", inline=False)
+    items_str = "\n".join([f"- **{i.get('title', i.get('name', 'Produkt'))}** ({i.get('price', 0)} PLN)" for i in items])
+    embed.add_field(name="Zakupione produkty (ze smakami):", value=items_str or "Brak", inline=False)
     embed.add_field(name="Suma", value=f"**{order.get('total')} PLN**", inline=False)
     
     await ticket_channel.send(content=user.mention, embed=embed)
