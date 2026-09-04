@@ -22,7 +22,7 @@
     }
   </script>
 </head>
-<body class="bg-[#fafbfc] text-slate-800 font-sans min-h-screen flex flex-col justify-between antialiased pb-24">
+<body class="bg-[#fafbfc] text-slate-800 font-sans min-h-screen flex flex-col justify-between antialiased pb-24" onload="loadProductsFromJSON(); loadReviews();">
 
   <!-- 18+ WERYFIKACJA WIEKU MODAL -->
   <div id="age-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
@@ -161,40 +161,15 @@
       <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6"></div>
     </main>
 
-    <!-- OPINIE -->
+    <!-- OPINIE (DYNAMICSZNIE POBIERANE Z BACKENDU) -->
     <section class="max-w-[1400px] mx-auto px-6 py-10 border-t border-slate-200/60">
       <div class="text-center mb-8">
         <span class="text-xs font-bold text-brand uppercase tracking-widest">Opinie społeczności</span>
         <h2 class="text-xl font-black text-slate-900 uppercase">Co mówią o nas klienci z Discorda?</h2>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-          <div class="flex items-center gap-1 text-amber-400 text-xs mb-2">★★★★★</div>
-          <p class="text-xs text-slate-600 font-medium mb-3">"Paczka przyszła w niecałe 24h! Wszystko dobrze zapakowane, kody z discorda działają bez problemu. Polecam w 100%!"</p>
-          <div class="flex items-center justify-between text-[11px]">
-            <strong class="text-slate-900">@Szymon_DC</strong>
-            <span class="text-emerald-500 font-bold">Zweryfikowany zakup</span>
-          </div>
-        </div>
-
-        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-          <div class="flex items-center gap-1 text-amber-400 text-xs mb-2">★★★★★</div>
-          <p class="text-xs text-slate-600 font-medium mb-3">"Bralem boxa 10x WGA smart. Cena najlepsza w internecie, wysyłka błyskawica. Napewno jeszcze wrócę."</p>
-          <div class="flex items-center justify-between text-[11px]">
-            <strong class="text-slate-900">@KacperVape</strong>
-            <span class="text-emerald-500 font-bold">Zweryfikowany zakup</span>
-          </div>
-        </div>
-
-        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-          <div class="flex items-center gap-1 text-amber-400 text-xs mb-2">★★★★★</div>
-          <p class="text-xs text-slate-600 font-medium mb-3">"Mega sprawna obsługa na DC, super jakość i szybka realizacja. Najlepszy sklep w sieci."</p>
-          <div class="flex items-center justify-between text-[11px]">
-            <strong class="text-slate-900">@Mati_LBK</strong>
-            <span class="text-emerald-500 font-bold">Zweryfikowany zakup</span>
-          </div>
-        </div>
+      <div id="reviews-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <p class="col-span-full text-center text-slate-400 py-4">Ładowanie opinii...</p>
       </div>
     </section>
   </div>
@@ -327,6 +302,41 @@
         products = [];
       }
       filterProducts('all');
+    }
+
+    // Funkcja pobierająca zaakceptowane opinie z backendu
+    async function loadReviews() {
+      try {
+        const res = await fetch('https://lbk.onrender.com/reviews');
+        const data = await res.json();
+        const reviewsContainer = document.getElementById('reviews-container');
+        
+        if (data.success && data.reviews && data.reviews.length > 0) {
+          reviewsContainer.innerHTML = '';
+          data.reviews.forEach(rev => {
+            // Generowanie gwiazdek na podstawie oceny (np. od 1 do 5)
+            const ratingNum = parseInt(rev.rating) || 5;
+            const stars = '★'.repeat(Math.min(Math.max(ratingNum, 1), 5));
+            
+            reviewsContainer.innerHTML += `
+              <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center gap-1 text-amber-400 text-xs mb-2">${stars}</div>
+                  <p class="text-xs text-slate-600 font-medium mb-3">"${rev.comment}"</p>
+                </div>
+                <div class="flex items-center justify-between text-[11px] pt-3 border-t border-slate-100">
+                  <strong class="text-slate-900">@${rev.user}</strong>
+                  <span class="text-emerald-500 font-bold">Zweryfikowany zakup</span>
+                </div>
+              </div>
+            `;
+          });
+        } else {
+          reviewsContainer.innerHTML = '<p class="col-span-full text-center text-slate-400 py-6">Brak opinii. Bądź pierwszy i oceń nas na Discordzie!</p>';
+        }
+      } catch (e) {
+        document.getElementById('reviews-container').innerHTML = '<p class="col-span-full text-center text-slate-400 py-6">Nie udało się pobrać opinii.</p>';
+      }
     }
 
     function renderProducts() {
@@ -569,7 +579,7 @@
           btn.innerText = "Złóż zamówienie i przejdź na Discorda";
         }
       } catch (err) {
-        alert('Błąd połączenia z backendem bota: ' + err.message);
+        alert('Błąd połączenia z serwerem.');
         btn.disabled = false;
         btn.innerText = "Złóż zamówienie i przejdź na Discorda";
       }
@@ -584,10 +594,6 @@
     function closeCookies() {
       document.getElementById('cookie-banner').style.display = 'none';
     }
-
-    window.onload = () => {
-      loadProductsFromJSON();
-    };
   </script>
 </body>
 </html>
