@@ -55,10 +55,5 @@
     "price": 20,
     "image": "https://www.vapes24h.net/api/uploads/1780857658028-201790681.png"
   },
-  {
-    "id": "VAP-107",
-    "name": "WGA SMART 20K",
-    "price": 49,
-    "image": "https://www.vapes24h.net/wga20k_new.png"
-  }
+
 ]
