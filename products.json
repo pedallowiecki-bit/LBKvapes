@@ -6,7 +6,8 @@
     "price": 88.0,
     "oldPrice": null,
     "badge": null,
-    "img": "https://www.vapes24h.net/api/uploads/1780853828329-376936261.png"
+    "img": "https://www.vapes24h.net/api/uploads/1780853828329-376936261.png",
+    "smaki": ["Watermelon Ice", "Strawberry Kiwi", "Blueberry Ice", "Peach Mango"]
   },
   {
     "id": "00002",
@@ -15,7 +16,8 @@
     "price": 65.0,
     "oldPrice": 79.0,
     "badge": null,
-    "img": "https://www.vapes24h.net/api/uploads/1780853948391-461762351.png"
+    "img": "https://www.vapes24h.net/api/uploads/1780853948391-461762351.png",
+    "smaki": ["Blue Razz Lemonade", "Strawberry Watermelon", "Cherry Cola", "Double Apple"]
   },
   {
     "id": "00004",
@@ -24,7 +26,8 @@
     "price": 35.0,
     "oldPrice": null,
     "badge": null,
-    "img": "https://www.vapes24h.net/api/uploads/1782674786774-994670689.png"
+    "img": "https://www.vapes24h.net/api/uploads/1782674786774-994670689.png",
+    "smaki": ["Grape Ice", "Mango Ice", "Mixed Berry", "Watermelon Bubblegum"]
   },
   {
     "id": "00006",
@@ -33,7 +36,8 @@
     "price": 45.0,
     "oldPrice": 50.0,
     "badge": null,
-    "img": "https://www.vapes24h.net/wga20k_new.png"
+    "img": "https://www.vapes24h.net/wga20k_new.png",
+    "smaki": ["Kiwi Passion Fruit Guava", "Blueberry Raspberry", "Strawberry Ice", "Peach Ice"]
   },
   {
     "id": "VAP-102",
@@ -42,7 +46,8 @@
     "price": 20.0,
     "oldPrice": null,
     "badge": null,
-    "img": "https://www.vapes24h.net/api/uploads/1780853848672-975219883.png"
+    "img": "https://www.vapes24h.net/api/uploads/1780853848672-975219883.png",
+    "smaki": ["0.4Ω", "0.6Ω", "0.8Ω", "1.2Ω"]
   },
   {
     "id": "VAP-105",
@@ -51,7 +56,8 @@
     "price": 65.0,
     "oldPrice": null,
     "badge": null,
-    "img": "https://www.vapes24h.net/api/uploads/1780853709325-159392263.png"
+    "img": "https://www.vapes24h.net/api/uploads/1780853709325-159392263.png",
+    "smaki": ["Blue Razz", "Strawberry Banana", "Watermelon Ice", "Cherry Ice"]
   },
   {
     "id": "VAP-106",
@@ -60,6 +66,37 @@
     "price": 20.0,
     "oldPrice": null,
     "badge": null,
-    "img": "https://www.vapes24h.net/api/uploads/1780857658028-201790681.png"
+    "img": "https://www.vapes24h.net/api/uploads/1780857658028-201790681.png",
+    "smaki": ["Mięta", "Jabłko", "Truskawka", "Czarna Porzeczka"]
+  },
+  {
+    "id": "SNUS-001",
+    "type": "snus",
+    "name": "CUBA BLACK LINE",
+    "price": 25.0,
+    "oldPrice": null,
+    "badge": "Nowość",
+    "img": "https://via.placeholder.com/200",
+    "smaki": ["Cherry", "Pineapple", "Strong Mint", "Blackberry"]
+  },
+  {
+    "id": "SNUS-002",
+    "type": "snus",
+    "name": "PABLO EXCLUSIVE",
+    "price": 28.0,
+    "oldPrice": null,
+    "badge": "Hit",
+    "img": "https://via.placeholder.com/200",
+    "smaki": ["Banana Ice", "Bubblegum", "Mint", "Grape Ice"]
+  },
+  {
+    "id": "SNUS-003",
+    "type": "snus",
+    "name": "KILLA COLD MINT",
+    "price": 24.0,
+    "oldPrice": null,
+    "badge": null,
+    "img": "https://via.placeholder.com/200",
+    "smaki": ["Cold Mint", "Watermelon", "Apple", "Blue Raspberry"]
   }
 ]
