@@ -199,6 +199,35 @@
     </section>
   </div>
 
+  <!-- MODAL SZCZEGÓŁÓW PRODUKTU (OPIS I SMAK) -->
+  <div id="product-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl relative border border-slate-100">
+      <div class="flex flex-col items-center text-center">
+        <div class="w-48 h-48 bg-slate-50 rounded-2xl mb-4 overflow-hidden flex items-center justify-center p-3 border border-slate-100">
+          <img id="modal-product-img" src="" alt="" class="max-h-full object-contain">
+        </div>
+        <h2 id="modal-product-title" class="text-base font-black text-slate-900 uppercase mb-2"></h2>
+        <p id="modal-product-desc" class="text-xs text-slate-600 font-medium mb-4 leading-relaxed text-left w-full bg-slate-50 p-3 rounded-xl border border-slate-100"></p>
+        
+        <div id="modal-flavor-container" class="w-full mb-4 text-left hidden">
+          <label class="block text-[11px] font-extrabold text-slate-700 uppercase mb-1">Wybierz smak:</label>
+          <select id="modal-flavor-select" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-brand cursor-pointer">
+          </select>
+        </div>
+
+        <div class="flex items-center justify-between w-full mb-5">
+          <span class="text-xs font-bold text-slate-500 uppercase">Cena:</span>
+          <span id="modal-product-price" class="text-lg font-black text-slate-900">0.00 PLN</span>
+        </div>
+
+        <button id="modal-add-btn" class="w-full bg-brand hover:bg-brand-hover text-white text-xs font-extrabold py-3.5 rounded-xl uppercase tracking-wider transition-all shadow-md shadow-brand/20 cursor-pointer">
+          DODAJ DO KOSZYKA
+        </button>
+      </div>
+      <button onclick="closeProductModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 font-black text-lg cursor-pointer">✕</button>
+    </div>
+  </div>
+
   <!-- MODAL KOSZYKA Z DANYMI ZAMÓWIENIA -->
   <div id="cart-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative border border-slate-100">
@@ -315,23 +344,11 @@
         const isBox = (p.badge && p.badge.toLowerCase().includes('box')) || p.name.toLowerCase().includes('box');
         const badgeText = p.badge || (isBox ? 'BOX' : null);
 
-        // Obsługa listy smaków dla produktu
-        let flavorsHtml = '';
-        if (p.smaki && Array.isArray(p.smaki) && p.smaki.length > 0) {
-          flavorsHtml = `
-            <div class="mb-2 text-left">
-              <label class="block text-[10px] font-extrabold text-slate-500 uppercase mb-1">Wybierz smak:</label>
-              <select id="flavor-${p.id}" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-[11px] font-bold text-slate-800 focus:outline-none focus:border-brand cursor-pointer">
-                ${p.smaki.map(s => `<option value="${s}">${s}</option>`).join('')}
-              </select>
-            </div>
-          `;
-        }
-
         html += `
           <div class="group bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-xl hover:border-brand/30 transition-all duration-300 flex flex-col justify-between relative">
             ${badgeText ? `<span class="absolute top-3 left-3 bg-slate-900 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider z-10 shadow-sm">${badgeText}</span>` : ''}
-            <div>
+            
+            <div class="cursor-pointer" onclick="openProductModal('${p.id}')">
               <div class="w-full h-44 bg-slate-50 rounded-xl mb-3 overflow-hidden flex items-center justify-center p-3 group-hover:bg-brand-light/30 transition-colors">
                 <img src="${p.img || 'https://via.placeholder.com/200'}" alt="${p.name}" class="max-h-full object-contain group-hover:scale-105 transition-transform duration-300">
               </div>
@@ -343,20 +360,67 @@
                 <span class="text-slate-400 text-[10px] font-medium">(5)</span>
               </div>
             </div>
+
             <div>
-              ${flavorsHtml}
-              <div class="mb-3">
-                <span class="text-base font-black text-slate-900">${price.toFixed(2)} <span class="text-xs font-bold">PLN</span></span>
-                ${oldPrice ? `<span class="text-xs text-slate-400 line-through block font-medium">${oldPrice.toFixed(2)} PLN</span>` : ''}
+              <div class="mb-3 flex items-center justify-between">
+                <div>
+                  <span class="text-base font-black text-slate-900">${price.toFixed(2)} <span class="text-xs font-bold">PLN</span></span>
+                  ${oldPrice ? `<span class="text-xs text-slate-400 line-through block font-medium">${oldPrice.toFixed(2)} PLN</span>` : ''}
+                </div>
+                <button onclick="openProductModal('${p.id}')" class="text-[11px] font-bold text-brand hover:underline cursor-pointer">Zobacz opis &rsaquo;</button>
               </div>
-              <button onclick="addToCart('${p.name.replace(/'/g, "\\'")}', ${price}, '${p.id}')" class="w-full bg-brand hover:bg-brand-hover text-white text-xs font-extrabold py-3 rounded-xl uppercase tracking-wider transition-all duration-200 shadow-md shadow-brand/20 active:scale-95 cursor-pointer">
-                DODAJ DO KOSZYKA
+              <button onclick="openProductModal('${p.id}')" class="w-full bg-brand hover:bg-brand-hover text-white text-xs font-extrabold py-3 rounded-xl uppercase tracking-wider transition-all duration-200 shadow-md shadow-brand/20 active:scale-95 cursor-pointer">
+                WYBIERZ I KUP
               </button>
             </div>
           </div>
         `;
       });
       grid.innerHTML = html;
+    }
+
+    function openProductModal(id) {
+      const p = products.find(prod => prod.id == id);
+      if (!p) return;
+
+      document.getElementById('modal-product-img').src = p.img || 'https://via.placeholder.com/200';
+      document.getElementById('modal-product-title').innerText = p.name;
+      document.getElementById('modal-product-desc').innerText = p.description || p.opis || 'Brak dodatkowego opisu dla tego produktu.';
+      
+      const price = typeof p.price === 'number' ? p.price : parseFloat(p.price);
+      document.getElementById('modal-product-price').innerText = price.toFixed(2) + ' PLN';
+
+      const flavorContainer = document.getElementById('modal-flavor-container');
+      const flavorSelect = document.getElementById('modal-flavor-select');
+
+      if (p.smaki && Array.isArray(p.smaki) && p.smaki.length > 0) {
+        flavorSelect.innerHTML = p.smaki.map(s => `<option value="${s}">${s}</option>`).join('');
+        flavorContainer.classList.remove('hidden');
+      } else {
+        flavorContainer.classList.add('hidden');
+      }
+
+      document.getElementById('modal-add-btn').onclick = () => {
+        let selectedFlavor = '';
+        if (p.smaki && Array.isArray(p.smaki) && p.smaki.length > 0) {
+          selectedFlavor = flavorSelect.value;
+        }
+        addToCartWithFlavor(p.name, price, selectedFlavor);
+        closeProductModal();
+      };
+
+      document.getElementById('product-modal').classList.remove('hidden');
+    }
+
+    function closeProductModal() {
+      document.getElementById('product-modal').classList.add('hidden');
+    }
+
+    function addToCartWithFlavor(title, price, flavor) {
+      const finalTitle = flavor ? `${title} (${flavor})` : title;
+      cart.push({ title: finalTitle, price });
+      document.getElementById('cart-count').innerText = cart.length;
+      openCartModal();
     }
 
     function searchProducts() {
@@ -410,19 +474,6 @@
       }
       
       renderProducts();
-    }
-
-    function addToCart(title, price, id) {
-      let selectedFlavor = '';
-      const selectEl = document.getElementById(`flavor-${id}`);
-      if (selectEl) {
-        selectedFlavor = selectEl.value;
-      }
-      const finalTitle = selectedFlavor ? `${title} (${selectedFlavor})` : title;
-
-      cart.push({ title: finalTitle, price });
-      document.getElementById('cart-count').innerText = cart.length;
-      openCartModal();
     }
 
     function removeFromCart(index) {
