@@ -25,5 +25,14 @@
     "oldPrice": null,
     "badge": null,
     "img": "https://cdn.discordapp.com/attachments/1419590364612005929/1545520041867350016/1780853828329-376936261.png?ex=6a9c7134&is=6a9b1fb4&hm=50b02eb8f30f7d380b98dfdd9f289a9c4ec4d46723be7a83e85f306966ca9a24&"
+  },
+  {
+    "id": "00002",
+    "type": "Inne",
+    "name": "VAPEN FLOW 40k",
+    "price": 65.0,
+    "oldPrice": 79.0,
+    "badge": null,
+    "img": "https://cdn.discordapp.com/attachments/1419590364612005929/1545520326903861418/1780853948391-461762351.png?ex=6a9c7178&is=6a9b1ff8&hm=dc67532a679ff4907da0930b31457ad99ee7bf9a45f106f5fb4412268e3b5ffb&"
   }
 ]
