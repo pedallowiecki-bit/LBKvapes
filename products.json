@@ -16,5 +16,14 @@
     "oldPrice": 79.0,
     "badge": null,
     "img": "https://cdn.discordapp.com/attachments/1419590364612005929/1545520326903861418/1780853948391-461762351.png?ex=6a9c7178&is=6a9b1ff8&hm=dc67532a679ff4907da0930b31457ad99ee7bf9a45f106f5fb4412268e3b5ffb&"
+  },
+  {
+    "id": "00003",
+    "type": "Inne",
+    "name": "WGA SMART 20K",
+    "price": 47.0,
+    "oldPrice": 65.0,
+    "badge": null,
+    "img": "https://cdn.discordapp.com/attachments/1419590364612005929/1545521969645092974/wga20k_new.png?ex=6a9c72ff&is=6a9b217f&hm=d0120510b686247c48721b492f0c67e086411d03935bd472088b78da05d67d0b&"
   }
 ]
