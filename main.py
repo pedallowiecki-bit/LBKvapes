@@ -20,6 +20,9 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO = os.getenv("GITHUB_REPO")
 GUILD_ID = os.getenv("GUILD_ID")
 ADMIN_CHANNEL_ID = os.getenv("ADMIN_CHANNEL_ID")
+ADMIN_ROLE_ID = os.getenv("ADMIN_ROLE_ID")
+
+CLIENT_ROLE_ID = "1545554046230855870"
 
 FILE_PATH = "products.json"
 ORDERS_FILE_PATH = "orders.json"
@@ -255,12 +258,18 @@ def create_order():
             if not channel_name:
                 channel_name = "ticket-zamowienie"
 
+            # Kanał widoczny tylko dla administracji i bota
             overwrites = {
                 guild.default_role: discord.PermissionOverwrite(read_messages=False),
                 guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
             }
-            if member:
-                overwrites[member] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
+            if ADMIN_ROLE_ID:
+                try:
+                    admin_role = guild.get_role(int(ADMIN_ROLE_ID))
+                    if admin_role:
+                        overwrites[admin_role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
+                except:
+                    pass
 
             ticket_channel = await guild.create_text_channel(name=channel_name, overwrites=overwrites)
 
@@ -281,7 +290,7 @@ def create_order():
             embed.add_field(name="Zamówione Produkty", value="\n".join(items_desc) or "Brak", inline=False)
             embed.add_field(name="Suma", value=f"**{total} PLN**", inline=False)
             
-            ping_content = member.mention if member else f"@{discord_user}"
+            ping_content = f"<@&{ADMIN_ROLE_ID}>" if ADMIN_ROLE_ID else "@here"
             await ticket_channel.send(content=ping_content, embed=embed)
 
         asyncio.run_coroutine_threadsafe(create_ticket_task(), bot.loop)
@@ -335,6 +344,11 @@ class ReviewButtonView(discord.ui.View):
 
     @discord.ui.button(label="📝 Oceń sklep", style=discord.ButtonStyle.green, custom_id="open_review_modal_btn")
     async def open_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
+        # Sprawdzenie czy użytkownik ma rangę klienta
+        has_role = any(str(r.id) == CLIENT_ROLE_ID for r in interaction.user.roles) if isinstance(interaction.user, discord.Member) else False
+        if not has_role:
+            await interaction.response.send_message("❌ Opinie mogą wystawiać tylko zweryfikowani klienci (posiadający odpowiednią rangę)!", ephemeral=True)
+            return
         await interaction.response.send_modal(ReviewModal())
 
 class AdminReviewView(discord.ui.View):
@@ -536,26 +550,45 @@ async def zamowienie(interaction: discord.Interaction, order_id: str):
         return
 
     guild = interaction.guild
-    user = interaction.user
+    order_discord_name = order.get('discord')
+    customer_member = discord.utils.get(guild.members, name=order_discord_name) or discord.utils.get(guild.members, global_name=order_discord_name)
     items = order.get('items', [])
     
-    channel_name = f"ticket-{user.name}".lower().replace(" ", "-")
+    channel_name = f"ticket-{order_discord_name}".lower().replace(" ", "-")
     channel_name = "".join(c for c in channel_name if c.isalnum() or c == "-")[:99]
 
+    # Kanał widoczny tylko dla administracji i bota
     overwrites = {
         guild.default_role: discord.PermissionOverwrite(read_messages=False),
-        user: discord.PermissionOverwrite(read_messages=True, send_messages=True),
         guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
     }
+    if ADMIN_ROLE_ID:
+        try:
+            admin_role = guild.get_role(int(ADMIN_ROLE_ID))
+            if admin_role:
+                overwrites[admin_role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
+        except:
+            pass
+
     ticket_channel = await guild.create_text_channel(name=channel_name, overwrites=overwrites)
 
+    # Realizacja zamówienia (usunięcie z GitHub)
     remaining_orders = [o for o in orders if str(o.get('id')).upper() != order_id.upper()]
     update_github_orders(remaining_orders, f"Zrealizowano zamówienie {order_id}")
 
-    await interaction.followup.send(f"✅ Otworzono ticket: {ticket_channel.mention}", ephemeral=True)
+    # Nadanie rangi klienta (ID: 1545554046230855870) przy zrealizowaniu zamówienia
+    if customer_member:
+        try:
+            client_role = guild.get_role(int(CLIENT_ROLE_ID))
+            if client_role:
+                await customer_member.add_roles(client_role)
+        except Exception as e:
+            print(f"Błąd nadawania roli klienta: {e}")
+
+    await interaction.followup.send(f"✅ Otworzono ticket administracyjny: {ticket_channel.mention}", ephemeral=True)
 
     embed = discord.Embed(title="🛒 Ticket Zamówienia", color=discord.Color.green())
-    embed.add_field(name="👤 Klient", value=f"`{order.get('discord')}` {user.mention}", inline=True)
+    embed.add_field(name="👤 Klient", value=f"`{order_discord_name}` {customer_member.mention if customer_member else ''}", inline=True)
     embed.add_field(name="🆔 ID", value=f"`{order_id}`", inline=True)
     embed.add_field(name="📧 Email", value=f"`{order.get('email')}`", inline=True)
     embed.add_field(name="📞 Telefon", value=f"`{order.get('phone')}`", inline=True)
@@ -571,7 +604,8 @@ async def zamowienie(interaction: discord.Interaction, order_id: str):
     embed.add_field(name="Produkty", value="\n".join(items_desc) or "Brak", inline=False)
     embed.add_field(name="Suma", value=f"**{order.get('total')} PLN**", inline=False)
     
-    await ticket_channel.send(content=user.mention, embed=embed)
+    ping_content = f"<@&{ADMIN_ROLE_ID}>" if ADMIN_ROLE_ID else "@here"
+    await ticket_channel.send(content=ping_content, embed=embed)
 
 @bot.tree.command(name="zamknij", description="Zamyka aktualny ticket")
 async def zamknij(interaction: discord.Interaction):
