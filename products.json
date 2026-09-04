@@ -76,27 +76,7 @@
     "price": 25.0,
     "oldPrice": null,
     "badge": "Nowość",
-    "img": "https://via.placeholder.com/200",
+    "img": "https://vapespot.pl/_next/image?url=https%3A%2F%2Fi.imgur.com%2FbB5ZytT.png&w=640&q=75",
     "smaki": ["Cherry", "Pineapple", "Strong Mint", "Blackberry"]
   },
-  {
-    "id": "SNUS-002",
-    "type": "snus",
-    "name": "PABLO EXCLUSIVE",
-    "price": 28.0,
-    "oldPrice": null,
-    "badge": "Hit",
-    "img": "https://via.placeholder.com/200",
-    "smaki": ["Banana Ice", "Bubblegum", "Mint", "Grape Ice"]
-  },
-  {
-    "id": "SNUS-003",
-    "type": "snus",
-    "name": "KILLA COLD MINT",
-    "price": 24.0,
-    "oldPrice": null,
-    "badge": null,
-    "img": "https://via.placeholder.com/200",
-    "smaki": ["Cold Mint", "Watermelon", "Apple", "Blue Raspberry"]
-  }
-]
+  
