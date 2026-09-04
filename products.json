@@ -228,5 +228,35 @@
     "badge": null,
     "img": "https://i.imgur.com/jqt70pQ.png",
     "smaki": ["Cold Mint", "Strong"]
+  },
+  {
+    "id": "VAP-301",
+    "type": "Inne",
+    "name": "AROMAKING 700",
+    "price": 22,
+    "oldPrice": null,
+    "badge": null,
+    "img": "https://i.imgur.com/H2TYSfy.png",
+    "smaki": ["Strawberry Watermelon", "Pineapple Peach Mango", "Blue Razz Cherry", "Banana Ice"]
+  },
+  {
+    "id": "VAP-302",
+    "type": "Inne",
+    "name": "HAPP BAR 30K",
+    "price": 65,
+    "oldPrice": null,
+    "badge": null,
+    "img": "https://i.imgur.com/ZQxuHFT.png",
+    "smaki": ["Blueberry Rasberry", "Strawberry Banana", "Blueberry Ice", "Cherry Ice", "Cola Ice", "Peach Hail", "Strawberry Ice"]
+  },
+  {
+    "id": "VAP-303",
+    "type": "Urządzenia",
+    "name": "NOVO MASTER",
+    "price": 89,
+    "oldPrice": null,
+    "badge": null,
+    "img": "https://i.imgur.com/Wm2tLxB.png",
+    "smaki": ["Turkusowy"]
   }
 ]
