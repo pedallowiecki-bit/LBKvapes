@@ -80,3 +80,115 @@
     "smaki": ["Cherry", "Pineapple", "Strong Mint", "Blackberry"]
   }
 ]
+[
+  {
+    "id": "VAP-201",
+    "type": "Inne",
+    "name": "PIPETA 5 ML",
+    "price": 5.0,
+    "oldPrice": null,
+    "badge": null,
+    "img": "https://vapespot.pl/_next/image?url=https%3A%2F%2Fi.imgur.com%2FEWHH0Ce.png&w=640&q=75",
+    "smaki": ["3 kolory"]
+  },
+  {
+    "id": "VAP-202",
+    "type": "Inne",
+    "name": "BUTELKA 10 ML",
+    "price": 2.0,
+    "oldPrice": null,
+    "badge": null,
+    "img": "https://vapespot.pl/_next/image?url=https%3A%2F%2Fi.imgur.com%2FhL8dBfA.png&w=640&q=75",
+    "smaki": ["Standard"]
+  },
+  {
+    "id": "VAP-203",
+    "type": "Inne",
+    "name": "AKUMULATOR 3000 MAH",
+    "price": 20.0,
+    "oldPrice": null,
+    "badge": "Popularne",
+    "img": "https://vapespot.pl/_next/image?url=https%3A%2F%2Fi.imgur.com%2FSkblUJZ.png&w=640&q=75",
+    "smaki": ["18650", "3000 mAh"]
+  },
+  {
+    "id": "VAP-204",
+    "type": "Inne",
+    "name": "GEEKVAPE TSUNAMI RDA",
+    "price": 99.0,
+    "oldPrice": null,
+    "badge": null,
+    "img": "https://vapespot.pl/_next/image?url=https%3A%2F%2Fi.imgur.com%2FUwlKS5u.png&w=640&q=75",
+    "smaki": ["Złoty", "Czarny"]
+  },
+  {
+    "id": "VAP-205",
+    "type": "Inne",
+    "name": "HELLVAPE DEAD RABBIT 3 RDA",
+    "price": 159.0,
+    "oldPrice": null,
+    "badge": "Bestseller",
+    "img": "https://vapespot.pl/_next/image?url=https%3A%2F%2Fi.imgur.com%2FbsRPrAT.png&w=640&q=75",
+    "smaki": ["Rainbow", "Czarny", "Stalowy"]
+  },
+  {
+    "id": "VAP-206",
+    "type": "Inne",
+    "name": "SMOK NORD 4 KARTRIDŻ",
+    "price": 15.0,
+    "oldPrice": null,
+    "badge": null,
+    "img": "https://vapespot.pl/_next/image?url=https%3A%2F%2Fi.imgur.com%2FiEhii4O.png&w=640&q=75",
+    "smaki": ["RPM", "RPM 2"]
+  },
+  {
+    "id": "VAP-207",
+    "type": "Inne",
+    "name": "VAPE BAND BUBBLE",
+    "price": 5.0,
+    "oldPrice": null,
+    "badge": null,
+    "img": "https://vapespot.pl/_next/image?url=https%3A%2F%2Fi.imgur.com%2F3bHLLCX.png&w=640&q=75",
+    "smaki": ["6 kolorów"]
+  },
+  {
+    "id": "VAP-209",
+    "type": "Inne",
+    "name": "GRZAŁKA CENTAURUS",
+    "price": 18.0,
+    "oldPrice": null,
+    "badge": null,
+    "img": "https://vapespot.pl/_next/image?url=https%3A%2F%2Fi.imgur.com%2F4Aq7Fj3.png&w=640&q=75",
+    "smaki": ["0.15 ,0.2 Ω,0.3 Ω]
+  },
+  {
+    "id": "VAP-210",
+    "type": "Inne",
+    "name": "WENAX K1 GRZAŁKA + KARTRIDŻ",
+    "price": 8.0,
+    "oldPrice": null,
+    "badge": null,
+    "img": "https://vapespot.pl/_next/image?url=https%3A%2F%2Fi.imgur.com%2Fk7uhUlF.png&w=640&q=75",
+    "smaki": ["1.0Ω", "1.2Ω"]
+  },
+  {
+    "id": "VAP-211",
+    "type": "Inne",
+    "name": "GEEKVAPE Z SUBOHM SZKIELET",
+    "price": 17.0,
+    "oldPrice": null,
+    "badge": null,
+    "img": "https://vapespot.pl/_next/image?url=https%3A%2F%2Fi.imgur.com%2F90qoz9B.png&w=640&q=75",
+    "smaki": ["Standard", "Bubble"]
+  },
+  {
+    "id": "VAP-212",
+    "type": "Inne",
+    "name": "VAPE BAND",
+    "price": 2.0,
+    "oldPrice": null,
+    "badge": null,
+    "img": "https://vapespot.pl/_next/image?url=https%3A%2F%2Fi.imgur.com%2FyQU2PIf.png&w=640&q=75",
+    "smaki": ["9 kolorów"]
+  }
+]
