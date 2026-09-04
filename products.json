@@ -36,3 +36,29 @@
     "img": "https://cdn.discordapp.com/attachments/1419590364612005929/1545524403465486407/wga20k_new.png?ex=6a9c7544&is=6a9b23c4&hm=e22cefb2c86d380d323df644f7ebb120f81d0eb3a04125995fa4ba6b6fbdf330&"
   }
 ]
+[
+  {
+    "id": "VAP-102",
+    "name": "KARTRIDŻ OXVA - XLIM 2 ML (0.4Ω, 0.6Ω, 0.8Ω, 1.2Ω)",
+    "price": 20,
+    "image": "https://www.vapes24h.net/api/uploads/1780853848672-975219883.png"
+  },
+  {
+    "id": "VAP-105",
+    "name": "WGA CRYSTAL ULTRA 35K",
+    "price": 65,
+    "image": "https://www.vapes24h.net/api/uploads/1780853709325-159392263.png"
+  },
+  {
+    "id": "VAP-106",
+    "name": "WGA LIQUID CRYSTAL SALT BAR 10ML",
+    "price": 20,
+    "image": "https://www.vapes24h.net/api/uploads/1780857658028-201790681.png"
+  },
+  {
+    "id": "VAP-107",
+    "name": "WGA SMART 20K",
+    "price": 49,
+    "image": "https://www.vapes24h.net/wga20k_new.png"
+  }
+]
