@@ -6,7 +6,7 @@
     "price": 88.0,
     "oldPrice": null,
     "badge": null,
-    "img": "https://cdn.discordapp.com/attachments/1419590364612005929/1545520041867350016/1780853828329-376936261.png?ex=6a9c7134&is=6a9b1fb4&hm=50b02eb8f30f7d380b98dfdd9f289a9c4ec4d46723be7a83e85f306966ca9a24&"
+    "img": "https://cdn.discordapp.com/attachments/1419590364612005929/1545520041867350016/1780853828329-376936261.png"
   },
   {
     "id": "00002",
@@ -15,7 +15,7 @@
     "price": 65.0,
     "oldPrice": 79.0,
     "badge": null,
-    "img": "https://cdn.discordapp.com/attachments/1419590364612005929/1545520326903861418/1780853948391-461762351.png?ex=6a9c7178&is=6a9b1ff8&hm=dc67532a679ff4907da0930b31457ad99ee7bf9a45f106f5fb4412268e3b5ffb&"
+    "img": "https://cdn.discordapp.com/attachments/1419590364612005929/1545520326903861418/1780853948391-461762351.png"
   },
   {
     "id": "00004",
@@ -24,7 +24,7 @@
     "price": 35.0,
     "oldPrice": null,
     "badge": null,
-    "img": "https://cdn.discordapp.com/attachments/1419590364612005929/1545522553022587002/1782674786774-994670689.png?ex=6a9c738b&is=6a9b220b&hm=a713c80f183413986ec786b7e57df62b22bd19cabd8c371e69c7a2c078aff5ae&"
+    "img": "https://cdn.discordapp.com/attachments/1419590364612005929/1545522553022587002/1782674786774-994670689.png"
   },
   {
     "id": "00006",
@@ -33,27 +33,33 @@
     "price": 45.0,
     "oldPrice": 50.0,
     "badge": null,
-    "img": "https://cdn.discordapp.com/attachments/1419590364612005929/1545524403465486407/wga20k_new.png?ex=6a9c7544&is=6a9b23c4&hm=e22cefb2c86d380d323df644f7ebb120f81d0eb3a04125995fa4ba6b6fbdf330&"
-  }
-]
-[
+    "img": "https://cdn.discordapp.com/attachments/1419590364612005929/1545524403465486407/wga20k_new.png"
+  },
   {
     "id": "VAP-102",
+    "type": "Inne",
     "name": "KARTRIDŻ OXVA - XLIM 2 ML (0.4Ω, 0.6Ω, 0.8Ω, 1.2Ω)",
-    "price": 20,
-    "image": "https://www.vapes24h.net/api/uploads/1780853848672-975219883.png"
+    "price": 20.0,
+    "oldPrice": null,
+    "badge": null,
+    "img": "https://www.vapes24h.net/api/uploads/1780853848672-975219883.png"
   },
   {
     "id": "VAP-105",
+    "type": "Inne",
     "name": "WGA CRYSTAL ULTRA 35K",
-    "price": 65,
-    "image": "https://www.vapes24h.net/api/uploads/1780853709325-159392263.png"
+    "price": 65.0,
+    "oldPrice": null,
+    "badge": null,
+    "img": "https://www.vapes24h.net/api/uploads/1780853709325-159392263.png"
   },
   {
     "id": "VAP-106",
+    "type": "Inne",
     "name": "WGA LIQUID CRYSTAL SALT BAR 10ML",
-    "price": 20,
-    "image": "https://www.vapes24h.net/api/uploads/1780857658028-201790681.png"
-  },
-
+    "price": 20.0,
+    "oldPrice": null,
+    "badge": null,
+    "img": "https://www.vapes24h.net/api/uploads/1780857658028-201790681.png"
+  }
 ]
