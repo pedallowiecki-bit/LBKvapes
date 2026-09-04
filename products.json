@@ -16,5 +16,14 @@
     "oldPrice": 40.0,
     "badge": "4",
     "img": "https://cdn.discordapp.com/attachments/1430560916570771546/1464017234077814898/synkurwy.gif?ex=6a9a970c&is=6a99458c&hm=77f1c3bf0aeeb2424a2abd9e65a799e398ed66d9a1873fd27e0cc955c3f04d1b&"
+  },
+  {
+    "id": "481263834",
+    "type": "Inne",
+    "name": "ELFBAR ICE KING SUMMER 40k",
+    "price": 88.0,
+    "oldPrice": null,
+    "badge": null,
+    "img": "https://via.placeholder.com/200"
   }
 ]
