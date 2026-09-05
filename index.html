@@ -160,7 +160,7 @@
       <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6"></div>
     </main>
 
-    <!-- OPINIE (DYNAMICSZNIE POBIERANE Z BACKENDU) -->
+    <!-- OPINIE -->
     <section class="max-w-[1400px] mx-auto px-6 py-10 border-t border-cyan-900/50">
       <div class="text-center mb-8">
         <span class="text-xs font-bold text-brand uppercase tracking-widest">Opinie społeczności</span>
@@ -173,7 +173,7 @@
     </section>
   </div>
 
-  <!-- MODAL SZCZEGÓŁÓW PRODUKTU (OPIS I SMAK) -->
+  <!-- MODAL SZCZEGÓŁÓW PRODUKTU -->
   <div id="product-modal" class="hidden fixed inset-0 bg-[#020817]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-[#0a192f] text-cyan-100 rounded-3xl max-w-md w-full p-6 shadow-2xl relative border border-cyan-500/30">
       <div class="flex flex-col items-center text-center">
@@ -208,7 +208,6 @@
       <h2 class="text-lg font-black text-white mb-4 border-b border-cyan-900/50 pb-3 uppercase">Twój Koszyk i Dane Zamówienia</h2>
       <div id="cart-list" class="space-y-2 max-h-32 overflow-y-auto mb-4 text-xs pr-1"></div>
 
-      <!-- POLA DANYCH KLIENTA -->
       <div class="space-y-3 mb-4 bg-[#020817] p-4 rounded-2xl border border-cyan-900/50">
         <div>
           <label class="block text-[11px] font-bold text-cyan-300 uppercase mb-1">Twój nick na Discordzie:</label>
@@ -261,20 +260,6 @@
     </div>
   </div>
 
-  <!-- COOKIES BANNER -->
-  <div id="cookie-banner" class="fixed bottom-4 left-4 right-4 z-40 max-w-[1400px] mx-auto">
-    <div class="bg-[#0a192f]/95 backdrop-blur-md border border-cyan-500/30 p-4 rounded-2xl shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-cyan-100">
-      <div class="text-xs text-cyan-200/80">
-        <strong class="text-white font-bold block mb-0.5">Polityka plików cookies</strong>
-        Nasza strona korzysta z plików cookies. <a href="#" class="text-brand font-semibold hover:underline">Dowiedz się więcej</a>
-      </div>
-      <div class="flex items-center gap-3 shrink-0">
-        <button onclick="closeCookies()" class="text-xs text-cyan-400 font-bold px-4 py-2 cursor-pointer hover:text-white">Odrzuć</button>
-        <button onclick="closeCookies()" class="bg-brand text-white text-xs font-extrabold px-6 py-2.5 rounded-xl shadow-md shadow-brand/20 cursor-pointer">Akceptuję</button>
-      </div>
-    </div>
-  </div>
-
   <script>
     let products = [];
     let displayedProducts = [];
@@ -303,7 +288,6 @@
       filterProducts('all');
     }
 
-    // Funkcja pobierająca zaakceptowane opinie z backendu
     async function loadReviews() {
       try {
         const res = await fetch('https://lbk.onrender.com/reviews');
@@ -313,7 +297,6 @@
         if (data.success && data.reviews && data.reviews.length > 0) {
           reviewsContainer.innerHTML = '';
           data.reviews.forEach(rev => {
-            // Generowanie gwiazdek na podstawie oceny (np. od 1 do 5)
             const ratingNum = parseInt(rev.rating) || 5;
             const stars = '★'.repeat(Math.min(Math.max(ratingNum, 1), 5));
             
@@ -554,34 +537,39 @@
 
       try {
         const backendUrl = 'https://lbk.onrender.com/create-order';
-
         const response = await fetch(backendUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            discord: nick,
+            discord_nick: nick,
             email: email,
             phone: phone,
             paczkomat: paczkomat,
-            items: cart
+            items: cart,
+            total: cart.reduce((sum, item) => sum + item.price, 0)
           })
         });
-
         const data = await response.json();
-        if (response.ok && data.success) {
+        if (data.success) {
+          document.getElementById('final-code').innerText = `/zamowienie order_id:${data.order_id || 'LBK-12345'}`;
           document.getElementById('token-result').classList.remove('hidden');
-          document.getElementById('final-code').innerText = `/zamowienie order_id:${data.order_id}`;
-          btn.innerText = "Zamówienie wysłane pomyślnie!";
+          btn.innerText = "Zamówienie złożone!";
         } else {
-          alert('Błąd serwera: ' + (data.error || 'Nieznany błąd'));
+          alert('Błąd podczas składania zamówienia: ' + (data.message || 'Spróbuj ponownie.'));
           btn.disabled = false;
           btn.innerText = "Złóż zamówienie i przejdź na Discorda";
         }
       } catch (e) {
-        alert('Wystąpił błąd sieci.');
+        alert('Błąd połączenia z serwerem.');
         btn.disabled = false;
         btn.innerText = "Złóż zamówienie i przejdź na Discorda";
       }
+    }
+
+    function copyCode() {
+      const codeText = document.getElementById('final-code').innerText;
+      navigator.clipboard.writeText(codeText);
+      alert('Skopiowano komendę do schowka!');
     }
   </script>
 </body>
