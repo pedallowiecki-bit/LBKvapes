@@ -70,16 +70,6 @@
     "smaki": ["Mięta", "Jabłko", "Truskawka", "Czarna Porzeczka"]
   },
   {
-    "id": "SNUS-001",
-    "type": "snus",
-    "name": "CUBA BLACK LINE",
-    "price": 25.0,
-    "oldPrice": null,
-    "badge": "Nowość",
-    "img": "https://i.imgur.com/bB5ZytT.png",
-    "smaki": ["Cherry", "Pineapple", "Strong Mint", "Blackberry"]
-  },
-  {
     "id": "VAP-201",
     "type": "Inne",
     "name": "PIPETA 5 ML",
