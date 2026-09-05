@@ -37,7 +37,7 @@
     </div>
   </div>
 
-  <!-- TOP BAR Z DISCORDEM I TIMEREM -->
+  <!-- TOP BAR Z DISCORDEM -->
   <div class="bg-[#020817] text-cyan-300 text-xs py-2.5 px-6 border-b border-cyan-900/50">
     <div class="max-w-[1400px] mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
       <div class="flex items-center gap-2">
@@ -69,7 +69,7 @@
             <span class="text-xs font-bold text-brand uppercase tracking-widest block mb-1">O naszej marce</span>
             <h2 class="text-2xl font-black text-white uppercase tracking-tight mb-2">Kim jesteśmy?</h2>
             <p class="text-xs md:text-sm text-cyan-200/80 font-medium leading-relaxed">
-              LBKPETS to Twój zaufany sklep internetowy. Zaczynaliśmy od społeczności na Discordzie, a dziś oferujemy w pełni profesjonalny asortyment, szybką dostawę i pełną gwarancję satysfakcji.
+              LBKPETS to Twój zaufany sklep internetowy. Oferujemy szeroki wybór jednorazówek, snusów oraz akcesoriów z błyskawiczną wysyłką i pełną gwarancją satysfakcji.
             </p>
           </div>
         </div>
@@ -96,39 +96,47 @@
       </div>
     </section>
 
-    <!-- KATEGORIE -->
+    <!-- KATEGORIE GŁÓWNE -->
     <section class="max-w-[1400px] mx-auto px-6 py-4">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div onclick="filterProducts('all')" class="cursor-pointer bg-gradient-to-br from-[#020817] to-[#0a192f] border border-cyan-900/50 text-cyan-100 rounded-2xl p-5 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div onclick="filterProducts('all')" class="cursor-pointer bg-gradient-to-br from-[#020817] to-[#0a192f] border border-cyan-900/50 text-cyan-100 rounded-2xl p-4 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md">
           <div>
-            <span class="text-[10px] font-bold text-brand uppercase tracking-wider block">Kategoria</span>
-            <h3 class="text-base font-black text-white">Wszystkie</h3>
+            <span class="text-[10px] font-bold text-brand uppercase tracking-wider block">Wszystko</span>
+            <h3 class="text-sm font-black text-white">Wszystkie</h3>
           </div>
-          <span class="text-2xl">🌊</span>
+          <span class="text-xl">🌊</span>
         </div>
 
-        <div onclick="filterProducts('snus')" class="cursor-pointer bg-gradient-to-br from-teal-900 to-cyan-900 border border-teal-500/30 text-white rounded-2xl p-5 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md shadow-teal-900/20">
+        <div onclick="filterProducts('jednorazowki')" class="cursor-pointer bg-gradient-to-br from-indigo-950 to-blue-900 border border-indigo-500/30 text-white rounded-2xl p-4 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md shadow-indigo-900/20">
+          <div>
+            <span class="text-[10px] font-bold text-indigo-200 uppercase tracking-wider block">E-papierosy</span>
+            <h3 class="text-sm font-black">Jednorazówki 💨</h3>
+          </div>
+          <span class="text-xl">💨</span>
+        </div>
+
+        <div onclick="filterProducts('snus')" class="cursor-pointer bg-gradient-to-br from-teal-900 to-cyan-900 border border-teal-500/30 text-white rounded-2xl p-4 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md shadow-teal-900/20">
           <div>
             <span class="text-[10px] font-bold text-teal-200 uppercase tracking-wider block">Nikotynowe</span>
-            <h3 class="text-base font-black">Snusy 🍃</h3>
+            <h3 class="text-sm font-black">Snusy 🍃</h3>
           </div>
-          <span class="text-2xl">🍃</span>
+          <span class="text-xl">🍃</span>
         </div>
 
-        <div onclick="filterProducts('box')" class="cursor-pointer bg-gradient-to-br from-blue-900 to-cyan-800 border border-cyan-400/30 text-white rounded-2xl p-5 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md shadow-blue-900/20">
+        <div onclick="filterProducts('akcesoria')" class="cursor-pointer bg-gradient-to-br from-slate-900 to-cyan-950 border border-cyan-500/30 text-white rounded-2xl p-4 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md">
           <div>
-            <span class="text-[10px] font-bold text-cyan-200 uppercase tracking-wider block">Zestawy i Hurt</span>
-            <h3 class="text-base font-black">BOXY (10 SZT)</h3>
+            <span class="text-[10px] font-bold text-cyan-200 uppercase tracking-wider block">Gadżety</span>
+            <h3 class="text-sm font-black">Akcesoria 🛠️</h3>
           </div>
-          <span class="text-2xl">📦</span>
+          <span class="text-xl">🛠️</span>
         </div>
 
-        <div onclick="filterProducts('promo')" class="cursor-pointer bg-gradient-to-br from-sky-900 to-indigo-950 border border-sky-500/30 text-white rounded-2xl p-5 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md shadow-sky-900/20">
+        <div onclick="filterProducts('promo')" class="cursor-pointer bg-gradient-to-br from-sky-900 to-indigo-950 border border-sky-500/30 text-white rounded-2xl p-4 flex items-center justify-between hover:scale-[1.02] transition-transform shadow-md">
           <div>
             <span class="text-[10px] font-bold text-sky-200 uppercase tracking-wider block">Super Okazje</span>
-            <h3 class="text-base font-black">Promocje %</h3>
+            <h3 class="text-sm font-black">Promocje %</h3>
           </div>
-          <span class="text-2xl">💎</span>
+          <span class="text-xl">💎</span>
         </div>
       </div>
     </section>
@@ -136,14 +144,15 @@
     <!-- PRZYCISKI FILTROWANIA I WYSZUKIWARKA -->
     <div class="max-w-[1400px] mx-auto px-6 pt-4 flex flex-col sm:flex-row gap-4 justify-between items-center">
       <div class="flex flex-wrap gap-2" id="filter-buttons">
-        <button id="btn-all" onclick="filterProducts('all')" class="filter-btn bg-[#0a192f] text-white border border-cyan-500/30 text-xs font-extrabold px-5 py-2.5 rounded-2xl transition-all shadow-sm">Wszystkie</button>
-        <button id="btn-snus" onclick="filterProducts('snus')" class="filter-btn bg-[#0a192f] border border-cyan-900/50 text-cyan-200 hover:border-brand text-xs font-bold px-5 py-2.5 rounded-2xl transition-all shadow-sm">Snusy 🍃</button>
-        <button id="btn-promo" onclick="filterProducts('promo')" class="filter-btn bg-[#0a192f] border border-cyan-900/50 text-cyan-200 hover:border-brand text-xs font-bold px-5 py-2.5 rounded-2xl transition-all shadow-sm">Promocje 🔥</button>
-        <button id="btn-box" onclick="filterProducts('box')" class="filter-btn bg-[#0a192f] border border-cyan-900/50 text-cyan-200 hover:border-brand text-xs font-bold px-5 py-2.5 rounded-2xl transition-all shadow-sm">Boxy 📦</button>
+        <button id="btn-all" onclick="filterProducts('all')" class="filter-btn bg-[#0a192f] text-white border border-cyan-500/30 text-xs font-extrabold px-4 py-2 rounded-xl transition-all shadow-sm">Wszystkie</button>
+        <button id="btn-jednorazowki" onclick="filterProducts('jednorazowki')" class="filter-btn bg-[#0a192f] border border-cyan-900/50 text-cyan-200 hover:border-brand text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm">Jednorazówki 💨</button>
+        <button id="btn-snus" onclick="filterProducts('snus')" class="filter-btn bg-[#0a192f] border border-cyan-900/50 text-cyan-200 hover:border-brand text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm">Snusy 🍃</button>
+        <button id="btn-akcesoria" onclick="filterProducts('akcesoria')" class="filter-btn bg-[#0a192f] border border-cyan-900/50 text-cyan-200 hover:border-brand text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm">Akcesoria 🛠️</button>
+        <button id="btn-promo" onclick="filterProducts('promo')" class="filter-btn bg-[#0a192f] border border-cyan-900/50 text-cyan-200 hover:border-brand text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm">Promocje 🔥</button>
       </div>
 
       <div class="relative w-full sm:w-72">
-        <input type="text" id="search-input" onkeyup="searchProducts()" placeholder="Szukaj produktu..." class="w-full bg-[#0a192f] text-cyan-100 placeholder-cyan-400/50 border border-cyan-900/60 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-brand shadow-sm">
+        <input type="text" id="search-input" onkeyup="searchProducts()" placeholder="Szukaj produktu..." class="w-full bg-[#0a192f] text-cyan-100 placeholder-cyan-400/50 border border-cyan-900/60 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-brand shadow-sm">
       </div>
     </div>
 
@@ -155,9 +164,12 @@
       </button>
     </header>
 
-    <!-- PRODUKTY GRID -->
+    <!-- PRODUKTY GRID & PAGINACJA -->
     <main class="max-w-[1400px] mx-auto px-6 py-8">
-      <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6"></div>
+      <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+      
+      <!-- KONTENER NA PRZYCISKI PAGINACJI -->
+      <div id="pagination-container" class="flex justify-center items-center gap-2 mt-10"></div>
     </main>
 
     <!-- OPINIE -->
@@ -184,7 +196,7 @@
         <p id="modal-product-desc" class="text-xs text-cyan-200/80 font-medium mb-4 leading-relaxed text-left w-full bg-[#020817] p-3 rounded-xl border border-cyan-900/50"></p>
         
         <div id="modal-flavor-container" class="w-full mb-4 text-left hidden">
-          <label class="block text-[11px] font-extrabold text-cyan-300 uppercase mb-1">Wybierz smak:</label>
+          <label class="block text-[11px] font-extrabold text-cyan-300 uppercase mb-1">Wybierz smak / wariant:</label>
           <select id="modal-flavor-select" class="w-full bg-[#020817] border border-cyan-900/60 rounded-xl px-3 py-2 text-xs font-bold text-cyan-100 focus:outline-none focus:border-brand cursor-pointer">
           </select>
         </div>
@@ -241,7 +253,7 @@
       </button>
 
       <div id="token-result" class="hidden mt-4 bg-cyan-950/80 p-4 rounded-2xl border border-cyan-500/30 text-center">
-        <p class="text-xs text-cyan-200 font-bold mb-1">✅ Zamówienie zapisane pomyślnie na GitHubie!</p>
+        <p class="text-xs text-cyan-200 font-bold mb-1">✅ Zamówienie zapisane pomyślnie!</p>
         <p class="text-[11px] text-cyan-400 mb-2">Skopiuj poniższą komendę, przejdź na nasz serwer Discord i wklej ją:</p>
         
         <code id="final-code" class="block font-mono font-bold text-sm text-cyan-300 bg-[#020817] p-2.5 rounded-xl border border-cyan-500/30 my-2 select-all">/zamowienie order_id:LBK-XXXXX</code>
@@ -265,6 +277,10 @@
     let displayedProducts = [];
     let cart = [];
     let currentFilter = 'all';
+    
+    // Ustawienia paginacji (12 przedmiotów na stronę)
+    let currentPage = 1;
+    const itemsPerPage = 12;
 
     function verifyAge(isAdult) {
       if (!isAdult) {
@@ -323,18 +339,27 @@
 
     function renderProducts() {
       const grid = document.getElementById('products-grid');
+      const paginationContainer = document.getElementById('pagination-container');
       let html = '';
       
       if (displayedProducts.length === 0) {
         grid.innerHTML = '<p class="col-span-full text-center text-cyan-400/65 py-10 font-semibold">Brak dostępnych produktów w tej kategorii.</p>';
+        paginationContainer.innerHTML = '';
         return;
       }
 
-      displayedProducts.forEach(p => {
+      // Obliczanie paginacji
+      const totalPages = Math.ceil(displayedProducts.length / itemsPerPage);
+      if (currentPage > totalPages) currentPage = totalPages || 1;
+
+      const start = (currentPage - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      const paginatedProducts = displayedProducts.slice(start, end);
+
+      paginatedProducts.forEach(p => {
         const price = typeof p.price === 'number' ? p.price : parseFloat(p.price);
         const oldPrice = p.oldPrice ? (typeof p.oldPrice === 'number' ? p.oldPrice : parseFloat(p.oldPrice)) : null;
-        const isBox = (p.badge && p.badge.toLowerCase().includes('box')) || p.name.toLowerCase().includes('box');
-        const badgeText = p.badge || (isBox ? 'BOX' : null);
+        const badgeText = p.badge || null;
 
         html += `
           <div class="group bg-[#0a192f] text-cyan-100 rounded-2xl p-4 border border-cyan-900/50 shadow-sm hover:shadow-xl hover:border-brand/50 transition-all duration-300 flex flex-col justify-between relative">
@@ -369,6 +394,39 @@
         `;
       });
       grid.innerHTML = html;
+      renderPagination(totalPages);
+    }
+
+    function renderPagination(totalPages) {
+      const paginationContainer = document.getElementById('pagination-container');
+      if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+      }
+
+      let html = '';
+      
+      // Przycisk "Poprzednia"
+      html += `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-3.5 py-2 rounded-xl bg-[#0a192f] border border-cyan-900 text-xs font-bold text-cyan-200 ${currentPage === 1 ? 'opacity-40 cursor-not-allowed' : 'hover:border-brand cursor-pointer'}">« Poprzednia</button>`;
+
+      // Numery stron
+      for (let i = 1; i <= totalPages; i++) {
+        const isActive = i === currentPage;
+        html += `<button onclick="changePage(${i})" class="w-9 h-9 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${isActive ? 'bg-brand text-white shadow-md shadow-brand/20 border border-brand' : 'bg-[#0a192f] text-cyan-300 border border-cyan-900/50 hover:border-brand'}">${i}</button>`;
+      }
+
+      // Przycisk "Następna"
+      html += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="px-3.5 py-2 rounded-xl bg-[#0a192f] border border-cyan-900 text-xs font-bold text-cyan-200 ${currentPage === totalPages ? 'opacity-40 cursor-not-allowed' : 'hover:border-brand cursor-pointer'}">Następna »</button>`;
+
+      paginationContainer.innerHTML = html;
+    }
+
+    function changePage(page) {
+      const totalPages = Math.ceil(displayedProducts.length / itemsPerPage);
+      if (page < 1 || page > totalPages) return;
+      currentPage = page;
+      renderProducts();
+      window.scrollTo({ top: 350, behavior: 'smooth' });
     }
 
     function openProductModal(id) {
@@ -416,55 +474,58 @@
     }
 
     function searchProducts() {
+      currentPage = 1; // Reset do 1 strony przy wyszukiwaniu
       const query = document.getElementById('search-input').value.toLowerCase();
-      displayedProducts = products.filter(p => {
-        const matchesQuery = p.name.toLowerCase().includes(query);
-        const isSnus = (p.type && p.type.toLowerCase() === 'snus') || p.name.toLowerCase().includes('cuba') || p.name.toLowerCase().includes('snus') || p.name.toLowerCase().includes('bit') || p.name.toLowerCase().includes('rabit');
-        
-        if (currentFilter === 'promo') {
-          return matchesQuery && p.oldPrice !== null && p.oldPrice !== undefined && p.oldPrice > 0;
-        } else if (currentFilter === 'box') {
-          return matchesQuery && (p.name.toLowerCase().includes('box') || (p.badge && p.badge.toLowerCase().includes('box')));
-        } else if (currentFilter === 'snus') {
-          return matchesQuery && isSnus;
-        }
-        return matchesQuery;
-      });
-      renderProducts();
+      applyFilterAndSearch(query);
     }
 
     function filterProducts(type) {
       currentFilter = type;
+      currentPage = 1; // Reset do 1 strony przy zmianie kategorii
       
       const btns = {
         all: document.getElementById('btn-all'),
+        jednorazowki: document.getElementById('btn-jednorazowki'),
         snus: document.getElementById('btn-snus'),
-        promo: document.getElementById('btn-promo'),
-        box: document.getElementById('btn-box')
+        akcesoria: document.getElementById('btn-akcesoria'),
+        promo: document.getElementById('btn-promo')
       };
 
       Object.keys(btns).forEach(key => {
         if (btns[key]) {
           if (key === type) {
-            btns[key].className = "filter-btn bg-[#020817] text-white border border-cyan-500/50 text-xs font-extrabold px-5 py-2.5 rounded-2xl transition-all shadow-sm";
+            btns[key].className = "filter-btn bg-[#020817] text-white border border-cyan-500/50 text-xs font-extrabold px-4 py-2 rounded-xl transition-all shadow-sm";
           } else {
-            btns[key].className = "filter-btn bg-[#0a192f] border border-cyan-900/50 text-cyan-200 hover:border-brand text-xs font-bold px-5 py-2.5 rounded-2xl transition-all shadow-sm";
+            btns[key].className = "filter-btn bg-[#0a192f] border border-cyan-900/50 text-cyan-200 hover:border-brand text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm";
           }
         }
       });
 
-      if (type === 'promo') {
-        displayedProducts = products.filter(p => p.oldPrice !== null && p.oldPrice !== undefined && p.oldPrice > 0);
-      } else if (type === 'box') {
-        displayedProducts = products.filter(p => p.name.toLowerCase().includes('box') || (p.badge && p.badge.toLowerCase().includes('box')));
-      } else if (type === 'snus') {
-        displayedProducts = products.filter(p => {
-          return (p.type && p.type.toLowerCase() === 'snus') || p.name.toLowerCase().includes('cuba') || p.name.toLowerCase().includes('snus') || p.name.toLowerCase().includes('bit') || p.name.toLowerCase().includes('rabit');
-        });
-      } else {
-        displayedProducts = [...products];
-      }
-      
+      const query = document.getElementById('search-input').value.toLowerCase();
+      applyFilterAndSearch(query);
+    }
+
+    function applyFilterAndSearch(query) {
+      displayedProducts = products.filter(p => {
+        const matchesQuery = p.name.toLowerCase().includes(query);
+        const pType = (p.type || '').toLowerCase();
+        const pName = p.name.toLowerCase();
+
+        const isJednorazowka = pType === 'jednorazowki' || pType === 'jednorazowka' || pName.includes('vape') || pName.includes('jednorazów') || pName.includes('puff') || pName.includes('elfbar');
+        const isSnus = pType === 'snus' || pName.includes('cuba') || pName.includes('snus') || pName.includes('bit') || pName.includes('rabit') || pName.includes('pablo');
+        const isAkcesoria = pType === 'akcesoria' || pName.includes('akcesoria') || pName.includes('ładowarka') || pName.includes('etui') || pName.includes('kabel');
+
+        if (currentFilter === 'promo') {
+          return matchesQuery && p.oldPrice !== null && p.oldPrice !== undefined && p.oldPrice > 0;
+        } else if (currentFilter === 'jednorazowki') {
+          return matchesQuery && isJednorazowka;
+        } else if (currentFilter === 'snus') {
+          return matchesQuery && isSnus;
+        } else if (currentFilter === 'akcesoria') {
+          return matchesQuery && isAkcesoria;
+        }
+        return matchesQuery;
+      });
       renderProducts();
     }
 
@@ -568,8 +629,11 @@
 
     function copyCode() {
       const codeText = document.getElementById('final-code').innerText;
-      navigator.clipboard.writeText(codeText);
-      alert('Skopiowano komendę do schowka!');
+      navigator.clipboard.writeText(codeText).then(() => {
+        alert('Skopiowano komendę do schowka!');
+      }).catch(err => {
+        console.error('Błąd podczas kopiowania: ', err);
+      });
     }
   </script>
 </body>
