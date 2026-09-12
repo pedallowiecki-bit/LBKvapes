@@ -42,7 +42,6 @@
         <span>Najlepsze oferty, ekspresowa wysyłka!</span>
       </div>
       <div class="flex items-center gap-3">
-        <!-- PRZYCISK ZMIANY MOTYWU -->
         <button onclick="toggleTheme()" class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-700 font-bold px-3 py-1 rounded-lg text-[11px] transition-all cursor-pointer flex items-center gap-1.5 shadow-sm">
           <span id="theme-icon">☀️</span> <span id="theme-text">Jasny motyw</span>
         </button>
@@ -65,7 +64,6 @@
               <span class="text-[9px] font-bold uppercase tracking-widest -mt-1">PETS</span>
             </div>
           </div>
-
           <div class="max-w-xl">
             <span class="text-xs font-bold uppercase tracking-widest block mb-1 text-neutral-500">O naszej marce</span>
             <h2 class="text-2xl font-black uppercase tracking-tight mb-2">Kim jesteśmy?</h2>
@@ -74,7 +72,6 @@
             </p>
           </div>
         </div>
-
         <div class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-1 lg:grid-cols-3 gap-3 w-full md:w-auto shrink-0">
           <div class="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 p-3.5 rounded-xl text-center flex flex-col items-center justify-center">
             <span class="text-lg mb-0.5">⚡</span>
@@ -145,7 +142,6 @@
         <button id="btn-akcesoria" onclick="filterProducts('akcesoria')" class="filter-btn bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm">Akcesoria 🛠️</button>
         <button id="btn-promo" onclick="filterProducts('promo')" class="filter-btn bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm">Promocje 🔥</button>
       </div>
-
       <div class="relative w-full sm:w-72">
         <input type="text" id="search-input" onkeyup="searchProducts()" placeholder="Szukaj produktu..." class="w-full bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-black dark:focus:border-white shadow-sm transition-colors">
       </div>
@@ -206,7 +202,7 @@
     </div>
   </div>
 
-  <!-- MODAL KOSZYKA Z WALIDACJĄ -->
+  <!-- MODAL KOSZYKA Z KODEM PROMOCYJNYM -->
   <div id="cart-modal" class="hidden fixed inset-0 bg-neutral-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative border border-neutral-200 dark:border-neutral-800">
       <h2 class="text-lg font-black mb-4 border-b border-neutral-200 dark:border-neutral-800 pb-3 uppercase">Twój Koszyk i Dane Zamówienia</h2>
@@ -230,6 +226,11 @@
             <label class="block text-[11px] font-bold uppercase mb-1 text-neutral-700 dark:text-neutral-300">Paczkomat (kod) <span class="text-red-500">*wymagane</span>:</label>
             <input type="text" id="customer-paczkomat" placeholder="np. WAW01M" oninput="checkCartForm()" class="w-full bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-black dark:focus:border-white">
           </div>
+        </div>
+        <!-- POLE NA KOD PROMOCYJNY -->
+        <div>
+          <label class="block text-[11px] font-bold uppercase mb-1 text-neutral-700 dark:text-neutral-300">Kod promocyjny <span class="text-neutral-400 font-normal">(opcjonalnie)</span>:</label>
+          <input type="text" id="promo-code-input" placeholder="np. RABAT10" class="w-full bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 py-2 text-xs uppercase focus:outline-none focus:border-black dark:focus:border-white">
         </div>
       </div>
 
@@ -256,6 +257,7 @@
         </div>
       </div>
 
+      <button onclick="closeProductModal()" class="absolute top-5 right-5 font-black text-lg cursor-pointer">✕</button>
       <button onclick="closeCartModal()" class="absolute top-5 right-5 font-black text-lg cursor-pointer">✕</button>
     </div>
   </div>
@@ -268,7 +270,6 @@
     let currentPage = 1;
     const itemsPerPage = 12;
 
-    // Przełączanie motywu Jasny / Ciemny
     function toggleTheme() {
       const htmlEl = document.documentElement;
       const themeText = document.getElementById('theme-text');
@@ -576,12 +577,14 @@
       const email = document.getElementById('customer-email').value.trim();
       const phone = document.getElementById('customer-phone').value.trim();
       const paczkomat = document.getElementById('customer-paczkomat').value.trim();
+      const promoCode = document.getElementById('promo-code-input').value.trim();
 
       const orderData = {
         discord,
         email,
         phone,
         paczkomat,
+        promoCode, // Przekazanie kodu do backendu
         items: cart
       };
 
@@ -599,7 +602,6 @@
           alert('Błąd podczas składania zamówienia: ' + (data.error || 'Nieznany błąd'));
         }
       } catch (e) {
-        // Fallback w razie niedostępności serwera zewnętrznego
         const randomCode = 'LBK-' + Math.floor(10000 + Math.random() * 90000);
         document.getElementById('final-code').innerText = randomCode;
         document.getElementById('token-result').classList.remove('hidden');
