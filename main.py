@@ -28,11 +28,13 @@ FILE_PATH = "products.json"
 ORDERS_FILE_PATH = "orders.json"
 PROMOS_FILE_PATH = "promos.json"
 REVIEWS_FILE_PATH = "reviews.json"
+TRACKING_FILE_PATH = "tracking.json"
 
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{FILE_PATH}"
 ORDERS_GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{ORDERS_FILE_PATH}"
 PROMOS_GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{PROMOS_FILE_PATH}"
 REVIEWS_GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{REVIEWS_FILE_PATH}"
+TRACKING_GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{TRACKING_FILE_PATH}"
 
 DEFAULT_PRODUCTS = [
     {
@@ -166,6 +168,29 @@ def update_github_reviews(reviews, commit_message):
     res = requests.put(REVIEWS_GITHUB_API_URL, headers=get_headers(), json=payload)
     return res.status_code in [200, 201]
 
+def get_github_tracking():
+    try:
+        res = requests.get(TRACKING_GITHUB_API_URL, headers=get_headers())
+        if res.status_code == 200:
+            data = res.json()
+            file_res = requests.get(data.get('download_url'), headers={"User-Agent": "DiscordBot-LBK"})
+            return json.loads(file_res.text), data.get('sha'), None
+        elif res.status_code == 404:
+            return {}, None, None
+        return {}, None, f"Error: {res.status_code}"
+    except Exception as e:
+        return {}, None, str(e)
+
+def update_github_tracking(tracking_data, commit_message):
+    _, current_sha, _ = get_github_tracking()
+    content_json = json.dumps(tracking_data, indent=2, ensure_ascii=False)
+    encoded_content = base64.b64encode(content_json.encode('utf-8')).decode('utf-8')
+    payload = {"message": commit_message, "content": encoded_content}
+    if current_sha:
+        payload["sha"] = current_sha
+    res = requests.put(TRACKING_GITHUB_API_URL, headers=get_headers(), json=payload)
+    return res.status_code in [200, 201]
+
 @app.route("/", methods=["GET"])
 def home():
     return "Bot and Web Server are ONLINE", 200
@@ -215,7 +240,11 @@ def create_order():
         return jsonify({"success": False, "error": "Brak wymaganych danych lub pusty koszyk"}), 400
 
     order_id = 'LBK-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
-    total = sum(item.get('price', 0) for item in cart_items)
+    
+    # Obliczanie kwoty produktów + stała dostawa za pobraniem 25 zł
+    items_total = sum(item.get('price', 0) for item in cart_items)
+    shipping_fee = 25.0
+    total = items_total + shipping_fee
     
     orders, _, _ = get_github_orders()
     if not isinstance(orders, list):
@@ -228,10 +257,22 @@ def create_order():
         "phone": phone,
         "paczkomat": paczkomat,
         "items": cart_items,
-        "total": total
+        "shipping": shipping_fee,
+        "total": total,
+        "payment": "Pobranie (Paczkomat)"
     }
     orders.append(new_order)
     update_github_orders(orders, f"Nowe zamówienie {order_id} dla {discord_user}")
+
+    # Automatyczny startowy status przesyłki (import)
+    tracking_data, _, _ = get_github_tracking()
+    if not isinstance(tracking_data, dict):
+        tracking_data = {}
+    tracking_data[order_id] = {
+        "status": "Zamówienie przyjęte do realizacji (Import w toku)",
+        "discord": discord_user
+    }
+    update_github_tracking(tracking_data, f"Utworzono status śledzenia dla {order_id}")
 
     if not bot.is_ready():
         return jsonify({"success": True, "order_id": order_id})
@@ -258,7 +299,6 @@ def create_order():
             if not channel_name:
                 channel_name = "ticket-zamowienie"
 
-            # Kanał widoczny tylko dla administracji i bota
             overwrites = {
                 guild.default_role: discord.PermissionOverwrite(read_messages=False),
                 guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
@@ -273,12 +313,12 @@ def create_order():
 
             ticket_channel = await guild.create_text_channel(name=channel_name, overwrites=overwrites)
 
-            embed = discord.Embed(title="🛒 Nowy Ticket Zamówienia (Strona WWW)", color=discord.Color.green())
+            embed = discord.Embed(title="🛒 Nowy Ticket Zamówienia (Za pobraniem)", color=discord.Color.green())
             embed.add_field(name="👤 Klient", value=f"`{discord_user}` {member.mention if member else ''}", inline=True)
             embed.add_field(name="🆔 ID Zamówienia", value=f"`{order_id}`", inline=True)
             embed.add_field(name="📧 Email", value=f"`{email}`", inline=True)
             embed.add_field(name="📞 Telefon", value=f"`{phone}`", inline=True)
-            embed.add_field(name="📦 Paczkomat", value=f"`{paczkomat}`", inline=False)
+            embed.add_field(name="📦 Paczkomat / Płatność", value=f"`{paczkomat}`\nMetoda: **Pobranie** (Dostawa: `25.0 PLN`)", inline=False)
             
             items_desc = []
             for i in cart_items:
@@ -288,7 +328,7 @@ def create_order():
                 items_desc.append(f"• **{title}** | Smak: `{selected_taste}` | **{price} PLN**")
 
             embed.add_field(name="Zamówione Produkty", value="\n".join(items_desc) or "Brak", inline=False)
-            embed.add_field(name="Suma", value=f"**{total} PLN**", inline=False)
+            embed.add_field(name="Suma (z dostawą 25 zł)", value=f"**{total} PLN**", inline=False)
             
             ping_content = f"<@&{ADMIN_ROLE_ID}>" if ADMIN_ROLE_ID else "@here"
             await ticket_channel.send(content=ping_content, embed=embed)
@@ -344,7 +384,6 @@ class ReviewButtonView(discord.ui.View):
 
     @discord.ui.button(label="📝 Oceń sklep", style=discord.ButtonStyle.green, custom_id="open_review_modal_btn")
     async def open_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
-        # Sprawdzenie czy użytkownik ma rangę klienta
         has_role = any(str(r.id) == CLIENT_ROLE_ID for r in interaction.user.roles) if isinstance(interaction.user, discord.Member) else False
         if not has_role:
             await interaction.response.send_message("❌ Opinie mogą wystawiać tylko zweryfikowani klienci (posiadający odpowiednią rangę)!", ephemeral=True)
@@ -408,7 +447,7 @@ async def on_ready():
     except Exception as e:
         print(f"❌ Błąd synchronizacji: {e}")
 
-@bot.tree.command(name="sklep", description="Wyświetla pełną ofertę sklepu z uwzględnieniem podziału na kategorie i smaki")
+@bot.tree.command(name="sklep", description="Wyświetla pełną ofertę sklepu")
 async def sklep(interaction: discord.Interaction):
     await interaction.response.defer()
     products, _, error = get_github_file()
@@ -420,7 +459,7 @@ async def sklep(interaction: discord.Interaction):
         await interaction.followup.send("🛍️ Sklep jest obecnie pusty.")
         return
 
-    embed = discord.Embed(title="🛍️ Oferta Sklepu LBKPETS", color=discord.Color.blue())
+    embed = discord.Embed(title="🛍️ Oferta Sklepu LBK", color=discord.Color.blue())
     
     for p in products:
         name = p.get('name', 'Brak nazwy')
@@ -446,15 +485,15 @@ async def sklep(interaction: discord.Interaction):
         
     await interaction.followup.send(embed=embed)
 
-@bot.tree.command(name="dodaj", description="Dodaje nowy produkt lub snus do sklepu na GitHubie")
+@bot.tree.command(name="dodaj", description="Dodaje nowy produkt do sklepu na GitHubie")
 @app_commands.describe(
     nazwa="Nazwa produktu", 
     cena="Cena w PLN", 
     typ="Typ: np. snus lub Inne", 
     stara_cena="Stara cena (opcjonalnie)", 
-    badge="Etykieta np. Nowość, Bestseller (opcjonalnie)", 
-    smaki="Smaki oddzielone przecinkiem (np. min. 9 smaków)", 
-    img="Link URL do zdjęcia produktu",
+    badge="Etykieta np. Nowość, Bestseller", 
+    smaki="Smaki oddzielone przecinkiem", 
+    img="Link URL do zdjęcia",
     product_id="Unikalne ID (opcjonalnie)"
 )
 @app_commands.default_permissions(administrator=True)
@@ -465,12 +504,11 @@ async def dodaj(
     typ: str = "Inne", 
     stara_cena: float = None, 
     badge: str = None, 
-    smaki: str = "Watermelon Ice, Strawberry Kiwi, Blueberry Ice, Peach Mango, Blue Razz Lemonade, Strawberry Watermelon, Cherry Cola, Double Apple, Kiwi Passion Fruit Guava", 
+    smaki: str = "Watermelon Ice, Strawberry Kiwi, Blueberry Ice", 
     img: str = "", 
     product_id: str = None
 ):
     await interaction.response.defer(ephemeral=True)
-    
     products, _, error = get_github_file()
     if error and "Brak pliku" not in error and "404" not in error:
         products = DEFAULT_PRODUCTS
@@ -499,45 +537,86 @@ async def dodaj(
     }
     
     products.append(new_product)
-    success = update_github_file(products, f"Dodano produkt {nazwa} ({product_id}) przez komendę Discord")
+    success = update_github_file(products, f"Dodano produkt {nazwa} ({product_id})")
     
     if success:
-        await interaction.followup.send(f"✅ Pomyślnie dodano produkt do bazy!\n* **Nazwa:** {nazwa}\n* **Typ:** {typ}\n* **Cena:** {cena} PLN\n* **Liczba smaków:** {len(smaki_list)}\n* **ID:** `{product_id}`", ephemeral=True)
+        await interaction.followup.send(f"✅ Pomyślnie dodano produkt do bazy!\n* **Nazwa:** {nazwa}\n* **Cena:** {cena} PLN\n* **ID:** `{product_id}`", ephemeral=True)
     else:
         await interaction.followup.send("❌ Błąd podczas zapisu pliku `products.json` na GitHubie.", ephemeral=True)
 
-@bot.tree.command(name="promo", description="Tworzy lub aktualizuje kod rabatowy na sklepie")
-@app_commands.describe(kod="Nazwa kodu rabatowego np. LATO20", procent="Wartość rabatu w procentach np. 15")
+@bot.tree.command(name="promo", description="Tworzy lub aktualizuje kod rabatowy")
+@app_commands.describe(kod="Nazwa kodu np. LATO20", procent="Wartość rabatu w procentach np. 15")
 @app_commands.default_permissions(administrator=True)
 async def promo(interaction: discord.Interaction, kod: str, procent: float):
     await interaction.response.defer(ephemeral=True)
     code_upper = kod.strip().upper()
     
-    promos, _, error = get_github_promos()
+    promos, _, _ = get_github_promos()
     if not isinstance(promos, dict):
         promos = {}
         
     promos[code_upper] = procent
-    success = update_github_promos(promos, f"Dodano/zaktualizowano kod rabatowy {code_upper} ({procent}%)")
+    success = update_github_promos(promos, f"Dodano/zaktualizowano kod {code_upper}")
     
     if success:
-        embed = discord.Embed(title="🎟️ Nowy Kod Rabatowy Utworzony", color=discord.Color.gold())
-        embed.add_field(name="Kod Promocyjny", value=f"`{code_upper}`", inline=True)
-        embed.add_field(name="Wysokość Rabatu", value=f"**{procent}%**", inline=True)
+        embed = discord.Embed(title="🎟️ Nowy Kod Rabatowy", color=discord.Color.gold())
+        embed.add_field(name="Kod", value=f"`{code_upper}`", inline=True)
+        embed.add_field(name="Rabat", value=f"**{procent}%**", inline=True)
         await interaction.followup.send(embed=embed, ephemeral=True)
     else:
-        await interaction.followup.send("❌ Błąd podczas zapisu kodu rabatowego na GitHubie.", ephemeral=True)
+        await interaction.followup.send("❌ Błąd zapisu kodu.", ephemeral=True)
 
-@bot.tree.command(name="start_ocen", description="Wysyła panel wystawiania opinii na tym kanale")
+@bot.tree.command(name="status_paczki", description="[Admin] Aktualizuje stopień importu/status przesyłki dla danego ID zamówienia")
+@app_commands.describe(order_id="ID zamówienia (np. LBK-XXXXX)", status_opisu="Opis stopnia importu / przesyłki (np. Paczka w drodze do PL)")
+@app_commands.default_permissions(administrator=True)
+async def status_paczki(interaction: discord.Interaction, order_id: str, status_opisu: str):
+    await interaction.response.defer(ephemeral=True)
+    oid = order_id.strip().upper()
+    
+    tracking_data, _, _ = get_github_tracking()
+    if not isinstance(tracking_data, dict):
+        tracking_data = {}
+        
+    if oid not in tracking_data:
+        tracking_data[oid] = {}
+        
+    tracking_data[oid]["status"] = status_opisu
+    success = update_github_tracking(tracking_data, f"Zaktualizowano status paczki {oid} na: {status_opisu}")
+    
+    if success:
+        await interaction.followup.send(f"✅ Zaktualizowano status przesyłki dla `{oid}` na:\n> *{status_opisu}*", ephemeral=True)
+    else:
+        await interaction.followup.send("❌ Błąd zapisu statusu na GitHubie.", ephemeral=True)
+
+@bot.tree.command(name="sprawdz_paczke", description="Sprawdza stopień importu i status swojej przesyłki po ID zamówienia")
+@app_commands.describe(order_id="ID zamówienia (np. LBK-XXXXX)")
+async def sprawdz_paczke(interaction: discord.Interaction, order_id: str):
+    await interaction.response.defer(ephemeral=True)
+    oid = order_id.strip().upper()
+    
+    tracking_data, _, _ = get_github_tracking()
+    if not isinstance(tracking_data, dict) or oid not in tracking_data:
+        await interaction.followup.send(f"❌ Nie znaleziono informacji o przesyłce dla ID `{oid}`.", ephemeral=True)
+        return
+        
+    current_status = tracking_data[oid].get("status", "Brak danych o statusie")
+    
+    embed = discord.Embed(title="📦 Status Przesyłki i Importu", color=discord.Color.purple())
+    embed.add_field(name="🆔 ID Zamówienia", value=f"`{oid}`", inline=False)
+    embed.add_field(name="🔄 Stopień importu / Status", value=f"**{current_status}**", inline=False)
+    
+    await interaction.followup.send(embed=embed, ephemeral=True)
+
+@bot.tree.command(name="start_ocen", description="Wysyła panel wystawiania opinii")
 @app_commands.default_permissions(administrator=True)
 async def start_ocen(interaction: discord.Interaction):
     embed = discord.Embed(
         title="⭐ Oceń zakupy w naszym sklepie!",
-        description="Jesteś zadowolony z transakcji? Kliknij poniższy przycisk, aby podzielić się swoją opinią z innymi.",
+        description="Jesteś zadowolony z transakcji? Kliknij poniższy przycisk, aby podzielić się swoją opinią.",
         color=discord.Color.blurple()
     )
     await interaction.channel.send(embed=embed, view=ReviewButtonView())
-    await interaction.response.send_message("✅ Panel opinii został pomyślnie wysłany na ten kanał!", ephemeral=True)
+    await interaction.response.send_message("✅ Panel opinii wysłany!", ephemeral=True)
 
 @bot.tree.command(name="zamowienie", description="Otwórz ticket na podstawie ID zamówienia")
 @app_commands.describe(order_id="ID zamówienia np. LBK-XXXXX")
@@ -557,7 +636,6 @@ async def zamowienie(interaction: discord.Interaction, order_id: str):
     channel_name = f"ticket-{order_discord_name}".lower().replace(" ", "-")
     channel_name = "".join(c for c in channel_name if c.isalnum() or c == "-")[:99]
 
-    # Kanał widoczny tylko dla administracji i bota
     overwrites = {
         guild.default_role: discord.PermissionOverwrite(read_messages=False),
         guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
@@ -572,11 +650,9 @@ async def zamowienie(interaction: discord.Interaction, order_id: str):
 
     ticket_channel = await guild.create_text_channel(name=channel_name, overwrites=overwrites)
 
-    # Realizacja zamówienia (usunięcie z GitHub)
     remaining_orders = [o for o in orders if str(o.get('id')).upper() != order_id.upper()]
     update_github_orders(remaining_orders, f"Zrealizowano zamówienie {order_id}")
 
-    # Nadanie rangi klienta (ID: 1545554046230855870) przy zrealizowaniu zamówienia
     if customer_member:
         try:
             client_role = guild.get_role(int(CLIENT_ROLE_ID))
@@ -587,12 +663,12 @@ async def zamowienie(interaction: discord.Interaction, order_id: str):
 
     await interaction.followup.send(f"✅ Otworzono ticket administracyjny: {ticket_channel.mention}", ephemeral=True)
 
-    embed = discord.Embed(title="🛒 Ticket Zamówienia", color=discord.Color.green())
+    embed = discord.Embed(title="🛒 Ticket Zamówienia (Za pobraniem)", color=discord.Color.green())
     embed.add_field(name="👤 Klient", value=f"`{order_discord_name}` {customer_member.mention if customer_member else ''}", inline=True)
     embed.add_field(name="🆔 ID", value=f"`{order_id}`", inline=True)
     embed.add_field(name="📧 Email", value=f"`{order.get('email')}`", inline=True)
     embed.add_field(name="📞 Telefon", value=f"`{order.get('phone')}`", inline=True)
-    embed.add_field(name="📦 Paczkomat", value=f"`{order.get('paczkomat')}`", inline=False)
+    embed.add_field(name="📦 Paczkomat / Płatność", value=f"`{order.get('paczkomat')}`\nMetoda: **Pobranie**", inline=False)
     
     items_desc = []
     for i in items:
@@ -602,7 +678,7 @@ async def zamowienie(interaction: discord.Interaction, order_id: str):
         items_desc.append(f"• **{title}** | Smak: `{taste}` | **{price} PLN**")
 
     embed.add_field(name="Produkty", value="\n".join(items_desc) or "Brak", inline=False)
-    embed.add_field(name="Suma", value=f"**{order.get('total')} PLN**", inline=False)
+    embed.add_field(name="Suma (z dostawą 25 zł)", value=f"**{order.get('total')} PLN**", inline=False)
     
     ping_content = f"<@&{ADMIN_ROLE_ID}>" if ADMIN_ROLE_ID else "@here"
     await ticket_channel.send(content=ping_content, embed=embed)
