@@ -74,5 +74,21 @@
       }
     ],
     "total": 89
+  },
+  {
+    "id": "LBK-AX0TY",
+    "discord": "beblobo",
+    "email": "pedallowiecki@gmail.com",
+    "phone": "639574321",
+    "paczkomat": "wamd",
+    "items": [
+      {
+        "title": "AKUMULATOR 3000 MAH (18650)",
+        "price": 20
+      }
+    ],
+    "shipping": 25.0,
+    "total": 45.0,
+    "payment": "Pobranie (Paczkomat)"
   }
 ]
