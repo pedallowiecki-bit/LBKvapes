@@ -218,7 +218,7 @@
           <input type="text" id="discord-nick" placeholder="np. nazwa_uzytkownika" oninput="checkCartForm()" class="w-full bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-black dark:focus:border-white">
         </div>
         <div>
-          <label class="block text-[11px] font-bold uppercase mb-1 text-neutral-700 dark:text-neutral-300">Adres E-mail Gmail <span class="text-red-500">*musí kończyć się @gmail.com</span>:</label>
+          <label class="block text-[11px] font-bold uppercase mb-1 text-neutral-700 dark:text-neutral-300">Adres E-mail Gmail <span class="text-red-500">*musi kończyć się @gmail.com</span>:</label>
           <input type="email" id="customer-email" placeholder="np. imie@gmail.com" oninput="checkCartForm()" class="w-full bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-black dark:focus:border-white">
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -493,110 +493,41 @@
           }
         }
       });
-
       const query = document.getElementById('search-input').value.toLowerCase();
       applyFilterAndSearch(query);
     }
 
     function applyFilterAndSearch(query) {
       displayedProducts = products.filter(p => {
-        const matchesQuery = p.name.toLowerCase().includes(query);
-        const pType = (p.type || '').toLowerCase();
-        const pName = p.name.toLowerCase();
-
-        const isJednorazowka = pType === 'jednorazowki' || pType === 'jednorazowka' || pName.includes('vape') || pName.includes('jednorazów') || pName.includes('puff') || pName.includes('elfbar');
-        const isSnus = pType === 'snus' || pName.includes('cuba') || pName.includes('snus') || pName.includes('bit') || pName.includes('rabit') || pName.includes('pablo');
-        const isAkcesoria = pType === 'akcesoria' || pName.includes('akcesoria') || pName.includes('ładowarka') || pName.includes('etui') || pName.includes('kabel');
-
-        if (currentFilter === 'promo') {
-          return matchesQuery && p.oldPrice !== null && p.oldPrice !== undefined && p.oldPrice > 0;
-        } else if (currentFilter === 'jednorazowki') {
-          return matchesQuery && isJednorazowka;
-        } else if (currentFilter === 'snus') {
-          return matchesQuery && isSnus;
-        } else if (currentFilter === 'akcesoria') {
-          return matchesQuery && isAkcesoria;
-        }
-        return matchesQuery;
+        const matchesType = currentFilter === 'all' || 
+                            (currentFilter === 'promo' && p.oldPrice) || 
+                            p.type === currentFilter;
+        const matchesQuery = p.name.toLowerCase().includes(query) || 
+                             (p.description && p.description.toLowerCase().includes(query));
+        return matchesType && matchesQuery;
       });
       renderProducts();
     }
 
-    function removeFromCart(index) {
-      cart.splice(index, 1);
-      document.getElementById('cart-count').innerText = cart.length;
-      openCartModal();
-    }
-
-    // Funkcje walidacji
-    function isValidGmail(email) {
-      return /^[a-zA-Z0-9._%+-]+@gmail\.com$/i.test(email.trim());
-    }
-
-    function isValidPolishPhone(phone) {
-      const cleaned = phone.replace(/[\s-]/g, '');
-      return /^\d{9}$/.test(cleaned);
-    }
-
-    function checkCartForm() {
-      const nick = document.getElementById('discord-nick').value.trim();
-      const email = document.getElementById('customer-email').value.trim();
-      const phone = document.getElementById('customer-phone').value.trim();
-      const paczkomat = document.getElementById('customer-paczkomat').value.trim();
-      const btn = document.getElementById('gen-btn');
-
-      const isNickValid = nick !== '';
-      const isEmailValid = isValidGmail(email);
-      const isPhoneValid = isValidPolishPhone(phone);
-      const isPaczkomatValid = paczkomat !== '';
-
-      if (cart.length > 0 && isNickValid && isEmailValid && isPhoneValid && isPaczkomatValid) {
-        btn.disabled = false;
-        btn.className = "w-full bg-black dark:bg-white text-white dark:text-black font-bold text-xs py-3.5 rounded-xl uppercase tracking-wider cursor-pointer shadow-sm transition-all";
-        btn.innerText = "Złóż zamówienie i wyślij na Discorda";
-      } else {
-        btn.disabled = true;
-        btn.className = "w-full bg-neutral-200 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-500 font-bold text-xs py-3.5 rounded-xl uppercase tracking-wider cursor-not-allowed border border-neutral-300 dark:border-neutral-700";
-        
-        if (cart.length === 0) {
-          btn.innerText = "Twój koszyk jest pusty";
-        } else if (!isNickValid) {
-          btn.innerText = "Wpisz swój nick z Discorda (*wymagane)";
-        } else if (!isEmailValid) {
-          btn.innerText = "E-mail musi być poprawnym adresem @gmail.com";
-        } else if (!isPhoneValid) {
-          btn.innerText = "Numer telefonu musi mieć dokładnie 9 cyfr";
-        } else if (!isPaczkomatValid) {
-          btn.innerText = "Wpisz kod paczkomatu (*wymagane)";
-        }
-      }
-    }
-
     function openCartModal() {
-      const listEl = document.getElementById('cart-list');
-      const totalEl = document.getElementById('cart-total');
-      let html = '';
-      let total = 0;
-
+      const list = document.getElementById('cart-list');
       if (cart.length === 0) {
-        html = '<p class="text-neutral-400 text-center py-2">Twój koszyk jest pusty.</p>';
+        list.innerHTML = '<p class="text-neutral-500 text-center py-4">Twój koszyk jest pusty.</p>';
       } else {
-        cart.forEach((item, index) => {
-          total += item.price;
-          html += `
-            <div class="flex justify-between items-center bg-white dark:bg-neutral-900 p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800">
-              <span class="font-medium truncate max-w-[200px]">${item.title}</span>
-              <div class="flex items-center gap-3">
-                <span class="font-bold">${item.price.toFixed(2)} PLN</span>
-                <button onclick="removeFromCart(${index})" class="text-red-500 font-bold cursor-pointer hover:opacity-70">Usuń</button>
-              </div>
+        list.innerHTML = cart.map((item, idx) => `
+          <div class="flex justify-between items-center bg-white dark:bg-neutral-900 p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800">
+            <div>
+              <span class="font-bold block">${item.title}</span>
+              <span class="text-neutral-500">${item.price.toFixed(2)} PLN</span>
             </div>
-          `;
-        });
+            <button onclick="removeFromCart(${idx})" class="text-red-500 font-bold px-2 py-1 cursor-pointer">✕</button>
+          </div>
+        `).join('');
       }
 
-      listEl.innerHTML = html;
-      totalEl.innerText = total.toFixed(2) + ' PLN';
+      const total = cart.reduce((sum, item) => sum + item.price, 0);
+      document.getElementById('cart-total').innerText = total.toFixed(2) + ' PLN';
+      document.getElementById('cart-count').innerText = cart.length;
       checkCartForm();
       document.getElementById('cart-modal').classList.remove('hidden');
     }
@@ -605,64 +536,80 @@
       document.getElementById('cart-modal').classList.add('hidden');
     }
 
-    async function submitOrder() {
-      const nick = document.getElementById('discord-nick').value.trim();
+    function removeFromCart(idx) {
+      cart.splice(idx, 1);
+      openCartModal();
+    }
+
+    function checkCartForm() {
+      const discord = document.getElementById('discord-nick').value.trim();
       const email = document.getElementById('customer-email').value.trim();
       const phone = document.getElementById('customer-phone').value.trim();
       const paczkomat = document.getElementById('customer-paczkomat').value.trim();
-      
-      if (!nick || !isValidGmail(email) || !isValidPolishPhone(phone) || !paczkomat) return;
+      const genBtn = document.getElementById('gen-btn');
 
-      const randomId = 'LBK-' + Math.floor(10000 + Math.random() * 90000);
-      
-      let total = 0;
-      let productsListText = cart.map(item => {
-        total += item.price;
-        return `• ${item.title} - ${item.price.toFixed(2)} PLN`;
-      }).join('\n');
+      const isEmailValid = email.endsWith('@gmail.com');
+      const isPhoneValid = /^\d{9}$/.test(phone);
+      const isFormValid = discord !== '' && isEmailValid && isPhoneValid && paczkomat !== '' && cart.length > 0;
 
-      // 🛑 WKLEJ TUTAJ SWÓJ WEBHOOK URL Z DISCORDA 🛑
-      const webhookURL = "TUTAJ_WKLEJ_SWOJ_WEBHOOK_URL_Z_DISCORDA";
+      if (isFormValid) {
+        genBtn.disabled = false;
+        genBtn.className = "w-full bg-black dark:bg-white text-white dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-200 font-bold text-xs py-3.5 rounded-xl uppercase tracking-wider cursor-pointer shadow-sm transition-all";
+        genBtn.innerText = "ZŁÓŻ ZAMÓWIENIE";
+      } else {
+        genBtn.disabled = true;
+        genBtn.className = "w-full bg-neutral-200 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-500 font-bold text-xs py-3.5 rounded-xl uppercase tracking-wider cursor-not-allowed border border-neutral-300 dark:border-neutral-700";
+        if (cart.length === 0) {
+          genBtn.innerText = "Koszyk jest pusty";
+        } else if (!isEmailValid && email !== '') {
+          genBtn.innerText = "E-mail musi kończyć się na @gmail.com";
+        } else if (!isPhoneValid && phone !== '') {
+          genBtn.innerText = "Numer telefonu musi mieć 9 cyfr";
+        } else {
+          genBtn.innerText = "Wypełnij wymagane pola";
+        }
+      }
+    }
 
-      const payload = {
-        content: `🚨 **NOWE ZAMÓWIENIE #${randomId}** 🚨`,
-        embeds: [{
-          title: `Szczegóły zamówienia #${randomId}`,
-          color: 0x000000,
-          fields: [
-            { name: "👤 Nick Discord", value: `@${nick}`, inline: true },
-            { name: "📧 E-mail (Gmail)", value: email, inline: true },
-            { name: "📞 Telefon", value: phone, inline: true },
-            { name: "📦 Paczkomat", value: paczkomat, inline: true },
-            { name: "🛒 Produkty", value: productsListText, inline: false },
-            { name: "💰 Łączna kwota", value: `${total.toFixed(2)} PLN`, inline: false }
-          ],
-          timestamp: new Date().toISOString()
-        }]
+    async function submitOrder() {
+      const discord = document.getElementById('discord-nick').value.trim();
+      const email = document.getElementById('customer-email').value.trim();
+      const phone = document.getElementById('customer-phone').value.trim();
+      const paczkomat = document.getElementById('customer-paczkomat').value.trim();
+
+      const orderData = {
+        discord,
+        email,
+        phone,
+        paczkomat,
+        items: cart
       };
 
       try {
-        if (webhookURL !== "TUTAJ_WKLEJ_SWOJ_WEBHOOK_URL_Z_DISCORDA") {
-          await fetch(webhookURL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
+        const res = await fetch('https://lbk.onrender.com/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderData)
+        });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('final-code').innerText = data.order_id || 'LBK-' + Math.floor(10000 + Math.random() * 90000);
+          document.getElementById('token-result').classList.remove('hidden');
         } else {
-          console.warn("Nie skonfigurowano Webhook URL w kodzie!");
+          alert('Błąd podczas składania zamówienia: ' + (data.error || 'Nieznany błąd'));
         }
       } catch (e) {
-        console.error("Błąd wysyłania na webhook:", e);
+        // Fallback w razie niedostępności serwera zewnętrznego
+        const randomCode = 'LBK-' + Math.floor(10000 + Math.random() * 90000);
+        document.getElementById('final-code').innerText = randomCode;
+        document.getElementById('token-result').classList.remove('hidden');
       }
-
-      document.getElementById('final-code').innerText = randomId;
-      document.getElementById('token-result').classList.remove('hidden');
     }
 
     function copyCode() {
       const codeText = document.getElementById('final-code').innerText;
       navigator.clipboard.writeText(codeText);
-      alert('Skopiowano kod zamówienia do schowka!');
+      alert('Skopiowano kod zamówienia: ' + codeText);
     }
   </script>
 </body>
