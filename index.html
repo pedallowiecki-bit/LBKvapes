@@ -1,171 +1,618 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="pl" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <title>🔥 NAJGORSZA STRONA NA ŚWIECIE - KLIKNIJ TUTAJ LUB ZGIŃ 🔥</title>
-    <style>
-        @keyframes blink {
-            0% { opacity: 1; color: red; }
-            50% { opacity: 0; color: yellow; }
-            100% { opacity: 1; color: lime; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LBKPETS - Oficjalny Sklep</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] }
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
-        }
-        body {
-            background-color: #00FF00;
-            color: #FF00FF;
-            font-family: "Comic Sans MS", "Papyrus", Impact, sans-serif;
-            cursor: progress;
-            animation: shake 0.1s infinite;
-        }
-        .migajacy {
-            animation: blink 0.2s infinite;
-            font-size: 40px;
-            font-weight: bold;
-        }
-        .obracajacy {
-            display: inline-block;
-            animation: spin 0.5s linear infinite;
-        }
-        table {
-            border: 10px dashed magenta;
-            background-color: yellow;
-        }
-        td {
-            color: blue;
-            font-size: 12px;
-            font-family: monospace;
-        }
-    </style>
+      }
+    }
+  </script>
 </head>
-<body bgcolor="#FF0000" text="#00FF00" link="#0000FF" vlink="#FFFF00" alink="#FF00FF">
+<body class="bg-white dark:bg-black text-neutral-900 dark:text-neutral-100 font-sans min-h-screen flex flex-col justify-between antialiased pb-24 transition-colors duration-300" onload="loadProductsFromJSON(); loadReviews();">
 
-<center>
-    <font size="7" color="yellow">
-        <marquee scrollamount="35" bgcolor="black">⚠️ UWAGA WIRUS! ŚCIĄGASZ TROJANA! KLIKNIJ ALT+F4 NATYCHMIAST! ⚠️</marquee>
-    </font>
-</center>
+  <!-- 18+ WERYFIKACJA WIEKU MODAL -->
+  <div id="age-modal" class="fixed inset-0 bg-neutral-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 rounded-2xl max-w-sm w-full p-6 text-center shadow-2xl border border-neutral-200 dark:border-neutral-800">
+      <div class="text-3xl mb-3">🔞</div>
+      <h2 class="text-lg font-black uppercase mb-2">Weryfikacja wieku</h2>
+      <p class="text-xs text-neutral-600 dark:text-neutral-400 font-medium mb-6">Czy masz ukończone 18 lat?</p>
+      <div class="flex gap-3">
+        <button onclick="verifyAge(false)" class="flex-1 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-700 text-xs font-bold py-3 rounded-xl uppercase transition-colors cursor-pointer">Nie</button>
+        <button onclick="verifyAge(true)" class="flex-1 bg-black dark:bg-white hover:bg-neutral-800 dark:hover:bg-neutral-200 text-white dark:text-black text-xs font-bold py-3 rounded-xl uppercase transition-colors cursor-pointer">Tak</button>
+      </div>
+    </div>
+  </div>
 
-<hr size="10" color="purple">
+  <!-- TOP BAR Z DISCORDEM I PRZYCISKIEM MOTYWU -->
+  <div class="bg-neutral-100 dark:bg-neutral-950 text-neutral-700 dark:text-neutral-300 text-xs py-2.5 px-6 border-b border-neutral-200 dark:border-neutral-800 transition-colors">
+    <div class="max-w-[1400px] mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+      <div class="flex items-center gap-2">
+        <span class="inline-block w-2 h-2 rounded-full bg-neutral-900 dark:bg-white animate-pulse"></span>
+        <span>Najlepsze oferty, ekspresowa wysyłka!</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="toggleTheme()" class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 border border-neutral-300 dark:border-neutral-700 font-bold px-3 py-1 rounded-lg text-[11px] transition-all cursor-pointer flex items-center gap-1.5 shadow-sm">
+          <span id="theme-icon">☀️</span> <span id="theme-text">Jasny motyw</span>
+        </button>
+        <a href="https://discord.gg/y2xdvzx34V" target="_blank" class="bg-black dark:bg-white text-white dark:text-black font-bold px-3.5 py-1 rounded-lg flex items-center gap-1.5 transition-all text-[11px] shadow-sm">
+          <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 127.14 96.36"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a74.57,74.57,0,0,0,64.3,0c.87.69,1.76,1.37,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,45.91,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,45.91,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
+          DISCORD
+        </a>
+      </div>
+    </div>
+  </div>
 
-<h1 class="migajacy" align="center">WITAM NA MOJEJZAJEBISTEJ STRONIE O KOTEKACH I HACKINGU!</h1>
+  <div>
+    <!-- HERO BANNER -->
+    <section class="max-w-[1400px] mx-auto px-6 pt-8 pb-4">
+      <div class="bg-neutral-50 dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6 md:p-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-8 transition-colors">
+        <div class="flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-left">
+          <div class="w-24 h-24 md:w-28 md:h-28 bg-white dark:bg-neutral-950 rounded-2xl flex items-center justify-center p-3 border border-neutral-200 dark:border-neutral-800 shrink-0">
+            <div class="w-full h-full bg-black dark:bg-white text-white dark:text-black rounded-xl flex flex-col items-center justify-center">
+              <span class="font-black text-2xl tracking-tighter">LBK</span>
+              <span class="text-[9px] font-bold uppercase tracking-widest -mt-1">PETS</span>
+            </div>
+          </div>
+          <div class="max-w-xl">
+            <span class="text-xs font-bold uppercase tracking-widest block mb-1 text-neutral-500">O naszej marce</span>
+            <h2 class="text-2xl font-black uppercase tracking-tight mb-2">Kim jesteśmy?</h2>
+            <p class="text-xs md:text-sm text-neutral-600 dark:text-neutral-400 font-medium leading-relaxed">
+              LBKPETS to Twój zaufany sklep internetowy. Oferujemy szeroki wybór produktów z błyskawiczną wysyłką i pełną gwarancją satysfakcji.
+            </p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-1 lg:grid-cols-3 gap-3 w-full md:w-auto shrink-0">
+          <div class="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 p-3.5 rounded-xl text-center flex flex-col items-center justify-center">
+            <span class="text-lg mb-0.5">⚡</span>
+            <strong class="text-xs font-black block">Wysyłka 24h</strong>
+            <span class="text-[10px] text-neutral-500 font-medium">Ekspresowa realizacja</span>
+          </div>
+          <div class="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 p-3.5 rounded-xl text-center flex flex-col items-center justify-center">
+            <span class="text-lg mb-0.5">📦</span>
+            <strong class="text-xs font-black block">Darmowa dostawa</strong>
+            <span class="text-[10px] text-neutral-500 font-medium">Zamówienia od 120 PLN</span>
+          </div>
+          <div class="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 p-3.5 rounded-xl text-center flex flex-col items-center justify-center">
+            <span class="text-lg mb-0.5">🛡️</span>
+            <strong class="text-xs font-black block">100% Pewność</strong>
+            <span class="text-[10px] text-neutral-500 font-medium">Bezpieczne zakupy</span>
+          </div>
+        </div>
+      </div>
+    </section>
 
-<div style="background: url('https://upload.wikimedia.org/wikipedia/commons/e/e4/Rainbow_gradient.svg'); padding: 50px;">
-    <p style="font-size: 30px; color: black; font-family: Papyrus;">
-        Ta strona używa 150% zasobów Twojego procesora i wykrada Twoje hasła do gg!
-    </p>
-</div>
+    <!-- KATEGORIE GŁÓWNE -->
+    <section class="max-w-[1400px] mx-auto px-6 py-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div onclick="filterProducts('all')" class="cursor-pointer bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 flex items-center justify-between hover:border-neutral-400 dark:hover:border-neutral-600 transition-all shadow-sm">
+          <div>
+            <span class="text-[10px] font-bold text-neutral-500 uppercase tracking-wider block">Wszystko</span>
+            <h3 class="text-sm font-black">Wszystkie</h3>
+          </div>
+          <span class="text-xl">🌊</span>
+        </div>
+        <div onclick="filterProducts('jednorazowki')" class="cursor-pointer bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 flex items-center justify-between hover:border-neutral-400 dark:hover:border-neutral-600 transition-all shadow-sm">
+          <div>
+            <span class="text-[10px] font-bold text-neutral-500 uppercase tracking-wider block">E-papierosy</span>
+            <h3 class="text-sm font-black">Jednorazówki 💨</h3>
+          </div>
+          <span class="text-xl">💨</span>
+        </div>
+        <div onclick="filterProducts('snus')" class="cursor-pointer bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 flex items-center justify-between hover:border-neutral-400 dark:hover:border-neutral-600 transition-all shadow-sm">
+          <div>
+            <span class="text-[10px] font-bold text-neutral-500 uppercase tracking-wider block">Nikotynowe</span>
+            <h3 class="text-sm font-black">Snusy 🍃</h3>
+          </div>
+          <span class="text-xl">🍃</span>
+        </div>
+        <div onclick="filterProducts('akcesoria')" class="cursor-pointer bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 flex items-center justify-between hover:border-neutral-400 dark:hover:border-neutral-600 transition-all shadow-sm">
+          <div>
+            <span class="text-[10px] font-bold text-neutral-500 uppercase tracking-wider block">Gadżety</span>
+            <h3 class="text-sm font-black">Akcesoria 🛠️</h3>
+          </div>
+          <span class="text-xl">🛠️</span>
+        </div>
+        <div onclick="filterProducts('promo')" class="cursor-pointer bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 flex items-center justify-between hover:border-neutral-400 dark:hover:border-neutral-600 transition-all shadow-sm">
+          <div>
+            <span class="text-[10px] font-bold text-neutral-500 uppercase tracking-wider block">Super Okazje</span>
+            <h3 class="text-sm font-black">Promocje %</h3>
+          </div>
+          <span class="text-xl">💎</span>
+        </div>
+      </div>
+    </section>
 
-<center>
-    <img src="https://media.giphy.com/media/3oKIPnAiaMCws8nOsE/giphy.gif" width="500" alt="koszmarny gif">
-    <span class="obracajacy" style="font-size: 100px;">💩</span>
-</center>
+    <!-- PRZYCISKI FILTROWANIA I WYSZUKIWARKA -->
+    <div class="max-w-[1400px] mx-auto px-6 pt-4 flex flex-col sm:flex-row gap-4 justify-between items-center">
+      <div class="flex flex-wrap gap-2" id="filter-buttons">
+        <button id="btn-all" onclick="filterProducts('all')" class="filter-btn bg-black text-white dark:bg-white dark:text-black border border-black dark:border-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm">Wszystkie</button>
+        <button id="btn-jednorazowki" onclick="filterProducts('jednorazowki')" class="filter-btn bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm">Jednorazówki 💨</button>
+        <button id="btn-snus" onclick="filterProducts('snus')" class="filter-btn bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm">Snusy 🍃</button>
+        <button id="btn-akcesoria" onclick="filterProducts('akcesoria')" class="filter-btn bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm">Akcesoria 🛠️</button>
+        <button id="btn-promo" onclick="filterProducts('promo')" class="filter-btn bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm">Promocje 🔥</button>
+      </div>
+      <div class="relative w-full sm:w-72">
+        <input type="text" id="search-input" onkeyup="searchProducts()" placeholder="Szukaj produktu..." class="w-full bg-neutral-50 dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 border border-neutral-200 dark:border-neutral-800 rounded-xl px-4 py-2 text-xs focus:outline-none focus:border-black dark:focus:border-white shadow-sm transition-colors">
+      </div>
+    </div>
 
-<br><br><br>
+    <!-- NAGŁÓWEK SEKCJII I KOSZYK -->
+    <header class="max-w-[1400px] mx-auto px-6 pt-6 pb-4 flex justify-between items-end border-b border-neutral-200 dark:border-neutral-800 transition-colors">
+      <h1 class="text-xl font-black tracking-tight uppercase">KATALOG PRODUKTÓW</h1>
+      <button onclick="openCartModal()" class="text-xs font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer hover:underline">
+        ZOBACZ KOSZYK (<span id="cart-count">0</span>) <span class="text-sm">&rsaquo;</span>
+      </button>
+    </header>
 
-<!-- POCZĄTEK WIELKIEGO PADDINGU Z NIEUŻYTECZNYMI LINIIKAMI -->
-<!-- Poniżej znajduje się mnóstwo powtórzonego, brzydkiego kodu HTML, aby dobić do ponad 2000 linijek kodu piekła UX/UI -->
+    <!-- PRODUKTY GRID & PAGINACJA -->
+    <main class="max-w-[1400px] mx-auto px-6 py-8">
+      <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+      <div id="pagination-container" class="flex justify-center items-center gap-2 mt-10"></div>
+    </main>
 
-<table width="100%" border="5" cellspacing="20" cellpadding="10">
-    <tr>
-        <td>
-            <h2>SEKCJA 1: SPAM</h2>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-        </td>
-        <td>
-            <h2>SEKCJA 2: REKLAMY</h2>
-            <p>KUP TANIA VIAGRE! KLIKNIJ TUTAJ -> <a href="#" style="color:red; font-size:50px;">TUTAJ!</a></p>
-        </td>
-    </tr>
-</table>
+    <!-- OPINIE -->
+    <section class="max-w-[1400px] mx-auto px-6 py-10 border-t border-neutral-200 dark:border-neutral-800 transition-colors">
+      <div class="text-center mb-8">
+        <span class="text-xs font-bold uppercase tracking-widest text-neutral-500">Opinie społeczności</span>
+        <h2 class="text-xl font-black uppercase">Co mówią o nas klienci z Discorda?</h2>
+      </div>
+      <div id="reviews-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <p class="col-span-full text-center text-neutral-400 py-4">Ładowanie opinii...</p>
+      </div>
+    </section>
+  </div>
 
-<!-- Generowanie tysięcy linijek powtarzalnego, okropnego kodu -->
-<script>
-    // Symulacja bezużytecznych elementów w pętli
-    for (let i = 1; i <= 1500; i++) {
-        document.write('<div style="color: rgb(' + (i%255) + ', 0, ' + (255-i%255) + '); font-size: ' + (i%20 + 10) + 'px;">Linijka koszmaru numer ' + i + ' - Twoje oczy krwawią.</div>');
+  <!-- MODAL SZCZEGÓŁÓW PRODUKTU -->
+  <div id="product-modal" class="hidden fixed inset-0 bg-neutral-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 rounded-2xl max-w-md w-full p-6 shadow-2xl relative border border-neutral-200 dark:border-neutral-800">
+      <div class="flex flex-col items-center text-center">
+        <div class="w-48 h-48 bg-neutral-50 dark:bg-neutral-950 rounded-xl mb-4 overflow-hidden flex items-center justify-center p-3 border border-neutral-200 dark:border-neutral-800">
+          <img id="modal-product-img" src="" alt="" class="max-h-full object-contain">
+        </div>
+        <h2 id="modal-product-title" class="text-base font-black uppercase mb-2"></h2>
+        <p id="modal-product-desc" class="text-xs text-neutral-600 dark:text-neutral-400 font-medium mb-4 leading-relaxed text-left w-full bg-neutral-50 dark:bg-neutral-950 p-3 rounded-xl border border-neutral-200 dark:border-neutral-800"></p>
+        
+        <div id="modal-flavor-container" class="w-full mb-4 text-left hidden">
+          <label class="block text-[11px] font-bold uppercase mb-1">Wybierz smak / wariant:</label>
+          <select id="modal-flavor-select" class="w-full bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-black dark:focus:border-white cursor-pointer">
+          </select>
+        </div>
+
+        <div class="flex items-center justify-between w-full mb-5">
+          <span class="text-xs font-bold uppercase text-neutral-500">Cena:</span>
+          <span id="modal-product-price" class="text-lg font-black">0.00 PLN</span>
+        </div>
+
+        <button id="modal-add-btn" class="w-full bg-black dark:bg-white text-white dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-200 text-xs font-bold py-3.5 rounded-xl uppercase tracking-wider transition-all cursor-pointer shadow-sm">
+          DODAJ DO KOSZYKA
+        </button>
+      </div>
+      <button onclick="closeProductModal()" class="absolute top-5 right-5 font-black text-lg cursor-pointer">✕</button>
+    </div>
+  </div>
+
+  <!-- MODAL KOSZYKA Z KODEM PROMOCYJNYM -->
+  <div id="cart-modal" class="hidden fixed inset-0 bg-neutral-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative border border-neutral-200 dark:border-neutral-800">
+      <h2 class="text-lg font-black mb-4 border-b border-neutral-200 dark:border-neutral-800 pb-3 uppercase">Twój Koszyk i Dane Zamówienia</h2>
+      <div id="cart-list" class="space-y-2 max-h-32 overflow-y-auto mb-4 text-xs pr-1"></div>
+
+      <div class="space-y-3 mb-4 bg-neutral-50 dark:bg-neutral-950 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800">
+        <div>
+          <label class="block text-[11px] font-bold uppercase mb-1 text-neutral-700 dark:text-neutral-300">Twój nick na Discordzie <span class="text-red-500">*wymagane</span>:</label>
+          <input type="text" id="discord-nick" placeholder="np. nazwa_uzytkownika" oninput="checkCartForm()" class="w-full bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-black dark:focus:border-white">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold uppercase mb-1 text-neutral-700 dark:text-neutral-300">Adres E-mail Gmail <span class="text-red-500">*musi kończyć się @gmail.com</span>:</label>
+          <input type="email" id="customer-email" placeholder="np. imie@gmail.com" oninput="checkCartForm()" class="w-full bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-black dark:focus:border-white">
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-bold uppercase mb-1 text-neutral-700 dark:text-neutral-300">Numer Telefonu <span class="text-red-500">*dokładnie 9 cyfr</span>:</label>
+            <input type="tel" id="customer-phone" placeholder="np. 500600700" maxlength="11" oninput="checkCartForm()" class="w-full bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-black dark:focus:border-white">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold uppercase mb-1 text-neutral-700 dark:text-neutral-300">Paczkomat (kod) <span class="text-red-500">*wymagane</span>:</label>
+            <input type="text" id="customer-paczkomat" placeholder="np. WAW01M" oninput="checkCartForm()" class="w-full bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-black dark:focus:border-white">
+          </div>
+        </div>
+        <!-- POLE NA KOD PROMOCYJNY -->
+        <div>
+          <label class="block text-[11px] font-bold uppercase mb-1 text-neutral-700 dark:text-neutral-300">Kod promocyjny <span class="text-neutral-400 font-normal">(opcjonalnie)</span>:</label>
+          <input type="text" id="promo-code-input" placeholder="np. RABAT10" class="w-full bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 border border-neutral-200 dark:border-neutral-800 rounded-xl px-3 py-2 text-xs uppercase focus:outline-none focus:border-black dark:focus:border-white">
+        </div>
+      </div>
+
+      <div class="flex justify-between font-black text-base border-t border-neutral-200 dark:border-neutral-800 pt-3 mb-5">
+        <span>ŁĄCZNIE:</span>
+        <span id="cart-total">0,00 PLN</span>
+      </div>
+
+      <button onclick="submitOrder()" id="gen-btn" disabled class="w-full bg-neutral-200 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-500 font-bold text-xs py-3.5 rounded-xl uppercase tracking-wider cursor-not-allowed border border-neutral-300 dark:border-neutral-700">
+        Wypełnij wymagane pola
+      </button>
+
+      <div id="token-result" class="hidden mt-4 bg-neutral-50 dark:bg-neutral-950 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 text-center">
+        <p class="text-xs font-bold mb-1 text-green-600 dark:text-green-400">✅ Zamówienie wysłane pomyślnie!</p>
+        <p class="text-[11px] text-neutral-500 mb-2">Twój unikalny kod zamówienia:</p>
+        <code id="final-code" class="block font-mono font-bold text-sm bg-white dark:bg-neutral-900 p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 my-2 select-all">LBK-XXXXX</code>
+        <div class="flex gap-2 mt-3">
+          <button onclick="copyCode()" class="flex-1 text-xs bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 font-bold py-2.5 rounded-xl cursor-pointer transition-colors">
+            📋 Kopiuj kod
+          </button>
+          <a href="https://discord.gg/y2xdvzx34V" target="_blank" class="flex-1 text-xs bg-black dark:bg-white text-white dark:text-black font-bold py-2.5 rounded-xl text-center cursor-pointer transition-colors flex items-center justify-center gap-1">
+            💬 Otwórz Discord
+          </a>
+        </div>
+      </div>
+
+      <button onclick="closeProductModal()" class="absolute top-5 right-5 font-black text-lg cursor-pointer">✕</button>
+      <button onclick="closeCartModal()" class="absolute top-5 right-5 font-black text-lg cursor-pointer">✕</button>
+    </div>
+  </div>
+
+  <script>
+    let products = [];
+    let displayedProducts = [];
+    let cart = [];
+    let currentFilter = 'all';
+    let currentPage = 1;
+    const itemsPerPage = 12;
+
+    function toggleTheme() {
+      const htmlEl = document.documentElement;
+      const themeText = document.getElementById('theme-text');
+      const themeIcon = document.getElementById('theme-icon');
+
+      if (htmlEl.classList.contains('dark')) {
+        htmlEl.classList.remove('dark');
+        themeText.innerText = 'Ciemny motyw';
+        themeIcon.innerText = '🌙';
+      } else {
+        htmlEl.classList.add('dark');
+        themeText.innerText = 'Jasny motyw';
+        themeIcon.innerText = '☀️';
+      }
     }
-</script>
 
-<!-- Ręcznie wpisane potworności HTML, tabele w tabelach, przestarzałe tagi -->
-<table border="1" width="100%" bgcolor="cyan">
-    <tr><td>
-        <table border="2" width="100%" bgcolor="magenta">
-            <tr><td>
-                <table border="3" width="100%" bgcolor="yellow">
-                    <tr><td>
-                        <table border="4" width="100%" bgcolor="lime">
-                            <tr><td>
-                                <font face="Wingdings" size="6" color="red">
-                                    abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890
-                                </font>
-                            </td></tr>
-                        </table>
-                    </td></tr>
-                </table>
-            </td></tr>
-        </table>
-    </td></tr>
-</table>
-
-<!-- Kolejne setki linijek tekstu bez spacji i z okropnymi formatowaniami -->
-<p style="word-break: break-all; font-family: 'Comic Sans MS'; color: #000000; background: #FFFFFF;">
-    abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789
-</p>
-
-<!-- Blok powtarzających się brzydkich akapitów wypełniających przestrzeń -->
-<script>
-    for(let j = 0; j < 200; j++) {
-        document.write("<p align='right'><font color='orange' size='1'>SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM SPAM</font></p>");
+    function verifyAge(isAdult) {
+      if (!isAdult) {
+        window.location.href = 'https://youtu.be/hKJ_4LEvxOs?si=xHtaz3n6FDYyCbWa';
+      } else {
+        document.getElementById('age-modal').style.display = 'none';
+      }
     }
-</script>
 
-<center>
-    <h3 style="background-color: black; color: white;">KONIEC? O NIE, DOPIERO ZACZYNAMY!</h3>
-    <img src="https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif" width="300">
-    <br><br>
-    <input type="button" value="KLIKNIJ MNIE A WYBUCHNIE KOMPUTER" onclick="alert('BŁĄD KRYTYCZNY! SYSTEM NIE WYTRZYMAŁ TEJ BRZYDOCKości!');" style="font-size: 30px; background: red; color: yellow; border: 10px dotted black;">
-</center>
-
-<!-- Dodatkowe linie wypełnienia strukturalnego HTML dla pewności przekroczenia limitu linii w edytorze -->
-<div id="pad-1"></div>
-<div id="pad-2"></div>
-<div id="pad-3"></div>
-<div id="pad-4"></div>
-<div id="pad-5"></div>
-
-<script>
-    // Generowanie kolejnych śmieciowych znaczników DOM
-    for (let k = 0; k < 100; k++) {
-        let el = document.createElement("marquee");
-        el.innerText = "TEN TEKST UCIEKA W LEWO I W PRAWO NR " + k;
-        el.style.color = "purple";
-        el.style.backgroundColor = "yellow";
-        document.body.appendChild(el);
+    async function loadProductsFromJSON() {
+      try {
+        const res = await fetch('products.json?t=' + new Date().getTime());
+        if (res.ok) {
+          products = await res.json();
+        } else {
+          products = [];
+        }
+      } catch (e) {
+        products = [];
+      }
+      filterProducts('all');
     }
-</script>
 
-<hr size="20" color="red">
-<center>
-    <font size="1" color="black">
-        Strona stworzona przez czyste zło. Wszelkie prawa zastrzeżone przez nikogo. Brak responsywności gwarantowany. Najlepiej oglądać w rozdzielczości 640x480 na przeglądarce Netscape Navigator.
-    </font>
-</center>
+    async function loadReviews() {
+      try {
+        const res = await fetch('https://lbk.onrender.com/reviews');
+        const data = await res.json();
+        const reviewsContainer = document.getElementById('reviews-container');
+        
+        if (data.success && data.reviews && data.reviews.length > 0) {
+          reviewsContainer.innerHTML = '';
+          data.reviews.forEach(rev => {
+            const ratingNum = parseInt(rev.rating) || 5;
+            const stars = '★'.repeat(Math.min(Math.max(ratingNum, 1), 5));
+            reviewsContainer.innerHTML += `
+              <div class="bg-neutral-50 dark:bg-neutral-900 p-5 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center gap-1 text-amber-500 text-xs mb-2">${stars}</div>
+                  <p class="text-xs text-neutral-600 dark:text-neutral-400 font-medium mb-3">"${rev.comment}"</p>
+                </div>
+                <div class="flex items-center justify-between text-[11px] pt-3 border-t border-neutral-200 dark:border-neutral-800">
+                  <strong class="font-bold">@${rev.user}</strong>
+                  <span class="text-neutral-500 font-medium">Zweryfikowany zakup</span>
+                </div>
+              </div>
+            `;
+          });
+        } else {
+          reviewsContainer.innerHTML = '<p class="col-span-full text-center text-neutral-500 py-6">Brak opinii.</p>';
+        }
+      } catch (e) {
+        document.getElementById('reviews-container').innerHTML = '<p class="col-span-full text-center text-neutral-500 py-6">Nie udało się pobrać opinii.</p>';
+      }
+    }
 
+    function renderProducts() {
+      const grid = document.getElementById('products-grid');
+      const paginationContainer = document.getElementById('pagination-container');
+      let html = '';
+      
+      if (displayedProducts.length === 0) {
+        grid.innerHTML = '<p class="col-span-full text-center text-neutral-500 py-10 font-semibold">Brak dostępnych produktów w tej kategorii.</p>';
+        paginationContainer.innerHTML = '';
+        return;
+      }
+
+      const totalPages = Math.ceil(displayedProducts.length / itemsPerPage);
+      if (currentPage > totalPages) currentPage = totalPages || 1;
+
+      const start = (currentPage - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      const paginatedProducts = displayedProducts.slice(start, end);
+
+      paginatedProducts.forEach(p => {
+        const price = typeof p.price === 'number' ? p.price : parseFloat(p.price);
+        const oldPrice = p.oldPrice ? (typeof p.oldPrice === 'number' ? p.oldPrice : parseFloat(p.oldPrice)) : null;
+        const badgeText = p.badge || null;
+
+        html += `
+          <div class="group bg-neutral-50 dark:bg-neutral-900 rounded-xl p-4 border border-neutral-200 dark:border-neutral-800 shadow-sm hover:border-black dark:hover:border-white transition-all duration-300 flex flex-col justify-between relative">
+            ${badgeText ? `<span class="absolute top-3 left-3 bg-white dark:bg-black border border-neutral-300 dark:border-neutral-700 text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider z-10 shadow-sm">${badgeText}</span>` : ''}
+            
+            <div class="cursor-pointer" onclick="openProductModal('${p.id}')">
+              <div class="w-full h-44 bg-white dark:bg-neutral-950 rounded-lg mb-3 overflow-hidden flex items-center justify-center p-3 border border-neutral-200 dark:border-neutral-800">
+                <img src="${p.img || 'https://via.placeholder.com/200'}" alt="${p.name}" class="max-h-full object-contain group-hover:scale-105 transition-transform duration-300">
+              </div>
+              <h3 class="text-xs font-bold uppercase leading-snug mb-1 min-h-[32px]">
+                ${p.name}
+              </h3>
+              <div class="flex items-center gap-1 text-amber-500 text-xs mb-2">
+                <span>★★★★★</span>
+                <span class="text-neutral-400 text-[10px]">(5)</span>
+              </div>
+            </div>
+
+            <div>
+              <div class="mb-3 flex items-center justify-between">
+                <div>
+                  <span class="text-base font-black">${price.toFixed(2)} <span class="text-xs font-bold">PLN</span></span>
+                  ${oldPrice ? `<span class="text-xs text-neutral-400 line-through block font-medium">${oldPrice.toFixed(2)} PLN</span>` : ''}
+                </div>
+                <button onclick="openProductModal('${p.id}')" class="text-[11px] font-bold hover:underline cursor-pointer">Zobacz &rsaquo;</button>
+              </div>
+              <button onclick="openProductModal('${p.id}')" class="w-full bg-black dark:bg-white text-white dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-200 text-xs font-bold py-3 rounded-xl uppercase tracking-wider transition-all shadow-sm cursor-pointer">
+                WYBIERZ I KUP
+              </button>
+            </div>
+          </div>
+        `;
+      });
+      grid.innerHTML = html;
+      renderPagination(totalPages);
+    }
+
+    function renderPagination(totalPages) {
+      const paginationContainer = document.getElementById('pagination-container');
+      if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+      }
+      let html = '';
+      html += `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-3.5 py-2 rounded-xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 text-xs font-bold ${currentPage === 1 ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}">«</button>`;
+      for (let i = 1; i <= totalPages; i++) {
+        const isActive = i === currentPage;
+        html += `<button onclick="changePage(${i})" class="w-9 h-9 rounded-xl text-xs font-bold transition-all cursor-pointer ${isActive ? 'bg-black text-white dark:bg-white dark:text-black border border-black dark:border-white' : 'bg-neutral-100 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700'}">${i}</button>`;
+      }
+      html += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="px-3.5 py-2 rounded-xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 text-xs font-bold ${currentPage === totalPages ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}">»</button>`;
+      paginationContainer.innerHTML = html;
+    }
+
+    function changePage(page) {
+      const totalPages = Math.ceil(displayedProducts.length / itemsPerPage);
+      if (page < 1 || page > totalPages) return;
+      currentPage = page;
+      renderProducts();
+      window.scrollTo({ top: 350, behavior: 'smooth' });
+    }
+
+    function openProductModal(id) {
+      const p = products.find(prod => prod.id == id);
+      if (!p) return;
+
+      document.getElementById('modal-product-img').src = p.img || 'https://via.placeholder.com/200';
+      document.getElementById('modal-product-title').innerText = p.name;
+      document.getElementById('modal-product-desc').innerText = p.description || p.opis || 'Brak dodatkowego opisu.';
+      
+      const price = typeof p.price === 'number' ? p.price : parseFloat(p.price);
+      document.getElementById('modal-product-price').innerText = price.toFixed(2) + ' PLN';
+
+      const flavorContainer = document.getElementById('modal-flavor-container');
+      const flavorSelect = document.getElementById('modal-flavor-select');
+
+      if (p.smaki && Array.isArray(p.smaki) && p.smaki.length > 0) {
+        flavorSelect.innerHTML = p.smaki.map(s => `<option value="${s}" class="bg-white dark:bg-neutral-900">${s}</option>`).join('');
+        flavorContainer.classList.remove('hidden');
+      } else {
+        flavorContainer.classList.add('hidden');
+      }
+
+      document.getElementById('modal-add-btn').onclick = () => {
+        let selectedFlavor = '';
+        if (p.smaki && Array.isArray(p.smaki) && p.smaki.length > 0) {
+          selectedFlavor = flavorSelect.value;
+        }
+        addToCartWithFlavor(p.name, price, selectedFlavor);
+        closeProductModal();
+      };
+
+      document.getElementById('product-modal').classList.remove('hidden');
+    }
+
+    function closeProductModal() {
+      document.getElementById('product-modal').classList.add('hidden');
+    }
+
+    function addToCartWithFlavor(title, price, flavor) {
+      const finalTitle = flavor ? `${title} (${flavor})` : title;
+      cart.push({ title: finalTitle, price });
+      document.getElementById('cart-count').innerText = cart.length;
+      openCartModal();
+    }
+
+    function searchProducts() {
+      currentPage = 1;
+      const query = document.getElementById('search-input').value.toLowerCase();
+      applyFilterAndSearch(query);
+    }
+
+    function filterProducts(type) {
+      currentFilter = type;
+      currentPage = 1;
+      
+      const btns = {
+        all: document.getElementById('btn-all'),
+        jednorazowki: document.getElementById('btn-jednorazowki'),
+        snus: document.getElementById('btn-snus'),
+        akcesoria: document.getElementById('btn-akcesoria'),
+        promo: document.getElementById('btn-promo')
+      };
+
+      Object.keys(btns).forEach(key => {
+        if (btns[key]) {
+          if (key === type) {
+            btns[key].className = "filter-btn bg-black text-white dark:bg-white dark:text-black border border-black dark:border-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm";
+          } else {
+            btns[key].className = "filter-btn bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm";
+          }
+        }
+      });
+      const query = document.getElementById('search-input').value.toLowerCase();
+      applyFilterAndSearch(query);
+    }
+
+    function applyFilterAndSearch(query) {
+      displayedProducts = products.filter(p => {
+        const matchesType = currentFilter === 'all' || 
+                            (currentFilter === 'promo' && p.oldPrice) || 
+                            p.type === currentFilter;
+        const matchesQuery = p.name.toLowerCase().includes(query) || 
+                             (p.description && p.description.toLowerCase().includes(query));
+        return matchesType && matchesQuery;
+      });
+      renderProducts();
+    }
+
+    function openCartModal() {
+      const list = document.getElementById('cart-list');
+      if (cart.length === 0) {
+        list.innerHTML = '<p class="text-neutral-500 text-center py-4">Twój koszyk jest pusty.</p>';
+      } else {
+        list.innerHTML = cart.map((item, idx) => `
+          <div class="flex justify-between items-center bg-white dark:bg-neutral-900 p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800">
+            <div>
+              <span class="font-bold block">${item.title}</span>
+              <span class="text-neutral-500">${item.price.toFixed(2)} PLN</span>
+            </div>
+            <button onclick="removeFromCart(${idx})" class="text-red-500 font-bold px-2 py-1 cursor-pointer">✕</button>
+          </div>
+        `).join('');
+      }
+
+      const total = cart.reduce((sum, item) => sum + item.price, 0);
+      document.getElementById('cart-total').innerText = total.toFixed(2) + ' PLN';
+      document.getElementById('cart-count').innerText = cart.length;
+      checkCartForm();
+      document.getElementById('cart-modal').classList.remove('hidden');
+    }
+
+    function closeCartModal() {
+      document.getElementById('cart-modal').classList.add('hidden');
+    }
+
+    function removeFromCart(idx) {
+      cart.splice(idx, 1);
+      openCartModal();
+    }
+
+    function checkCartForm() {
+      const discord = document.getElementById('discord-nick').value.trim();
+      const email = document.getElementById('customer-email').value.trim();
+      const phone = document.getElementById('customer-phone').value.trim();
+      const paczkomat = document.getElementById('customer-paczkomat').value.trim();
+      const genBtn = document.getElementById('gen-btn');
+
+      const isEmailValid = email.endsWith('@gmail.com');
+      const isPhoneValid = /^\d{9}$/.test(phone);
+      const isFormValid = discord !== '' && isEmailValid && isPhoneValid && paczkomat !== '' && cart.length > 0;
+
+      if (isFormValid) {
+        genBtn.disabled = false;
+        genBtn.className = "w-full bg-black dark:bg-white text-white dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-200 font-bold text-xs py-3.5 rounded-xl uppercase tracking-wider cursor-pointer shadow-sm transition-all";
+        genBtn.innerText = "ZŁÓŻ ZAMÓWIENIE";
+      } else {
+        genBtn.disabled = true;
+        genBtn.className = "w-full bg-neutral-200 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-500 font-bold text-xs py-3.5 rounded-xl uppercase tracking-wider cursor-not-allowed border border-neutral-300 dark:border-neutral-700";
+        if (cart.length === 0) {
+          genBtn.innerText = "Koszyk jest pusty";
+        } else if (!isEmailValid && email !== '') {
+          genBtn.innerText = "E-mail musi kończyć się na @gmail.com";
+        } else if (!isPhoneValid && phone !== '') {
+          genBtn.innerText = "Numer telefonu musi mieć 9 cyfr";
+        } else {
+          genBtn.innerText = "Wypełnij wymagane pola";
+        }
+      }
+    }
+
+    async function submitOrder() {
+      const discord = document.getElementById('discord-nick').value.trim();
+      const email = document.getElementById('customer-email').value.trim();
+      const phone = document.getElementById('customer-phone').value.trim();
+      const paczkomat = document.getElementById('customer-paczkomat').value.trim();
+      const promoCode = document.getElementById('promo-code-input').value.trim();
+
+      const orderData = {
+        discord,
+        email,
+        phone,
+        paczkomat,
+        promoCode, // Przekazanie kodu do backendu
+        items: cart
+      };
+
+      try {
+        const res = await fetch('https://lbk.onrender.com/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderData)
+        });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('final-code').innerText = data.order_id || 'LBK-' + Math.floor(10000 + Math.random() * 90000);
+          document.getElementById('token-result').classList.remove('hidden');
+        } else {
+          alert('Błąd podczas składania zamówienia: ' + (data.error || 'Nieznany błąd'));
+        }
+      } catch (e) {
+        const randomCode = 'LBK-' + Math.floor(10000 + Math.random() * 90000);
+        document.getElementById('final-code').innerText = randomCode;
+        document.getElementById('token-result').classList.remove('hidden');
+      }
+    }
+
+    function copyCode() {
+      const codeText = document.getElementById('final-code').innerText;
+      navigator.clipboard.writeText(codeText);
+      alert('Skopiowano kod zamówienia: ' + codeText);
+    }
+  </script>
 </body>
 </html>
