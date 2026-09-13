@@ -90,5 +90,25 @@
     "shipping": 25.0,
     "total": 45.0,
     "payment": "Pobranie (Paczkomat)"
+  },
+  {
+    "id": "LBK-EO36C",
+    "discord": "beblobo",
+    "email": "pedallowiecki@gmail.com",
+    "phone": "679345628",
+    "paczkomat": "w6367r4",
+    "items": [
+      {
+        "title": "SNUSY MINI (ON!) (Tropical Spice 6 mg)",
+        "price": 11
+      },
+      {
+        "title": "CUBA BLACK 66 MG (Black Currant)",
+        "price": 29
+      }
+    ],
+    "shipping": 25.0,
+    "total": 65.0,
+    "payment": "Pobranie (Paczkomat)"
   }
 ]
