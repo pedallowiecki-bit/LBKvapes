@@ -214,5 +214,24 @@
     "shipping": 25.0,
     "total": 54.0,
     "payment": "Pobranie (Paczkomat)"
+  },
+  {
+    "id": "LBK-9Q742",
+    "discord": "Dawide2115",
+    "email": "dawiddziecielski6@gmail.com",
+    "phone": "663495757",
+    "paczkomat": "Linia",
+    "items": [
+      {
+        "id": "VAP-105",
+        "name": "WGA CRYSTAL ULTRA 35K",
+        "price": 65,
+        "selectedTaste": "Kiwi Passion Fruit Guava",
+        "img": "https://www.vapes24h.net/api/uploads/1780853709325-159392263.png"
+      }
+    ],
+    "shipping": 25.0,
+    "total": 90.0,
+    "payment": "Pobranie (Paczkomat)"
   }
 ]
