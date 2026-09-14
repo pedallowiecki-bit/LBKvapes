@@ -166,6 +166,8 @@ def create_order():
         return jsonify({}), 200
     
     data = request.get_json(force=True, silent=True)
+    print("🔥 [FLASK] Otrzymano żądanie /create-order z danymi:", data)
+    
     if not data:
         return jsonify({"success": False, "error": "Brak danych lub nieprawidłowy format JSON"}), 400
 
@@ -211,32 +213,22 @@ def create_order():
     }
     update_github_tracking(tracking_data, f"Utworzono status śledzenia dla {order_id}")
 
-    # Natychmiastowe utworzenie kanału na Discordzie bez czekania
-    if bot.is_ready() and GUILD_ID:
+    # Natychmiastowe utworzenie kanału na Discordzie przez wątek bota
+    if GUILD_ID:
         async def create_order_channel():
             try:
+                print(f"🤖 [DISCORD] Próbuję pobrać serwer o ID: {GUILD_ID}")
                 guild = bot.get_guild(int(GUILD_ID))
                 if not guild:
                     guild = await bot.fetch_guild(int(GUILD_ID))
                 if not guild:
+                    print("❌ [DISCORD] Nie znaleziono gildii/serwera Discord!")
                     return
 
                 channel_name = f"zamowienie-{order_id}".lower()
                 channel_name = "".join(c for c in channel_name if c.isalnum() or c == "-")[:99]
 
-                existing_channel = discord.utils.get(guild.text_channels, name=channel_name)
-                if existing_channel:
-                    return
-
-                customer_member = None
-                try:
-                    async for member in guild.fetch_members(limit=None):
-                        if member.name.lower() == discord_user.lower() or (member.global_name and member.global_name.lower() == discord_user.lower()):
-                            customer_member = member
-                            break
-                except:
-                    pass
-
+                print(f"📁 [DISCORD] Tworzenie kanału tekstowego: {channel_name}")
                 overwrites = {
                     guild.default_role: discord.PermissionOverwrite(read_messages=False),
                     guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
@@ -247,14 +239,27 @@ def create_order():
                     overwrites[r] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
 
                 ticket_channel = await guild.create_text_channel(name=channel_name, overwrites=overwrites)
+                print(f"✅ [DISCORD] Sukces! Utworzono kanał: {ticket_channel.name}")
 
-                if customer_member:
+                customer_member = None
+                try:
+                    customer_member = guild.get_member_named(discord_user)
+                    if not customer_member:
+                        for m in guild.members:
+                            if m.name.lower() == discord_user.lower() or (m.global_name and m.global_name.lower() == discord_user.lower()):
+                                customer_member = m
+                                break
+                except Exception as e:
+                    print(f"⚠️ [DISCORD] Problem przy szukaniu użytkownika: {e}")
+
+                if customer_member and CLIENT_ROLE_ID:
                     try:
                         client_role = guild.get_role(int(CLIENT_ROLE_ID))
                         if client_role:
                             await customer_member.add_roles(client_role)
+                            print(f"✅ [DISCORD] Nadano rangę klienta dla {customer_member.name}")
                     except Exception as e:
-                        print(f"Błąd nadawania roli klienta: {e}")
+                        print(f"❌ [DISCORD] Błąd nadawania roli klienta: {e}")
 
                 embed = discord.Embed(title="🛒 Nowe Zamówienie (Za pobraniem)", color=discord.Color.green())
                 embed.add_field(name="👤 Klient", value=f"`{discord_user}` {customer_member.mention if customer_member else ''}", inline=True)
@@ -275,8 +280,9 @@ def create_order():
                 
                 ping_content = " ".join([r.mention for r in admin_roles]) if admin_roles else "@here"
                 await ticket_channel.send(content=ping_content, embed=embed)
+                print(f"✅ [DISCORD] Wysłano embed z zamówieniem do kanału {channel_name}")
             except Exception as e:
-                print(f"Błąd automatycznego tworzenia kanału: {e}")
+                print(f"❌ [DISCORD KRYTYCZNY BŁĄD]: {e}")
 
         asyncio.run_coroutine_threadsafe(create_order_channel(), bot.loop)
 
@@ -289,6 +295,7 @@ def run_flask():
 intents = discord.Intents.default()
 intents.members = True
 intents.guilds = True
+intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 class ReviewModal(discord.ui.Modal, title="Oceń nasz sklep"):
