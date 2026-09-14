@@ -8,7 +8,7 @@
     "oldPrice": 25,
     "badge": "Popularne",
     "img": "https://i.imgur.com/SkblUJZ.png",
-    "smaki": ["18650", "3000 mAh"]
+    "smaki": ["18650", "21700", "3000 mAh", "Sony VTC6", "Samsung 30Q", "LG HG2"]
   },
   {
     "id": "VAP-301",
@@ -19,7 +19,7 @@
     "oldPrice": 30,
     "badge": null,
     "img": "https://i.imgur.com/H2TYSfy.png",
-    "smaki": ["Strawberry Watermelon", "Pineapple Peach Mango", "Blue Razz Cherry", "Banana Ice"]
+    "smaki": ["Strawberry Watermelon", "Pineapple Peach Mango", "Blue Razz Cherry", "Banana Ice", "Apple Peach", "Grape Ice", "Watermelon Ice", "Blueberry Sour Raspberry", "Pink Lemonade", "Mango Ice", "Menthol", "Cola"]
   },
   {
     "id": "SNUS-104",
@@ -30,7 +30,7 @@
     "oldPrice": 20,
     "badge": null,
     "img": "https://i.imgur.com/jqt70pQ.png",
-    "smaki": ["Cold Mint", "Strong"]
+    "smaki": ["Cold Mint", "Strong", "Ice Mint", "Double Mint", "Cool Frost", "Spearmint"]
   },
   {
     "id": "VAP-202",
@@ -41,7 +41,7 @@
     "oldPrice": null,
     "badge": null,
     "img": "https://i.imgur.com/hL8dBfA.png",
-    "smaki": ["Standard"]
+    "smaki": ["Standard", "Gorillabox 10ml", "PET przezroczysta", "PET czarna", "Miękka z igłą"]
   },
   {
     "id": "SNUS-101",
@@ -52,7 +52,7 @@
     "oldPrice": 35,
     "badge": null,
     "img": "https://i.imgur.com/bB5ZytT.png",
-    "smaki": ["Black Currant", "Wariant 2", "Wariant 3", "Wariant 4", "Wariant 5", "Wariant 6", "Wariant 7"]
+    "smaki": ["Black Currant", "Cherry", "Cola", "Energy Drink", "Pineapple", "Bubble Gum", "Blueberry", "Menthol", "Strawberry", "Peach"]
   },
   {
     "id": "481263834",
@@ -63,7 +63,7 @@
     "oldPrice": 95,
     "badge": null,
     "img": "https://www.vapes24h.net/api/uploads/1780853828329-376936261.png",
-    "smaki": ["Watermelon Ice", "Strawberry Kiwi", "Blueberry Ice", "Peach Mango"]
+    "smaki": ["Watermelon Ice", "Strawberry Kiwi", "Blueberry Ice", "Peach Mango", "Double Apple Ice", "Miami Mint", "Cherry Lemon", "Grape Ice", "Mixed Berry Ice", "Strawberry Ice", "Blue Razz Ice", "Watermelon Bubblegum"]
   },
   {
     "id": "VAP-204",
@@ -74,7 +74,7 @@
     "oldPrice": 110,
     "badge": null,
     "img": "https://i.imgur.com/UwlKS5u.png",
-    "smaki": ["Złoty", "Czarny"]
+    "smaki": ["Złoty", "Czarny", "Stalowy", "Rainbow", "Gunmetal", "Niebieski"]
   },
   {
     "id": "VAP-211",
@@ -85,7 +85,7 @@
     "oldPrice": 22,
     "badge": null,
     "img": "https://i.imgur.com/90qoz9B.png",
-    "smaki": ["Standard", "Bubble"]
+    "smaki": ["Standard", "Bubble", "Prosty 5ml", "Wypukły 5.5ml", "Rainbow", "Czarny"]
   },
   {
     "id": "VAP-209",
@@ -96,7 +96,7 @@
     "oldPrice": 20,
     "badge": null,
     "img": "https://i.imgur.com/4Aq7Fj3.png",
-    "smaki": ["0.15Ω", "0.2Ω", "0.3Ω"]
+    "smaki": ["0.15Ω", "0.2Ω", "0.3Ω", "0.5Ω", "Mesh UB Pro", "UB Ultra"]
   },
   {
     "id": "VAP-302",
@@ -107,7 +107,7 @@
     "oldPrice": 73,
     "badge": null,
     "img": "https://i.imgur.com/ZQxuHFT.png",
-    "smaki": ["Blueberry Rasberry", "Strawberry Banana", "Blueberry Ice", "Cherry Ice", "Cola Ice", "Peach Hail", "Strawberry Ice"]
+    "smaki": ["Blueberry Rasberry", "Strawberry Banana", "Blueberry Ice", "Cherry Ice", "Cola Ice", "Peach Hail", "Strawberry Ice", "Watermelon Ice", "Grape Ice", "Mixed Berry", "Spearmint", "Mango Passion Fruit"]
   },
   {
     "id": "VAP-205",
@@ -118,7 +118,7 @@
     "oldPrice": 170,
     "badge": "Bestseller",
     "img": "https://i.imgur.com/bsRPrAT.png",
-    "smaki": ["Rainbow", "Czarny", "Stalowy"]
+    "smaki": ["Rainbow", "Czarny", "Stalowy", "Gunmetal", "Matte Black", "Gold", "Blue", "Purple"]
   },
   {
     "id": "VAP-102",
@@ -129,7 +129,7 @@
     "oldPrice": 30,
     "badge": null,
     "img": "https://www.vapes24h.net/api/uploads/1780853848672-975219883.png",
-    "smaki": ["0.4Ω", "0.6Ω", "0.8Ω", "1.2Ω"]
+    "smaki": ["0.4Ω", "0.6Ω", "0.8Ω", "1.2Ω", "Top Fill 0.4Ω", "Top Fill 0.6Ω", "Top Fill 0.8Ω"]
   },
   {
     "id": "VAP-303",
@@ -140,7 +140,7 @@
     "oldPrice": 99,
     "badge": null,
     "img": "https://i.imgur.com/Wm2tLxB.png",
-    "smaki": ["Turkusowy"]
+    "smaki": ["Turkusowy", "Czarny", "Matte White", "Cyan", "Pink", "Pale Green", "Grey", "Red"]
   },
   {
     "id": "VAP-201",
@@ -151,7 +151,7 @@
     "oldPrice": 6.99,
     "badge": null,
     "img": "https://i.imgur.com/EWHH0Ce.png",
-    "smaki": ["3 kolory"]
+    "smaki": ["3 kolory", "Przezroczysta", "Szklana z gumką", "Plastikowa z podziałką"]
   },
   {
     "id": "SNUS-103",
@@ -162,7 +162,7 @@
     "oldPrice": 22,
     "badge": null,
     "img": "https://i.imgur.com/G6uMyp1.png",
-    "smaki": ["Blue Ice"]
+    "smaki": ["Blue Ice", "Cold Mint", "Double Mint", "Ice Mint", "Menthol Strong", "Wild Mint", "Eucaliptus Mint"]
   },
   {
     "id": "00004",
@@ -173,7 +173,7 @@
     "oldPrice": 39,
     "badge": null,
     "img": "https://www.vapes24h.net/api/uploads/1782674786774-994670689.png",
-    "smaki": ["Grape Ice", "Mango Ice", "Mixed Berry", "Watermelon Bubblegum"]
+    "smaki": ["Grape Ice", "Mango Ice", "Mixed Berry", "Watermelon Bubblegum", "Strawberry Kiwi", "Blue Razz Ice", "Peach Ice", "Cherry Cola", "Cool Mint", "Pineapple Coconut", "Double Apple", "Lemon Lime"]
   },
   {
     "id": "VAP-206",
@@ -184,7 +184,7 @@
     "oldPrice": 20,
     "badge": null,
     "img": "https://i.imgur.com/iEhii4O.png",
-    "smaki": ["RPM", "RPM 2"]
+    "smaki": ["RPM", "RPM 2", "Pusty pod Nord 4 RPM", "Pusty pod Nord 4 RPM 2"]
   },
   {
     "id": "SNUS-102",
@@ -195,7 +195,7 @@
     "oldPrice": 15,
     "badge": null,
     "img": "https://i.imgur.com/JtHMUSf.png",
-    "smaki": ["Mint 3 mg", "Sweet Mint 3 mg", "Mint 6 mg", "Tropical Spice 6 mg", "Mint 3 mg", "Spearmint 6 mg"]
+    "smaki": ["Mint 3 mg", "Sweet Mint 3 mg", "Mint 6 mg", "Tropical Spice 6 mg", "Spearmint 6 mg", "Berry 3 mg", "Citrus 3 mg", "Licorice 3 mg", "Coffee 6 mg"]
   },
   {
     "id": "VAP-212",
@@ -206,7 +206,7 @@
     "oldPrice": 3,
     "badge": null,
     "img": "https://i.imgur.com/yQU2PIf.png",
-    "smaki": ["9 kolorów"]
+    "smaki": ["9 kolorów", "Czarny", "Czerwony", "Niebieski", "Zielony", "Żółty", "Biały", "Różowy", "Fioletowy", "Pomarańczowy"]
   },
   {
     "id": "VAP-207",
@@ -217,7 +217,7 @@
     "oldPrice": 5.50,
     "badge": null,
     "img": "https://i.imgur.com/3bHLLCX.png",
-    "smaki": ["6 kolorów"]
+    "smaki": ["6 kolorów", "Czarny", "Czerwony", "Niebieski", "Przezroczysty", "Biały", "Zielony"]
   },
   {
     "id": "00002",
@@ -228,7 +228,7 @@
     "oldPrice": 79.0,
     "badge": null,
     "img": "https://www.vapes24h.net/api/uploads/1780853948391-461762351.png",
-    "smaki": ["Blue Razz Lemonade", "Strawberry Watermelon", "Cherry Cola", "Double Apple"]
+    "smaki": ["Blue Razz Lemonade", "Strawberry Watermelon", "Cherry Cola", "Double Apple", "Peach Mango Watermelon", "Strawberry Kiwi", "Watermelon Ice", "Blueberry Ice", "Mixed Berry", "Grape Ice", "Lemon Mint", "Raspberry Watermelon"]
   },
   {
     "id": "VAP-210",
@@ -239,7 +239,7 @@
     "oldPrice": 10,
     "badge": null,
     "img": "https://i.imgur.com/k7uhUlF.png",
-    "smaki": ["1.0Ω", "1.2Ω"]
+    "smaki": ["0.8Ω", "1.0Ω", "1.2Ω", "0.6Ω"]
   },
   {
     "id": "VAP-105",
@@ -250,7 +250,7 @@
     "oldPrice": 70,
     "badge": null,
     "img": "https://www.vapes24h.net/api/uploads/1780853709325-159392263.png",
-    "smaki": ["Blue Razz", "Strawberry Banana", "Watermelon Ice", "Cherry Ice"]
+    "smaki": ["Blue Razz", "Strawberry Banana", "Watermelon Ice", "Cherry Ice", "Kiwi Passion Fruit Guava", "Blueberry Raspberry", "Peach Ice", "Strawberry Watermelon", "Triple Mango", "Mixed Berries", "Lemon Lime", "Skittles"]
   },
   {
     "id": "VAP-106",
@@ -261,7 +261,7 @@
     "oldPrice": 30,
     "badge": null,
     "img": "https://www.vapes24h.net/api/uploads/1780857658028-201790681.png",
-    "smaki": ["Mięta", "Jabłko", "Truskawka", "Czarna Porzeczka"]
+    "smaki": ["Mięta", "Jabłko", "Truskawka", "Czarna Porzeczka", "Arbuz", "Jagoda", "Brzoskwinia", "Winogrono", "Cola", "Cyztryna", "Mango", "Mieszanka Owoce Leśne"]
   },
   {
     "id": "00006",
@@ -272,6 +272,6 @@
     "oldPrice": 50.0,
     "badge": null,
     "img": "https://www.vapes24h.net/wga20k_new.png",
-    "smaki": ["Kiwi Passion Fruit Guava", "Blueberry Raspberry", "Strawberry Ice", "Peach Ice"]
+    "smaki": ["Kiwi Passion Fruit Guava", "Blueberry Raspberry", "Strawberry Ice", "Peach Ice", "Watermelon Ice", "Blue Razz Ice", "Cherry Cola", "Strawberry Kiwi", "Double Apple", "Pineapple Mango", "Spearmint", "Pink Lemonade"]
   }
 ]
