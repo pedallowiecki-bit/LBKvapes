@@ -117,5 +117,24 @@
     "shipping": 25.0,
     "total": 45.0,
     "payment": "Pobranie (Paczkomat)"
+  },
+  {
+    "id": "LBK-FX0X2",
+    "discord": "beblobo",
+    "email": "pedallowiecki@gmail.com",
+    "phone": "632546573",
+    "paczkomat": "w6367r4",
+    "items": [
+      {
+        "id": "VAP-203",
+        "name": "AKUMULATOR 3000 MAH",
+        "price": 20,
+        "selectedTaste": "18650",
+        "img": "https://i.imgur.com/SkblUJZ.png"
+      }
+    ],
+    "shipping": 25.0,
+    "total": 45.0,
+    "payment": "Pobranie (Paczkomat)"
   }
 ]
