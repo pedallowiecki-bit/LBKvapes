@@ -195,5 +195,24 @@
     "shipping": 25.0,
     "total": 71.0,
     "payment": "Pobranie (Paczkomat)"
+  },
+  {
+    "id": "LBK-9XMDU",
+    "discord": "Ec6un",
+    "email": "cwelowkiczarnuch@gmail.com",
+    "phone": "676767676",
+    "paczkomat": "Chujciwpysk",
+    "items": [
+      {
+        "id": "SNUS-101",
+        "name": "CUBA BLACK 66 MG",
+        "price": 29,
+        "selectedTaste": "Wariant 4",
+        "img": "https://i.imgur.com/bB5ZytT.png"
+      }
+    ],
+    "shipping": 25.0,
+    "total": 54.0,
+    "payment": "Pobranie (Paczkomat)"
   }
 ]
