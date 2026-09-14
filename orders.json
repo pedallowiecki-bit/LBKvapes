@@ -49,5 +49,22 @@
     "shipping": 25.0,
     "total": 45.0,
     "payment": "Pobranie (Paczkomat)"
+  },
+  {
+    "id": "LBK-4C1JD",
+    "discord": "beblobo",
+    "email": "pedallowiecki@gmail.com",
+    "phone": "735758653",
+    "paczkomat": "w6367r4",
+    "items": [
+      {
+        "title": "AKUMULATOR 3000 MAH (18650)",
+        "price": 20,
+        "img": "https://i.imgur.com/SkblUJZ.png"
+      }
+    ],
+    "shipping": 25.0,
+    "total": 45.0,
+    "payment": "Pobranie (Paczkomat)"
   }
 ]
