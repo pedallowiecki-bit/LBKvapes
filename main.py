@@ -208,11 +208,11 @@ def reviews_endpoint():
 def check_promo():
     if request.method == "OPTIONS":
         return jsonify({}), 200
-    data = request.json
+    data = request.get_json(force=True, silent=True)
     if not data:
         return jsonify({"success": False, "error": "Brak danych"}), 400
     
-    code = data.get('code', '').strip().upper()
+    code = str(data.get('code', '')).strip().upper()
     promos, _, _ = get_github_promos()
     if not isinstance(promos, dict):
         promos = {}
@@ -226,14 +226,15 @@ def create_order():
     if request.method == "OPTIONS":
         return jsonify({}), 200
     
-    data = request.json
+    # Użycie force=True i silent=True naprawia błąd 400 Bad Request przy problemach z nagłówkami Content-Type
+    data = request.get_json(force=True, silent=True)
     if not data:
-        return jsonify({"success": False, "error": "Brak danych"}), 400
+        return jsonify({"success": False, "error": "Brak danych lub nieprawidłowy format JSON"}), 400
 
-    discord_user = data.get('discord', '').strip()
-    email = data.get('email', '').strip()
-    phone = data.get('phone', '').strip()
-    paczkomat = data.get('paczkomat', '').strip()
+    discord_user = str(data.get('discord', '')).strip()
+    email = str(data.get('email', '')).strip()
+    phone = str(data.get('phone', '')).strip()
+    paczkomat = str(data.get('paczkomat', '')).strip()
     cart_items = data.get('items', [])
 
     if not discord_user or not cart_items:
@@ -241,10 +242,11 @@ def create_order():
 
     order_id = 'LBK-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
     
-    items_total = sum(item.get('price', 0) for item in cart_items)
+    items_total = sum(float(item.get('price', 0)) for item in cart_items)
     shipping_fee = 25.0
     total = items_total + shipping_fee
     
+    # Zapis do orders.json na GitHubie (dzięki temu plik przestaje być pusty [])
     orders, _, _ = get_github_orders()
     if not isinstance(orders, list):
         orders = []
@@ -263,6 +265,7 @@ def create_order():
     orders.append(new_order)
     update_github_orders(orders, f"Nowe zamówienie {order_id} dla {discord_user}")
 
+    # Zapis statusu śledzenia do tracking.json
     tracking_data, _, _ = get_github_tracking()
     if not isinstance(tracking_data, dict):
         tracking_data = {}
@@ -272,68 +275,39 @@ def create_order():
     }
     update_github_tracking(tracking_data, f"Utworzono status śledzenia dla {order_id}")
 
-    if not bot.is_ready():
-        return jsonify({"success": True, "order_id": order_id})
+    # Wysyłanie powiadomienia jako zwykła wiadomość (zamiast tworzenia osobnych kanałów)
+    if bot.is_ready() and ADMIN_CHANNEL_ID:
+        async def send_order_notification():
+            try:
+                channel = bot.get_channel(int(ADMIN_CHANNEL_ID))
+                if not channel:
+                    channel = await bot.fetch_channel(int(ADMIN_CHANNEL_ID))
+                if channel:
+                    embed = discord.Embed(title="🛒 Nowe Zamówienie (Za pobraniem)", color=discord.Color.green())
+                    embed.add_field(name="👤 Klient", value=f"`{discord_user}`", inline=True)
+                    embed.add_field(name="🆔 ID Zamówienia", value=f"`{order_id}`", inline=True)
+                    embed.add_field(name="📧 Email", value=f"`{email}`", inline=True)
+                    embed.add_field(name="📞 Telefon", value=f"`{phone}`", inline=True)
+                    embed.add_field(name="📦 Paczkomat / Płatność", value=f"`{paczkomat}`\nMetoda: **Pobranie** (Dostawa: `25.0 PLN`)", inline=False)
+                    
+                    items_desc = []
+                    for i in cart_items:
+                        title = i.get('title', i.get('name', 'Produkt'))
+                        price = i.get('price', 0)
+                        taste = i.get('selectedTaste', i.get('smak', 'Brak'))
+                        items_desc.append(f"• **{title}** | Smak: `{taste}` | **{price} PLN**")
 
-    target_guild_id = GUILD_ID
-    if not target_guild_id and bot.guilds:
-        target_guild_id = bot.guilds[0].id
-    else:
-        try:
-            target_guild_id = int(target_guild_id)
-        except:
-            target_guild_id = None
+                    embed.add_field(name="Produkty", value="\n".join(items_desc) or "Brak", inline=False)
+                    embed.add_field(name="Suma (z dostawą 25 zł)", value=f"**{total} PLN**", inline=False)
+                    
+                    ping_content = f"<@&{ADMIN_ROLE_ID}>" if ADMIN_ROLE_ID else "@here"
+                    await channel.send(content=ping_content, embed=embed)
+            except Exception as e:
+                print(f"Błąd wysyłania powiadomienia o zamówieniu na Discorda: {e}")
 
-    if target_guild_id:
-        async def create_ticket_task():
-            guild = bot.get_guild(target_guild_id)
-            if not guild:
-                return
+        asyncio.run_coroutine_threadsafe(send_order_notification(), bot.loop)
 
-            member = discord.utils.get(guild.members, name=discord_user) or discord.utils.get(guild.members, global_name=discord_user)
-            
-            channel_name = f"ticket-{discord_user}".lower().replace(" ", "-")
-            channel_name = "".join(c for c in channel_name if c.isalnum() or c == "-")[:99]
-            if not channel_name:
-                channel_name = "ticket-zamowienie"
-
-            overwrites = {
-                guild.default_role: discord.PermissionOverwrite(read_messages=False),
-                guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
-            }
-            if ADMIN_ROLE_ID:
-                try:
-                    admin_role = guild.get_role(int(ADMIN_ROLE_ID))
-                    if admin_role:
-                        overwrites[admin_role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
-                except:
-                    pass
-
-            ticket_channel = await guild.create_text_channel(name=channel_name, overwrites=overwrites)
-
-            embed = discord.Embed(title="🛒 Nowy Ticket Zamówienia (Za pobraniem)", color=discord.Color.green())
-            embed.add_field(name="👤 Klient", value=f"`{discord_user}` {member.mention if member else ''}", inline=True)
-            embed.add_field(name="🆔 ID Zamówienia", value=f"`{order_id}`", inline=True)
-            embed.add_field(name="📧 Email", value=f"`{email}`", inline=True)
-            embed.add_field(name="📞 Telefon", value=f"`{phone}`", inline=True)
-            embed.add_field(name="📦 Paczkomat / Płatność", value=f"`{paczkomat}`\nMetoda: **Pobranie** (Dostawa: `25.0 PLN`)", inline=False)
-            
-            items_desc = []
-            for i in cart_items:
-                title = i.get('title', i.get('name', 'Produkt'))
-                price = i.get('price', 0)
-                selected_taste = i.get('selectedTaste', i.get('smak', 'Brak'))
-                items_desc.append(f"• **{title}** | Smak: `{selected_taste}` | **{price} PLN**")
-
-            embed.add_field(name="Zamówione Produkty", value="\n".join(items_desc) or "Brak", inline=False)
-            embed.add_field(name="Suma (z dostawą 25 zł)", value=f"**{total} PLN**", inline=False)
-            
-            ping_content = f"<@&{ADMIN_ROLE_ID}>" if ADMIN_ROLE_ID else "@here"
-            await ticket_channel.send(content=ping_content, embed=embed)
-
-        asyncio.run_coroutine_threadsafe(create_ticket_task(), bot.loop)
-
-    return jsonify({"success": True, "order_id": order_id})
+    return jsonify({"success": True, "order_id": order_id}), 200
 
 def run_flask():
     port = int(os.environ.get("PORT", 10000))
