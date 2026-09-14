@@ -20,7 +20,6 @@ GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO = os.getenv("GITHUB_REPO")
 GUILD_ID = os.getenv("GUILD_ID")
 ADMIN_CHANNEL_ID = os.getenv("ADMIN_CHANNEL_ID")
-ADMIN_ROLE_ID = os.getenv("ADMIN_ROLE_ID")
 
 CLIENT_ROLE_ID = "1545554046230855870"
 
@@ -272,7 +271,6 @@ def create_order():
     }
     update_github_tracking(tracking_data, f"Utworzono status śledzenia dla {order_id}")
 
-    # Automatyczne tworzenie osobnego kanału (ticketu) dla nowego zamówienia ze strony
     if bot.is_ready() and GUILD_ID:
         async def create_order_channel():
             try:
@@ -285,17 +283,15 @@ def create_order():
                 channel_name = f"zamowienie-{order_id.lower()}"
                 channel_name = "".join(c for c in channel_name if c.isalnum() or c == "-")[:99]
 
+                # Automatycznie wykryj role z uprawnieniem Administratora
                 overwrites = {
                     guild.default_role: discord.PermissionOverwrite(read_messages=False),
                     guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
                 }
-                if ADMIN_ROLE_ID:
-                    try:
-                        admin_role = guild.get_role(int(ADMIN_ROLE_ID))
-                        if admin_role:
-                            overwrites[admin_role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
-                    except:
-                        pass
+                
+                admin_roles = [r for r in guild.roles if r.permissions.administrator and r != guild.default_role]
+                for r in admin_roles:
+                    overwrites[r] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
 
                 ticket_channel = await guild.create_text_channel(name=channel_name, overwrites=overwrites)
 
@@ -316,7 +312,7 @@ def create_order():
                 embed.add_field(name="Produkty", value="\n".join(items_desc) or "Brak", inline=False)
                 embed.add_field(name="Suma (z dostawą 25 zł)", value=f"**{total} PLN**", inline=False)
                 
-                ping_content = f"<@&{ADMIN_ROLE_ID}>" if ADMIN_ROLE_ID else "@here"
+                ping_content = " ".join([r.mention for r in admin_roles]) if admin_roles else "@here"
                 await ticket_channel.send(content=ping_content, embed=embed)
             except Exception as e:
                 print(f"Błąd tworzenia kanału zamówienia na Discordzie: {e}")
@@ -628,13 +624,10 @@ async def zamowienie(interaction: discord.Interaction, order_id: str):
         guild.default_role: discord.PermissionOverwrite(read_messages=False),
         guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
     }
-    if ADMIN_ROLE_ID:
-        try:
-            admin_role = guild.get_role(int(ADMIN_ROLE_ID))
-            if admin_role:
-                overwrites[admin_role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
-        except:
-            pass
+    
+    admin_roles = [r for r in guild.roles if r.permissions.administrator and r != guild.default_role]
+    for r in admin_roles:
+        overwrites[r] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
 
     ticket_channel = await guild.create_text_channel(name=channel_name, overwrites=overwrites)
 
@@ -668,7 +661,7 @@ async def zamowienie(interaction: discord.Interaction, order_id: str):
     embed.add_field(name="Produkty", value="\n".join(items_desc) or "Brak", inline=False)
     embed.add_field(name="Suma (z dostawą 25 zł)", value=f"**{order.get('total')} PLN**", inline=False)
     
-    ping_content = f"<@&{ADMIN_ROLE_ID}>" if ADMIN_ROLE_ID else "@here"
+    ping_content = " ".join([r.mention for r in admin_roles]) if admin_roles else "@here"
     await ticket_channel.send(content=ping_content, embed=embed)
 
 @bot.tree.command(name="zamknij", description="Zamyka aktualny ticket")
