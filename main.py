@@ -72,123 +72,63 @@ def get_headers():
         "User-Agent": "DiscordBot-LBK"
     }
 
-def get_github_file():
+def get_github_json(api_url, default_value):
     try:
-        res = requests.get(GITHUB_API_URL, headers=get_headers())
+        res = requests.get(api_url, headers=get_headers())
         if res.status_code == 200:
             data = res.json()
-            file_res = requests.get(data.get('download_url'), headers={"User-Agent": "DiscordBot-LBK"})
-            content = json.loads(file_res.text)
-            if not content:
-                return DEFAULT_PRODUCTS, data.get('sha'), None
-            return content, data.get('sha'), None
+            sha = data.get('sha')
+            content_b64 = data.get('content', '')
+            content_bytes = base64.b64decode(content_b64.replace('\n', ''))
+            content = json.loads(content_bytes.decode('utf-8'))
+            if not content and default_value is not None:
+                return default_value, sha, None
+            return content, sha, None
         elif res.status_code == 404:
-            return DEFAULT_PRODUCTS, None, None
-        return DEFAULT_PRODUCTS, None, f"Brak pliku products.json ({res.status_code})"
+            return default_value, None, None
+        return default_value, None, f"Error: {res.status_code}"
     except Exception as e:
-        return DEFAULT_PRODUCTS, None, str(e)
+        return default_value, None, str(e)
+
+def update_github_json(api_url, data_obj, commit_message):
+    _, current_sha, _ = get_github_json(api_url, None)
+    content_json = json.dumps(data_obj, indent=2, ensure_ascii=False)
+    encoded_content = base64.b64encode(content_json.encode('utf-8')).decode('utf-8')
+    payload = {"message": commit_message, "content": encoded_content}
+    if current_sha:
+        payload["sha"] = current_sha
+    res = requests.put(api_url, headers=get_headers(), json=payload)
+    return res.status_code in [200, 201]
+
+def get_github_file():
+    return get_github_json(GITHUB_API_URL, DEFAULT_PRODUCTS)
 
 def update_github_file(products, commit_message):
-    _, current_sha, _ = get_github_file()
-    content_json = json.dumps(products, indent=2, ensure_ascii=False)
-    encoded_content = base64.b64encode(content_json.encode('utf-8')).decode('utf-8')
-    payload = {"message": commit_message, "content": encoded_content}
-    if current_sha:
-        payload["sha"] = current_sha
-    res = requests.put(GITHUB_API_URL, headers=get_headers(), json=payload)
-    return res.status_code in [200, 201]
+    return update_github_json(GITHUB_API_URL, products, commit_message)
 
 def get_github_orders():
-    try:
-        res = requests.get(ORDERS_GITHUB_API_URL, headers=get_headers())
-        if res.status_code == 200:
-            data = res.json()
-            file_res = requests.get(data.get('download_url'), headers={"User-Agent": "DiscordBot-LBK"})
-            return json.loads(file_res.text), data.get('sha'), None
-        elif res.status_code == 404:
-            return [], None, None
-        return [], None, f"Error: {res.status_code}"
-    except Exception as e:
-        return [], None, str(e)
+    return get_github_json(ORDERS_GITHUB_API_URL, [])
 
 def update_github_orders(orders, commit_message):
-    _, current_sha, _ = get_github_orders()
-    content_json = json.dumps(orders, indent=2, ensure_ascii=False)
-    encoded_content = base64.b64encode(content_json.encode('utf-8')).decode('utf-8')
-    payload = {"message": commit_message, "content": encoded_content}
-    if current_sha:
-        payload["sha"] = current_sha
-    res = requests.put(ORDERS_GITHUB_API_URL, headers=get_headers(), json=payload)
-    return res.status_code in [200, 201]
+    return update_github_json(ORDERS_GITHUB_API_URL, orders, commit_message)
 
 def get_github_promos():
-    try:
-        res = requests.get(PROMOS_GITHUB_API_URL, headers=get_headers())
-        if res.status_code == 200:
-            data = res.json()
-            file_res = requests.get(data.get('download_url'), headers={"User-Agent": "DiscordBot-LBK"})
-            return json.loads(file_res.text), data.get('sha'), None
-        elif res.status_code == 404:
-            return {}, None, None
-        return {}, None, f"Error: {res.status_code}"
-    except Exception as e:
-        return {}, None, str(e)
+    return get_github_json(PROMOS_GITHUB_API_URL, {})
 
 def update_github_promos(promos, commit_message):
-    _, current_sha, _ = get_github_promos()
-    content_json = json.dumps(promos, indent=2, ensure_ascii=False)
-    encoded_content = base64.b64encode(content_json.encode('utf-8')).decode('utf-8')
-    payload = {"message": commit_message, "content": encoded_content}
-    if current_sha:
-        payload["sha"] = current_sha
-    res = requests.put(PROMOS_GITHUB_API_URL, headers=get_headers(), json=payload)
-    return res.status_code in [200, 201]
+    return update_github_json(PROMOS_GITHUB_API_URL, promos, commit_message)
 
 def get_github_reviews():
-    try:
-        res = requests.get(REVIEWS_GITHUB_API_URL, headers=get_headers())
-        if res.status_code == 200:
-            data = res.json()
-            file_res = requests.get(data.get('download_url'), headers={"User-Agent": "DiscordBot-LBK"})
-            return json.loads(file_res.text), data.get('sha'), None
-        elif res.status_code == 404:
-            return [], None, None
-        return [], None, f"Error: {res.status_code}"
-    except Exception as e:
-        return [], None, str(e)
+    return get_github_json(REVIEWS_GITHUB_API_URL, [])
 
 def update_github_reviews(reviews, commit_message):
-    _, current_sha, _ = get_github_reviews()
-    content_json = json.dumps(reviews, indent=2, ensure_ascii=False)
-    encoded_content = base64.b64encode(content_json.encode('utf-8')).decode('utf-8')
-    payload = {"message": commit_message, "content": encoded_content}
-    if current_sha:
-        payload["sha"] = current_sha
-    res = requests.put(REVIEWS_GITHUB_API_URL, headers=get_headers(), json=payload)
-    return res.status_code in [200, 201]
+    return update_github_json(REVIEWS_GITHUB_API_URL, reviews, commit_message)
 
 def get_github_tracking():
-    try:
-        res = requests.get(TRACKING_GITHUB_API_URL, headers=get_headers())
-        if res.status_code == 200:
-            data = res.json()
-            file_res = requests.get(data.get('download_url'), headers={"User-Agent": "DiscordBot-LBK"})
-            return json.loads(file_res.text), data.get('sha'), None
-        elif res.status_code == 404:
-            return {}, None, None
-        return {}, None, f"Error: {res.status_code}"
-    except Exception as e:
-        return {}, None, str(e)
+    return get_github_json(TRACKING_GITHUB_API_URL, {})
 
 def update_github_tracking(tracking_data, commit_message):
-    _, current_sha, _ = get_github_tracking()
-    content_json = json.dumps(tracking_data, indent=2, ensure_ascii=False)
-    encoded_content = base64.b64encode(content_json.encode('utf-8')).decode('utf-8')
-    payload = {"message": commit_message, "content": encoded_content}
-    if current_sha:
-        payload["sha"] = current_sha
-    res = requests.put(TRACKING_GITHUB_API_URL, headers=get_headers(), json=payload)
-    return res.status_code in [200, 201]
+    return update_github_json(TRACKING_GITHUB_API_URL, tracking_data, commit_message)
 
 @app.route("/", methods=["GET"])
 def home():
@@ -283,7 +223,6 @@ def create_order():
                 channel_name = f"zamowienie-{order_id.lower()}"
                 channel_name = "".join(c for c in channel_name if c.isalnum() or c == "-")[:99]
 
-                # Automatycznie wykryj role z uprawnieniem Administratora
                 overwrites = {
                     guild.default_role: discord.PermissionOverwrite(read_messages=False),
                     guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
