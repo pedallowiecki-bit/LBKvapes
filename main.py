@@ -10,7 +10,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import discord
 from discord import app_commands
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 app = Flask(__name__)
 CORS(app)
@@ -211,53 +211,6 @@ def create_order():
     }
     update_github_tracking(tracking_data, f"Utworzono status śledzenia dla {order_id}")
 
-    if bot.is_ready() and GUILD_ID:
-        async def create_order_channel():
-            try:
-                guild = bot.get_guild(int(GUILD_ID))
-                if not guild:
-                    guild = await bot.fetch_guild(int(GUILD_ID))
-                if not guild:
-                    return
-
-                channel_name = f"zamowienie-{order_id.lower()}"
-                channel_name = "".join(c for c in channel_name if c.isalnum() or c == "-")[:99]
-
-                overwrites = {
-                    guild.default_role: discord.PermissionOverwrite(read_messages=False),
-                    guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
-                }
-                
-                admin_roles = [r for r in guild.roles if r.permissions.administrator and r != guild.default_role]
-                for r in admin_roles:
-                    overwrites[r] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
-
-                ticket_channel = await guild.create_text_channel(name=channel_name, overwrites=overwrites)
-
-                embed = discord.Embed(title="🛒 Nowe Zamówienie ze strony (Za pobraniem)", color=discord.Color.green())
-                embed.add_field(name="👤 Klient", value=f"`{discord_user}`", inline=True)
-                embed.add_field(name="🆔 ID Zamówienia", value=f"`{order_id}`", inline=True)
-                embed.add_field(name="📧 Email", value=f"`{email}`", inline=True)
-                embed.add_field(name="📞 Telefon", value=f"`{phone}`", inline=True)
-                embed.add_field(name="📦 Paczkomat / Płatność", value=f"`{paczkomat}`\nMetoda: **Pobranie** (Dostawa: `25.0 PLN`)", inline=False)
-                
-                items_desc = []
-                for i in cart_items:
-                    title = i.get('title', i.get('name', 'Produkt'))
-                    price = i.get('price', 0)
-                    taste = i.get('selectedTaste', i.get('smak', 'Brak'))
-                    items_desc.append(f"• **{title}** | Smak: `{taste}` | **{price} PLN**")
-
-                embed.add_field(name="Produkty", value="\n".join(items_desc) or "Brak", inline=False)
-                embed.add_field(name="Suma (z dostawą 25 zł)", value=f"**{total} PLN**", inline=False)
-                
-                ping_content = " ".join([r.mention for r in admin_roles]) if admin_roles else "@here"
-                await ticket_channel.send(content=ping_content, embed=embed)
-            except Exception as e:
-                print(f"Błąd tworzenia kanału zamówienia na Discordzie: {e}")
-
-        asyncio.run_coroutine_threadsafe(create_order_channel(), bot.loop)
-
     return jsonify({"success": True, "order_id": order_id}), 200
 
 def run_flask():
@@ -354,10 +307,116 @@ class AdminReviewView(discord.ui.View):
         await interaction.message.edit(embed=embed, view=self)
         await interaction.response.send_message("❌ Opinia została odrzucona.", ephemeral=True)
 
+@tasks.loop(seconds=15)
+async def check_new_orders():
+    if not GUILD_ID:
+        return
+    
+    orders, _, error = get_github_orders()
+    if error or not isinstance(orders, list) or not orders:
+        return
+
+    guild = bot.get_guild(int(GUILD_ID))
+    if not guild:
+        try:
+            guild = await bot.fetch_guild(int(GUILD_ID))
+        except:
+            return
+
+    processed_any = False
+    remaining_orders = list(orders)
+
+    for order in orders:
+        order_id = order.get('id')
+        if not order_id:
+            continue
+        
+        try:
+            order_discord_name = str(order.get('discord', '')).strip()
+            email = order.get('email')
+            phone = order.get('phone')
+            paczkomat = order.get('paczkomat')
+            items = order.get('items', [])
+            total = order.get('total', 0)
+
+            channel_name = f"zamowienie-{order_id}".lower()
+            channel_name = "".join(c for c in channel_name if c.isalnum() or c == "-")[:99]
+
+            # Sprawdź czy kanał już istnieje
+            existing_channel = discord.utils.get(guild.text_channels, name=channel_name)
+            if existing_channel:
+                remaining_orders = [o for o in remaining_orders if str(o.get('id')).upper() != str(order_id).upper()]
+                processed_any = True
+                continue
+
+            customer_member = None
+            try:
+                async for member in guild.fetch_members(limit=None):
+                    if member.name.lower() == order_discord_name.lower() or (member.global_name and member.global_name.lower() == order_discord_name.lower()):
+                        customer_member = member
+                        break
+            except:
+                pass
+
+            overwrites = {
+                guild.default_role: discord.PermissionOverwrite(read_messages=False),
+                guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
+            }
+            
+            admin_roles = [r for r in guild.roles if r.permissions.administrator and r != guild.default_role]
+            for r in admin_roles:
+                overwrites[r] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
+
+            ticket_channel = await guild.create_text_channel(name=channel_name, overwrites=overwrites)
+
+            if customer_member:
+                try:
+                    client_role = guild.get_role(int(CLIENT_ROLE_ID))
+                    if client_role:
+                        await customer_member.add_roles(client_role)
+                except Exception as e:
+                    print(f"Błąd nadawania roli klienta: {e}")
+
+            embed = discord.Embed(title="🛒 Nowe Zamówienie (Za pobraniem)", color=discord.Color.green())
+            embed.add_field(name="👤 Klient", value=f"`{order_discord_name}` {customer_member.mention if customer_member else ''}", inline=True)
+            embed.add_field(name="🆔 ID", value=f"`{order_id}`", inline=True)
+            embed.add_field(name="📧 Email", value=f"`{email}`", inline=True)
+            embed.add_field(name="📞 Telefon", value=f"`{phone}`", inline=True)
+            embed.add_field(name="📦 Paczkomat / Płatność", value=f"`{paczkomat}`\nMetoda: **Pobranie**", inline=False)
+            
+            items_desc = []
+            for i in items:
+                title = i.get('title', i.get('name', 'Produkt'))
+                price = i.get('price', 0)
+                taste = i.get('selectedTaste', i.get('smak', 'Brak'))
+                items_desc.append(f"• **{title}** | Smak: `{taste}` | **{price} PLN**")
+
+            embed.add_field(name="Produkty", value="\n".join(items_desc) or "Brak", inline=False)
+            embed.add_field(name="Suma (z dostawą 25 zł)", value=f"**{total} PLN**", inline=False)
+            
+            ping_content = " ".join([r.mention for r in admin_roles]) if admin_roles else "@here"
+            await ticket_channel.send(content=ping_content, embed=embed)
+
+            remaining_orders = [o for o in remaining_orders if str(o.get('id')).upper() != str(order_id).upper()]
+            processed_any = True
+
+        except Exception as e:
+            print(f"Błąd w automatycznym tworzeniu kanału dla {order_id}: {e}")
+
+    if processed_any:
+        update_github_orders(remaining_orders, "Automatyczne przetworzenie nowych zamówień ze strony")
+
+@check_new_orders.before_loop
+async def before_check_new_orders():
+    await bot.wait_until_ready()
+
 @bot.event
 async def on_ready():
     print(f"✅ Bot jest ONLINE jako: {bot.user}")
     bot.add_view(ReviewButtonView())
+    if not check_new_orders.is_running():
+        check_new_orders.start()
+        
     try:
         if GUILD_ID:
             guild_obj = discord.Object(id=int(GUILD_ID))
@@ -541,7 +600,7 @@ async def start_ocen(interaction: discord.Interaction):
     await interaction.channel.send(embed=embed, view=ReviewButtonView())
     await interaction.response.send_message("✅ Panel opinii wysłany!", ephemeral=True)
 
-@bot.tree.command(name="zamowienie", description="Otwórz ticket na podstawie ID zamówienia")
+@bot.tree.command(name="zamowienie", description="[Ręczne] Otwórz ticket na podstawie ID zamówienia")
 @app_commands.describe(order_id="ID zamówienia np. LBK-XXXXX")
 async def zamowienie(interaction: discord.Interaction, order_id: str):
     await interaction.response.defer(ephemeral=True)
