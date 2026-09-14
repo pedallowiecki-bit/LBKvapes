@@ -43,6 +43,24 @@
     .animate-marquee:hover {
       animation-play-state: paused;
     }
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 0.8s ease-in-out infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-left: 8px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body class="bg-neutral-950 text-neutral-100 font-sans min-h-screen flex flex-col justify-between antialiased pb-24 selection:bg-orange-500 selection:text-white" onload="loadProductsFromJSON(); loadReviews();">
@@ -419,6 +437,39 @@
       }
     }
 
+    function filterProducts(category) {
+      currentFilter = category;
+      currentPage = 1;
+      
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('bg-orange-500', 'text-white', 'border-orange-500', 'shadow-md');
+        btn.classList.add('bg-neutral-900', 'border-neutral-800', 'text-neutral-400');
+      });
+      
+      const activeBtn = document.getElementById('btn-' + category);
+      if (activeBtn) {
+        activeBtn.classList.remove('bg-neutral-900', 'border-neutral-800', 'text-neutral-400');
+        activeBtn.classList.add('bg-orange-500', 'text-white', 'border-orange-500', 'shadow-md', 'shadow-orange-500/20');
+      }
+
+      if (category === 'all') {
+        displayedProducts = products;
+      } else if (category === 'promo') {
+        displayedProducts = products.filter(p => p.oldPrice || p.badge);
+      } else {
+        displayedProducts = products.filter(p => p.type === category || p.category === category);
+      }
+      renderProducts();
+    }
+
+    function searchProducts() {
+      const query = document.getElementById('search-input').value.toLowerCase();
+      const base = currentFilter === 'all' ? products : products.filter(p => p.type === currentFilter || p.category === currentFilter);
+      displayedProducts = base.filter(p => p.name.toLowerCase().includes(query) || (p.description && p.description.toLowerCase().includes(query)));
+      currentPage = 1;
+      renderProducts();
+    }
+
     function renderProducts() {
       const grid = document.getElementById('products-grid');
       const paginationContainer = document.getElementById('pagination-container');
@@ -455,81 +506,71 @@
               </h3>
               <div class="flex items-center gap-1 text-orange-500 text-xs mb-3">
                 <span>★★★★★</span>
-                <span class="text-neutral-500 text-[10px]">(5)</span>
               </div>
             </div>
 
-            <div>
-              <div class="mb-4 flex items-center justify-between">
-                <div>
-                  <span class="text-base font-black text-white">${price.toFixed(2)} <span class="text-xs font-bold text-orange-500">PLN</span></span>
-                  ${oldPrice ? `<span class="text-xs text-neutral-500 line-through block font-medium">${oldPrice.toFixed(2)} PLN</span>` : ''}
-                </div>
-                <button onclick="openProductModal('${p.id}')" class="text-[11px] font-bold hover:underline cursor-pointer text-neutral-400 hover:text-orange-400">Zobacz &rsaquo;</button>
+            <div class="pt-3 border-t border-neutral-800/80 flex items-center justify-between">
+              <div>
+                ${oldPrice ? `<span class="text-[10px] text-neutral-500 line-through block font-medium">${oldPrice.toFixed(2)} PLN</span>` : ''}
+                <span class="text-sm font-black text-orange-500">${price.toFixed(2)} PLN</span>
               </div>
-              <button onclick="openProductModal('${p.id}')" class="w-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold py-3.5 rounded-2xl uppercase tracking-wider transition-all shadow-md shadow-orange-500/20 cursor-pointer">
-                WYBIERZ I KUP
+              <button onclick="openProductModal('${p.id}')" class="bg-neutral-800 hover:bg-orange-500 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl transition-all cursor-pointer shadow-sm">
+                Wybierz
               </button>
             </div>
           </div>
         `;
       });
-      grid.innerHTML = html;
-      renderPagination(totalPages);
-    }
 
-    function renderPagination(totalPages) {
-      const paginationContainer = document.getElementById('pagination-container');
-      if (totalPages <= 1) {
-        paginationContainer.innerHTML = '';
-        return;
+      grid.innerHTML = html;
+
+      // Paginacja
+      let paginationHtml = '';
+      if (totalPages > 1) {
+        for (let i = 1; i <= totalPages; i++) {
+          paginationHtml += `
+            <button onclick="changePage(${i})" class="w-9 h-9 rounded-xl font-bold text-xs transition-all cursor-pointer ${i === currentPage ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' : 'bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white'}">
+              ${i}
+            </button>
+          `;
+        }
       }
-      let html = '';
-      html += `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-4 py-2.5 rounded-2xl bg-neutral-900 border border-neutral-800 text-xs font-bold text-white ${currentPage === 1 ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:border-orange-500'}">«</button>`;
-      for (let i = 1; i <= totalPages; i++) {
-        const isActive = i === currentPage;
-        html += `<button onclick="changePage(${i})" class="w-10 h-10 rounded-2xl text-xs font-bold transition-all cursor-pointer ${isActive ? 'bg-orange-500 text-white border border-orange-500 shadow-md shadow-orange-500/25' : 'bg-neutral-900 text-neutral-300 border border-neutral-800 hover:border-orange-500'}">${i}</button>`;
-      }
-      html += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="px-4 py-2.5 rounded-2xl bg-neutral-900 border border-neutral-800 text-xs font-bold text-white ${currentPage === totalPages ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:border-orange-500'}">»</button>`;
-      paginationContainer.innerHTML = html;
+      paginationContainer.innerHTML = paginationHtml;
     }
 
     function changePage(page) {
-      const totalPages = Math.ceil(displayedProducts.length / itemsPerPage);
-      if (page < 1 || page > totalPages) return;
       currentPage = page;
       renderProducts();
-      window.scrollTo({ top: 350, behavior: 'smooth' });
+      window.scrollTo({ top: 400, behavior: 'smooth' });
     }
 
-    function openProductModal(id) {
-      const p = products.find(prod => prod.id == id);
-      if (!p) return;
+    let selectedProductForModal = null;
 
-      document.getElementById('modal-product-img').src = p.img || 'https://via.placeholder.com/200';
-      document.getElementById('modal-product-title').innerText = p.name;
-      document.getElementById('modal-product-desc').innerText = p.description || p.opis || 'Brak dodatkowego opisu.';
-      
-      const price = typeof p.price === 'number' ? p.price : parseFloat(p.price);
-      document.getElementById('modal-product-price').innerText = price.toFixed(2) + ' PLN';
+    function openProductModal(id) {
+      const p = products.find(prod => String(prod.id) === String(id));
+      if (!p) return;
+      selectedProductForModal = p;
+
+      document.getElementById('modal-product-img').src = p.img || '';
+      document.getElementById('modal-product-title').innerText = p.name || '';
+      document.getElementById('modal-product-desc').innerText = p.description || 'Brak opisu produktu.';
+      document.getElementById('modal-product-price').innerText = (typeof p.price === 'number' ? p.price : parseFloat(p.price)).toFixed(2) + ' PLN';
 
       const flavorContainer = document.getElementById('modal-flavor-container');
       const flavorSelect = document.getElementById('modal-flavor-select');
-
-      if (p.smaki && Array.isArray(p.smaki) && p.smaki.length > 0) {
-        flavorSelect.innerHTML = p.smaki.map(s => `<option value="${s}" class="bg-neutral-900 text-white">${s}</option>`).join('');
+      
+      if (p.smaki && p.smaki.length > 0) {
         flavorContainer.classList.remove('hidden');
+        flavorSelect.innerHTML = '';
+        p.smaki.forEach(flavor => {
+          flavorSelect.innerHTML += `<option value="${flavor}">${flavor}</option>`;
+        });
       } else {
         flavorContainer.classList.add('hidden');
       }
 
-      document.getElementById('modal-add-btn').onclick = () => {
-        let selectedFlavor = '';
-        if (p.smaki && Array.isArray(p.smaki) && p.smaki.length > 0) {
-          selectedFlavor = flavorSelect.value;
-        }
-        addToCartWithFlavor(p.name, price, selectedFlavor, p.img || '');
-        closeProductModal();
+      document.getElementById('modal-add-btn').onclick = function() {
+        addProductToCartFromModal(p);
       };
 
       document.getElementById('product-modal').classList.remove('hidden');
@@ -537,57 +578,76 @@
 
     function closeProductModal() {
       document.getElementById('product-modal').classList.add('hidden');
+      selectedProductForModal = null;
     }
 
-    function addToCartWithFlavor(title, price, flavor, img) {
-      const finalTitle = flavor ? `${title} (${flavor})` : title;
-      cart.push({ title: finalTitle, price, img });
-      updateCartBadge();
-      renderCartItems();
+    function addProductToCartFromModal(p) {
+      const flavorSelect = document.getElementById('modal-flavor-select');
+      const selectedTaste = (p.smaki && p.smaki.length > 0) ? flavorSelect.value : 'Brak';
+
+      cart.push({
+        id: p.id,
+        name: p.name,
+        price: parseFloat(p.price),
+        selectedTaste: selectedTaste,
+        img: p.img
+      });
+
+      closeProductModal();
+      updateCartUI();
       openCartDrawer();
+    }
+
+    function openCartDrawer() {
+      document.getElementById('cart-drawer-backdrop').classList.remove('hidden');
+      document.getElementById('cart-drawer').classList.remove('translate-x-full');
+    }
+
+    function closeCartDrawer() {
+      document.getElementById('cart-drawer-backdrop').classList.add('hidden');
+      document.getElementById('cart-drawer').classList.add('translate-x-full');
+    }
+
+    function updateCartUI() {
+      const countEl = document.getElementById('cart-count');
+      const drawerCountEl = document.getElementById('drawer-cart-count');
+      countEl.innerText = cart.length;
+      drawerCountEl.innerText = cart.length;
+
+      const cartList = document.getElementById('cart-list');
+      if (cart.length === 0) {
+        cartList.innerHTML = '<p class="text-xs text-neutral-500 text-center py-6">Twój koszyk jest pusty.</p>';
+      } else {
+        let html = '';
+        cart.forEach((item, index) => {
+          html += `
+            <div class="bg-neutral-950 p-3.5 rounded-2xl border border-neutral-800 flex items-center justify-between gap-3">
+              <div class="w-12 h-12 bg-neutral-900 rounded-xl flex items-center justify-center p-1 shrink-0 border border-neutral-800">
+                <img src="${item.img}" class="max-h-full object-contain">
+              </div>
+              <div class="flex-1 min-w-0">
+                <h4 class="text-xs font-bold text-white truncate">${item.name}</h4>
+                <p class="text-[10px] text-neutral-400">Smak: <span class="text-orange-400">${item.selectedTaste}</span></p>
+                <span class="text-xs font-black text-orange-500">${item.price.toFixed(2)} PLN</span>
+              </div>
+              <button onclick="removeFromCart(${index})" class="text-neutral-500 hover:text-red-400 text-xs font-bold p-2 cursor-pointer transition-colors">✕</button>
+            </div>
+          `;
+        });
+        cartList.innerHTML = html;
+      }
+
+      calculateTotals();
+      checkCartForm();
     }
 
     function removeFromCart(index) {
       cart.splice(index, 1);
-      updateCartBadge();
-      renderCartItems();
+      updateCartUI();
     }
 
-    function updateCartBadge() {
-      document.getElementById('cart-count').innerText = cart.length;
-      document.getElementById('drawer-cart-count').innerText = cart.length;
-    }
-
-    function renderCartItems() {
-      const list = document.getElementById('cart-list');
-      if (cart.length === 0) {
-        list.innerHTML = '<p class="text-xs text-neutral-500 text-center py-4">Twój koszyk jest pusty.</p>';
-        document.getElementById('subtotal-amount').innerText = '0,00 PLN';
-        document.getElementById('cart-total').innerText = deliveryFee.toFixed(2) + ' PLN';
-        checkCartForm();
-        return;
-      }
-
-      let html = '';
-      let subtotal = 0;
-
-      cart.forEach((item, index) => {
-        subtotal += item.price;
-        html += `
-          <div class="flex items-center justify-between bg-neutral-950 p-3 rounded-2xl border border-neutral-800 gap-3">
-            <div class="w-12 h-12 bg-neutral-900 rounded-xl flex items-center justify-center p-1 shrink-0 overflow-hidden border border-neutral-800">
-              <img src="${item.img}" alt="" class="max-h-full object-contain">
-            </div>
-            <div class="flex-1 min-w-0">
-              <h4 class="text-xs font-bold text-white truncate">${item.title}</h4>
-              <span class="text-[11px] font-bold text-orange-500">${item.price.toFixed(2)} PLN</span>
-            </div>
-            <button onclick="removeFromCart(${index})" class="text-neutral-500 hover:text-red-400 font-bold p-2 text-sm cursor-pointer transition-colors">✕</button>
-          </div>
-        `;
-      });
-
-      list.innerHTML = html;
+    function calculateTotals() {
+      const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
       document.getElementById('subtotal-amount').innerText = subtotal.toFixed(2) + ' PLN';
 
       let discountVal = 0;
@@ -599,122 +659,40 @@
         document.getElementById('discount-row').classList.add('hidden');
       }
 
-      let total = Math.max(0, subtotal - discountVal) + deliveryFee;
+      const total = Math.max(0, subtotal - discountVal) + deliveryFee;
       document.getElementById('cart-total').innerText = total.toFixed(2) + ' PLN';
-      checkCartForm();
     }
 
     async function applyPromoCode() {
       const codeInput = document.getElementById('promo-code-input').value.trim();
-      const msg = document.getElementById('promo-msg');
-
-      if (!codeInput) {
-        msg.innerText = 'Wpisz kod rabatowy.';
-        msg.className = 'text-[11px] mt-1.5 text-red-400';
-        msg.classList.remove('hidden');
-        return;
-      }
+      const promoMsg = document.getElementById('promo-msg');
+      if (!codeInput) return;
 
       try {
-        msg.innerText = 'Sprawdzanie kodu...';
-        msg.className = 'text-[11px] mt-1.5 text-neutral-400';
-        msg.classList.remove('hidden');
-
-        // Poprawiono endpoint na /check-promo z żądaniem POST zgodnym z main.py
-        const response = await fetch('https://lbk.onrender.com/check-promo', {
+        const res = await fetch('https://lbk.onrender.com/check-promo', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code: codeInput })
         });
-        const data = await response.json();
+        const data = await res.json();
 
-        if (data.success && data.discount) {
-          activeDiscount = parseFloat(data.discount) || 10;
+        if (data.success) {
+          activeDiscount = parseFloat(data.discount);
           appliedPromoCode = codeInput;
-          msg.innerText = `✅ Kod aktywny! Rabat: ${activeDiscount}%`;
-          msg.className = 'text-[11px] mt-1.5 text-orange-400';
-          renderCartItems();
+          promoMsg.innerText = `✅ Kod zastosowany! Rabat: ${activeDiscount}%`;
+          promoMsg.className = 'text-[11px] mt-1.5 text-green-400 font-medium';
+          promoMsg.classList.remove('hidden');
+          calculateTotals();
         } else {
-          throw new Error(data.error || 'Niepoprawny kod');
+          promoMsg.innerText = `❌ ${data.error || 'Nieprawidłowy kod'}`;
+          promoMsg.className = 'text-[11px] mt-1.5 text-red-400 font-medium';
+          promoMsg.classList.remove('hidden');
         }
-      } catch (err) {
-        if (codeInput.toUpperCase() === 'LBKVAPE10' || codeInput.toUpperCase() === 'DISCORD10') {
-          activeDiscount = 10;
-          appliedPromoCode = codeInput;
-          msg.innerText = '✅ Kod aktywny! Rabat: 10%';
-          msg.className = 'text-[11px] mt-1.5 text-orange-400';
-          renderCartItems();
-        } else {
-          msg.innerText = '❌ Niepoprawny lub wygasły kod rabatowy.';
-          msg.className = 'text-[11px] mt-1.5 text-red-400';
-          activeDiscount = 0;
-          appliedPromoCode = '';
-          renderCartItems();
-        }
+      } catch (e) {
+        promoMsg.innerText = '❌ Błąd serwera przy sprawdzaniu kodu.';
+        promoMsg.className = 'text-[11px] mt-1.5 text-red-400 font-medium';
+        promoMsg.classList.remove('hidden');
       }
-    }
-
-    function searchProducts() {
-      currentPage = 1;
-      const query = document.getElementById('search-input').value.toLowerCase();
-      applyFilterAndSearch(query);
-    }
-
-    function filterProducts(type) {
-      currentFilter = type;
-      currentPage = 1;
-      
-      const btns = {
-        all: document.getElementById('btn-all'),
-        jednorazowki: document.getElementById('btn-jednorazowki'),
-        snus: document.getElementById('btn-snus'),
-        akcesoria: document.getElementById('btn-akcesoria'),
-        promo: document.getElementById('btn-promo')
-      };
-
-      Object.keys(btns).forEach(key => {
-        if (btns[key]) {
-          if (key === type) {
-            btns[key].className = 'filter-btn bg-orange-500 text-white border border-orange-500 text-xs font-bold px-4 py-2.5 rounded-2xl transition-all shadow-md shadow-orange-500/20 cursor-pointer';
-          } else {
-            btns[key].className = 'filter-btn bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white text-xs font-bold px-4 py-2.5 rounded-2xl transition-all shadow-sm cursor-pointer';
-          }
-        }
-      });
-
-      const query = document.getElementById('search-input') ? document.getElementById('search-input').value.toLowerCase() : '';
-      applyFilterAndSearch(query);
-    }
-
-    function applyFilterAndSearch(query) {
-      displayedProducts = products.filter(p => {
-        const matchesQuery = p.name.toLowerCase().includes(query) || (p.description && p.description.toLowerCase().includes(query));
-        let matchesCategory = true;
-
-        if (currentFilter === 'jednorazowki') {
-          matchesCategory = p.category === 'jednorazowki' || p.kategoria === 'jednorazowki';
-        } else if (currentFilter === 'snus') {
-          matchesCategory = p.category === 'snus' || p.kategoria === 'snus';
-        } else if (currentFilter === 'akcesoria') {
-          matchesCategory = p.category === 'akcesoria' || p.kategoria === 'akcesoria';
-        } else if (currentFilter === 'promo') {
-          matchesCategory = p.oldPrice || p.badge;
-        }
-
-        return matchesQuery && matchesCategory;
-      });
-      renderProducts();
-    }
-
-    function openCartDrawer() {
-      document.getElementById('cart-drawer-backdrop').classList.remove('hidden');
-      document.getElementById('cart-drawer').classList.remove('translate-x-full');
-      renderCartItems();
-    }
-
-    function closeCartDrawer() {
-      document.getElementById('cart-drawer-backdrop').classList.add('hidden');
-      document.getElementById('cart-drawer').classList.add('translate-x-full');
     }
 
     function checkCartForm() {
@@ -722,75 +700,73 @@
       const email = document.getElementById('customer-email').value.trim();
       const phone = document.getElementById('customer-phone').value.trim();
       const paczkomat = document.getElementById('customer-paczkomat').value.trim();
-      const btn = document.getElementById('gen-btn');
+      const genBtn = document.getElementById('gen-btn');
 
-      const isEmailValid = email.toLowerCase().endsWith('@gmail.com') && email.length > 10;
+      const isEmailValid = email.endsWith('@gmail.com');
       const isPhoneValid = phone.length >= 9;
-      const isPaczkomatValid = paczkomat.length >= 5;
-      const hasItems = cart.length > 0;
 
-      if (discord && isEmailValid && isPhoneValid && isPaczkomatValid && hasItems) {
-        btn.disabled = false;
-        btn.className = 'w-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs py-4 rounded-2xl uppercase tracking-wider cursor-pointer shadow-lg shadow-orange-500/25 transition-all flex items-center justify-center gap-2';
-        btn.innerText = 'ZŁÓŻ ZAMÓWIENIE';
+      if (cart.length > 0 && discord && isEmailValid && isPhoneValid && paczkomat) {
+        genBtn.disabled = false;
+        genBtn.className = 'w-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs py-4 rounded-2xl uppercase tracking-wider cursor-pointer transition-all flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25';
+        genBtn.innerText = 'ZŁÓŻ ZAMÓWIENIE';
       } else {
-        btn.disabled = true;
-        btn.className = 'w-full bg-neutral-800 text-neutral-500 font-bold text-xs py-4 rounded-2xl uppercase tracking-wider cursor-not-allowed border border-neutral-700 transition-all flex items-center justify-center gap-2';
-        if (!hasItems) {
-          btn.innerText = 'Twój koszyk jest pusty';
-        } else {
-          btn.innerText = 'Wypełnij wymagane pola';
-        }
+        genBtn.disabled = true;
+        genBtn.className = 'w-full bg-neutral-800 text-neutral-500 font-bold text-xs py-4 rounded-2xl uppercase tracking-wider cursor-not-allowed border border-neutral-700 transition-all flex items-center justify-center gap-2';
+        if (cart.length === 0) genBtn.innerText = 'Twój koszyk jest pusty';
+        else if (!discord) genBtn.innerText = 'Podaj nick z Discorda';
+        else if (!isEmailValid) genBtn.innerText = 'Wymagany e-mail @gmail.com';
+        else if (!isPhoneValid) genBtn.innerText = 'Podaj poprawny telefon (9 cyfr)';
+        else if (!paczkomat) genBtn.innerText = 'Podaj kod paczkomatu';
       }
     }
 
     async function submitOrder() {
-      const btn = document.getElementById('gen-btn');
-      if (btn.disabled) return;
-
-      const discord = document.getElementById('discord-nick').value.trim();
+      const discordNick = document.getElementById('discord-nick').value.trim();
       const email = document.getElementById('customer-email').value.trim();
       const phone = document.getElementById('customer-phone').value.trim();
       const paczkomat = document.getElementById('customer-paczkomat').value.trim();
 
-      btn.disabled = true;
-      btn.innerText = 'Wysyłanie zamówienia...';
+      const genBtn = document.getElementById('gen-btn');
+      
+      // Blokada przed ponownym kliknięciem i dodanie kółka ładowania (spinnera)
+      genBtn.disabled = true;
+      genBtn.innerHTML = 'Składanie zamówienia... <span class="spinner"></span>';
 
-      let orderCode = 'LBK-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+      const orderData = {
+        discord: discordNick,
+        email: email,
+        phone: phone,
+        paczkomat: paczkomat,
+        items: cart,
+        promo: appliedPromoCode
+      };
 
       try {
-        const orderData = {
-          discord,
-          email,
-          phone,
-          paczkomat,
-          items: cart,
-          promoCode: appliedPromoCode,
-          totalAmount: document.getElementById('cart-total').innerText
-        };
-
-        const res = await fetch('https://lbk.onrender.com/create-order', {
+        const response = await fetch('https://lbk.onrender.com/create-order', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(orderData)
         });
 
-        if (res.ok) {
-          const data = await res.json();
-          if (data.order_id) {
-            orderCode = data.order_id;
-          }
-        }
-      } catch (err) {
-        console.warn('Backend nie odpowiedział, użyto kodu zapasowego.');
-      }
+        const data = await response.json();
 
-      document.getElementById('final-code').innerText = orderCode;
-      document.getElementById('token-result').classList.remove('hidden');
-      cart = [];
-      updateCartBadge();
-      renderCartItems();
-      btn.innerText = 'ZŁÓŻ ZAMÓWIENIE';
+        if (response.ok && data.success) {
+          document.getElementById('final-code').innerText = data.order_id;
+          document.getElementById('token-result').classList.remove('hidden');
+          cart = [];
+          updateCartUI();
+          genBtn.style.display = 'none';
+        } else {
+          alert('Błąd: ' + (data.error || 'Nie udało się złożyć zamówienia.'));
+          genBtn.disabled = false;
+          genBtn.innerHTML = 'ZŁÓŻ ZAMÓWIENIE';
+        }
+      } catch (error) {
+        console.error('Błąd sieci:', error);
+        alert('Wystąpił błąd połączenia z serwerem.');
+        genBtn.disabled = false;
+        genBtn.innerHTML = 'ZŁÓŻ ZAMÓWIENIE';
+      }
     }
 
     function copyCode() {
