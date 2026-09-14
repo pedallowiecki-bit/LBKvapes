@@ -358,7 +358,6 @@
     const deliveryFee = 25.00;
     const itemsPerPage = 12;
 
-    // Zapasowe produkty na wypadek braku pliku products.json (np. uruchomienie lokalne z dysku)
     const fallbackProducts = [
       { id: 1, name: "RandM Tornado 15000 - Strawberry Ice", category: "jednorazowki", price: 65.00, oldPrice: 85.00, badge: "HIT", img: "https://i.imgur.com/ZQxuHFT.png", description: "Jednorazowy e-papieros o ogromnej wydajności do 15000 zaciągnięć. Smak: Truskawka z lodem.", smaki: ["Strawberry Ice", "Blueberry Raspberry", "Watermelon Ice"] },
       { id: 2, name: "Lost Mary BM6000", category: "jednorazowki", price: 55.00, badge: "NOWOŚĆ", img: "https://www.vapes24h.net/api/uploads/1780853848672-975219883.png", description: "Nowość na rynku, bogaty smak i długi czas działania.", smaki: ["Double Apple", "Grape", "Cherry Ice"] },
@@ -383,7 +382,7 @@
           products = fallbackProducts;
         }
       } catch (e) {
-        products = fallbackProducts; // Uruchomienie lokalne z dysku zadziała dzięki fallbackowi
+        products = fallbackProducts;
       }
       filterProducts('all');
     }
@@ -621,7 +620,12 @@
         msg.className = 'text-[11px] mt-1.5 text-neutral-400';
         msg.classList.remove('hidden');
 
-        const response = await fetch(`https://lbk.onrender.com/verify-code?code=${encodeURIComponent(codeInput)}`);
+        // Poprawiono endpoint na /check-promo z żądaniem POST zgodnym z main.py
+        const response = await fetch('https://lbk.onrender.com/check-promo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: codeInput })
+        });
         const data = await response.json();
 
         if (data.success && data.discount) {
@@ -631,10 +635,9 @@
           msg.className = 'text-[11px] mt-1.5 text-orange-400';
           renderCartItems();
         } else {
-          throw new Error('Niepoprawny kod z API');
+          throw new Error(data.error || 'Niepoprawny kod');
         }
       } catch (err) {
-        // Fallback dla znanych kodów, jeśli API nie odpowiada lub śpi
         if (codeInput.toUpperCase() === 'LBKVAPE10' || codeInput.toUpperCase() === 'DISCORD10') {
           activeDiscount = 10;
           appliedPromoCode = codeInput;
@@ -721,7 +724,6 @@
       const paczkomat = document.getElementById('customer-paczkomat').value.trim();
       const btn = document.getElementById('gen-btn');
 
-      // Poprawiono walidację e-maila, aby obsługiwała też duże litery (np. @GMAIL.COM)
       const isEmailValid = email.toLowerCase().endsWith('@gmail.com') && email.length > 10;
       const isPhoneValid = phone.length >= 9;
       const isPaczkomatValid = paczkomat.length >= 5;
@@ -762,7 +764,7 @@
           email,
           phone,
           paczkomat,
-          cart,
+          items: cart,
           promoCode: appliedPromoCode,
           totalAmount: document.getElementById('cart-total').innerText
         };
@@ -775,12 +777,11 @@
 
         if (res.ok) {
           const data = await res.json();
-          if (data.orderCode) {
-            orderCode = data.orderCode;
+          if (data.order_id) {
+            orderCode = data.order_id;
           }
         }
       } catch (err) {
-        // Jeśli serwer nie odpowie (np. uśpiony), kod zapasowy i tak wygeneruje poprawne zamówienie lokalnie
         console.warn('Backend nie odpowiedział, użyto kodu zapasowego.');
       }
 
