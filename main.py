@@ -241,7 +241,6 @@ def create_order():
 
     order_id = 'LBK-' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
     
-    # Obliczanie kwoty produktów + stała dostawa za pobraniem 25 zł
     items_total = sum(item.get('price', 0) for item in cart_items)
     shipping_fee = 25.0
     total = items_total + shipping_fee
@@ -264,7 +263,6 @@ def create_order():
     orders.append(new_order)
     update_github_orders(orders, f"Nowe zamówienie {order_id} dla {discord_user}")
 
-    # Automatyczny startowy status przesyłki (import)
     tracking_data, _, _ = get_github_tracking()
     if not isinstance(tracking_data, dict):
         tracking_data = {}
