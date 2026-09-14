@@ -162,5 +162,38 @@
     "shipping": 25.0,
     "total": 69.0,
     "payment": "Pobranie (Paczkomat)"
+  },
+  {
+    "id": "LBK-0PWZ7",
+    "discord": "omann12",
+    "email": "dupapindol874@gmail.com",
+    "phone": "608506006",
+    "paczkomat": "Lebork",
+    "items": [
+      {
+        "id": "SNUS-104",
+        "name": "BIT 20 MG (EFEKT 50 MG)",
+        "price": 15,
+        "selectedTaste": "Cold Mint",
+        "img": "https://i.imgur.com/jqt70pQ.png"
+      },
+      {
+        "id": "VAP-202",
+        "name": "BUTELKA 10 ML",
+        "price": 2,
+        "selectedTaste": "Standard",
+        "img": "https://i.imgur.com/hL8dBfA.png"
+      },
+      {
+        "id": "SNUS-101",
+        "name": "CUBA BLACK 66 MG",
+        "price": 29,
+        "selectedTaste": "Black Currant",
+        "img": "https://i.imgur.com/bB5ZytT.png"
+      }
+    ],
+    "shipping": 25.0,
+    "total": 71.0,
+    "payment": "Pobranie (Paczkomat)"
   }
 ]
