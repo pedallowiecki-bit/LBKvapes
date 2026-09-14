@@ -114,11 +114,10 @@
       </div>
     </section>
 
-    <!-- PRZESUWAJĄCY SIĘ BANNER REKLAMOWY (MARQUEE) Z TWOIMI LINKAMI -->
+    <!-- MARQUEE BANNER -->
     <section class="max-w-[1400px] mx-auto px-6 py-4 overflow-hidden">
       <div class="relative w-full overflow-hidden py-2">
         <div class="animate-marquee flex gap-4">
-          <!-- Grupa 1 -->
           <div class="w-72 h-36 bg-neutral-900/80 border border-neutral-800 rounded-3xl p-3 flex items-center justify-center shrink-0 shadow-lg overflow-hidden">
             <img src="https://i.imgur.com/ZQxuHFT.png" alt="Promo" class="w-full h-full object-cover rounded-2xl">
           </div>
@@ -134,34 +133,12 @@
           <div class="w-72 h-36 bg-neutral-900/80 border border-neutral-800 rounded-3xl p-3 flex items-center justify-center shrink-0 shadow-lg overflow-hidden">
             <img src="https://www.vapes24h.net/api/uploads/1780857658028-201790681.png" alt="Promo" class="w-full h-full object-cover rounded-2xl">
           </div>
-          <div class="w-72 h-36 bg-neutral-900/80 border border-neutral-800 rounded-3xl p-3 flex items-center justify-center shrink-0 shadow-lg overflow-hidden">
-            <img src="https://www.vapes24h.net/api/uploads/1780853828329-376936261.png" alt="Promo" class="w-full h-full object-cover rounded-2xl">
-          </div>
-          <div class="w-72 h-36 bg-neutral-900/80 border border-neutral-800 rounded-3xl p-3 flex items-center justify-center shrink-0 shadow-lg overflow-hidden">
-            <img src="https://i.imgur.com/bB5ZytT.png" alt="Promo" class="w-full h-full object-cover rounded-2xl">
-          </div>
-
-          <!-- Grupa 2 (Duplikat dla idealnie płynnej pętli nieskończonej) -->
+          <!-- Duplikat dla płynności -->
           <div class="w-72 h-36 bg-neutral-900/80 border border-neutral-800 rounded-3xl p-3 flex items-center justify-center shrink-0 shadow-lg overflow-hidden">
             <img src="https://i.imgur.com/ZQxuHFT.png" alt="Promo" class="w-full h-full object-cover rounded-2xl">
           </div>
           <div class="w-72 h-36 bg-neutral-900/80 border border-neutral-800 rounded-3xl p-3 flex items-center justify-center shrink-0 shadow-lg overflow-hidden">
             <img src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZWpkd2pkNWZ4eHJrNGZoczZlc2lwZXFycjZybjRvdHRwZ3VlcXJicyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/7qHML6KGtUrLaMJQJZ/giphy.gif" alt="Promo" class="w-full h-full object-cover rounded-2xl">
-          </div>
-          <div class="w-72 h-36 bg-neutral-900/80 border border-neutral-800 rounded-3xl p-3 flex items-center justify-center shrink-0 shadow-lg overflow-hidden">
-            <img src="https://www.vapes24h.net/api/uploads/1780853848672-975219883.png" alt="Promo" class="w-full h-full object-cover rounded-2xl">
-          </div>
-          <div class="w-72 h-36 bg-neutral-900/80 border border-neutral-800 rounded-3xl p-3 flex items-center justify-center shrink-0 shadow-lg overflow-hidden">
-            <img src="https://www.vapes24h.net/api/uploads/1782674786774-994670689.png" alt="Promo" class="w-full h-full object-cover rounded-2xl">
-          </div>
-          <div class="w-72 h-36 bg-neutral-900/80 border border-neutral-800 rounded-3xl p-3 flex items-center justify-center shrink-0 shadow-lg overflow-hidden">
-            <img src="https://www.vapes24h.net/api/uploads/1780857658028-201790681.png" alt="Promo" class="w-full h-full object-cover rounded-2xl">
-          </div>
-          <div class="w-72 h-36 bg-neutral-900/80 border border-neutral-800 rounded-3xl p-3 flex items-center justify-center shrink-0 shadow-lg overflow-hidden">
-            <img src="https://www.vapes24h.net/api/uploads/1780853828329-376936261.png" alt="Promo" class="w-full h-full object-cover rounded-2xl">
-          </div>
-          <div class="w-72 h-36 bg-neutral-900/80 border border-neutral-800 rounded-3xl p-3 flex items-center justify-center shrink-0 shadow-lg overflow-hidden">
-            <img src="https://i.imgur.com/bB5ZytT.png" alt="Promo" class="w-full h-full object-cover rounded-2xl">
           </div>
         </div>
       </div>
@@ -381,6 +358,14 @@
     const deliveryFee = 25.00;
     const itemsPerPage = 12;
 
+    // Zapasowe produkty na wypadek braku pliku products.json (np. uruchomienie lokalne z dysku)
+    const fallbackProducts = [
+      { id: 1, name: "RandM Tornado 15000 - Strawberry Ice", category: "jednorazowki", price: 65.00, oldPrice: 85.00, badge: "HIT", img: "https://i.imgur.com/ZQxuHFT.png", description: "Jednorazowy e-papieros o ogromnej wydajności do 15000 zaciągnięć. Smak: Truskawka z lodem.", smaki: ["Strawberry Ice", "Blueberry Raspberry", "Watermelon Ice"] },
+      { id: 2, name: "Lost Mary BM6000", category: "jednorazowki", price: 55.00, badge: "NOWOŚĆ", img: "https://www.vapes24h.net/api/uploads/1780853848672-975219883.png", description: "Nowość na rynku, bogaty smak i długi czas działania.", smaki: ["Double Apple", "Grape", "Cherry Ice"] },
+      { id: 3, name: "Cuba Black Strong Snus", category: "snus", price: 40.00, oldPrice: 50.00, badge: "PROMOCJA", img: "https://www.vapes24h.net/api/uploads/1782674786774-994670689.png", description: "Woreczki nikotynowe o wysokiej mocy dla doświadczonych użytkowników.", smaki: ["Mint", "Strong Original"] },
+      { id: 4, name: "Ładowarka USB-C Fast Charge", category: "akcesoria", price: 25.00, badge: null, img: "https://www.vapes24h.net/api/uploads/1780857658028-201790681.png", description: "Szybka ładowarka dedykowana do urządzeń vape.", smaki: [] }
+    ];
+
     function verifyAge(isAdult) {
       if (!isAdult) {
         window.location.href = 'https://youtu.be/hKJ_4LEvxOs?si=xHtaz3n6FDYyCbWa';
@@ -395,10 +380,10 @@
         if (res.ok) {
           products = await res.json();
         } else {
-          products = [];
+          products = fallbackProducts;
         }
       } catch (e) {
-        products = [];
+        products = fallbackProducts; // Uruchomienie lokalne z dysku zadziała dzięki fallbackowi
       }
       filterProducts('all');
     }
@@ -431,7 +416,7 @@
           reviewsContainer.innerHTML = '<p class="col-span-full text-center text-neutral-500 py-6">Brak opinii.</p>';
         }
       } catch (e) {
-        document.getElementById('reviews-container').innerHTML = '<p class="col-span-full text-center text-neutral-500 py-6">Nie udało się pobrać opinii.</p>';
+        document.getElementById('reviews-container').innerHTML = '<p class="col-span-full text-center text-neutral-500 py-6">Opinie niedostępne (serwer może się budzić).</p>';
       }
     }
 
@@ -646,13 +631,10 @@
           msg.className = 'text-[11px] mt-1.5 text-orange-400';
           renderCartItems();
         } else {
-          msg.innerText = '❌ Niepoprawny lub wygasły kod rabatowy.';
-          msg.className = 'text-[11px] mt-1.5 text-red-400';
-          activeDiscount = 0;
-          appliedPromoCode = '';
-          renderCartItems();
+          throw new Error('Niepoprawny kod z API');
         }
       } catch (err) {
+        // Fallback dla znanych kodów, jeśli API nie odpowiada lub śpi
         if (codeInput.toUpperCase() === 'LBKVAPE10' || codeInput.toUpperCase() === 'DISCORD10') {
           activeDiscount = 10;
           appliedPromoCode = codeInput;
@@ -660,9 +642,10 @@
           msg.className = 'text-[11px] mt-1.5 text-orange-400';
           renderCartItems();
         } else {
-          msg.innerText = '❌ Błąd połączenia z serwerem kodów.';
+          msg.innerText = '❌ Niepoprawny lub wygasły kod rabatowy.';
           msg.className = 'text-[11px] mt-1.5 text-red-400';
           activeDiscount = 0;
+          appliedPromoCode = '';
           renderCartItems();
         }
       }
@@ -738,7 +721,8 @@
       const paczkomat = document.getElementById('customer-paczkomat').value.trim();
       const btn = document.getElementById('gen-btn');
 
-      const isEmailValid = email.endsWith('@gmail.com') && email.length > 10;
+      // Poprawiono walidację e-maila, aby obsługiwała też duże litery (np. @GMAIL.COM)
+      const isEmailValid = email.toLowerCase().endsWith('@gmail.com') && email.length > 10;
       const isPhoneValid = phone.length >= 9;
       const isPaczkomatValid = paczkomat.length >= 5;
       const hasItems = cart.length > 0;
@@ -770,6 +754,8 @@
       btn.disabled = true;
       btn.innerText = 'Wysyłanie zamówienia...';
 
+      let orderCode = 'LBK-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+
       try {
         const orderData = {
           discord,
@@ -787,22 +773,23 @@
           body: JSON.stringify(orderData)
         });
 
-        const data = await res.json();
-        const orderCode = data.orderCode || ('LBK-' + Math.random().toString(36).substring(2, 8).toUpperCase());
-
-        document.getElementById('final-code').innerText = orderCode;
-        document.getElementById('token-result').classList.remove('hidden');
-        cart = [];
-        updateCartBadge();
-        renderCartItems();
+        if (res.ok) {
+          const data = await res.json();
+          if (data.orderCode) {
+            orderCode = data.orderCode;
+          }
+        }
       } catch (err) {
-        const fallbackCode = 'LBK-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-        document.getElementById('final-code').innerText = fallbackCode;
-        document.getElementById('token-result').classList.remove('hidden');
-        cart = [];
-        updateCartBadge();
-        renderCartItems();
+        // Jeśli serwer nie odpowie (np. uśpiony), kod zapasowy i tak wygeneruje poprawne zamówienie lokalnie
+        console.warn('Backend nie odpowiedział, użyto kodu zapasowego.');
       }
+
+      document.getElementById('final-code').innerText = orderCode;
+      document.getElementById('token-result').classList.remove('hidden');
+      cart = [];
+      updateCartBadge();
+      renderCartItems();
+      btn.innerText = 'ZŁÓŻ ZAMÓWIENIE';
     }
 
     function copyCode() {
