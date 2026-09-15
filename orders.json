@@ -271,5 +271,24 @@
     "shipping": 25.0,
     "total": 90.0,
     "payment": "Pobranie (Paczkomat)"
+  },
+  {
+    "id": "LBK-EGJB4",
+    "discord": "antek02095",
+    "email": "antoniwronski88@gmail.com",
+    "phone": "+4888284192",
+    "paczkomat": "LII01M",
+    "items": [
+      {
+        "id": "SNUS-101",
+        "name": "CUBA BLACK 66 MG",
+        "price": 29,
+        "selectedTaste": "Black Currant",
+        "img": "https://i.imgur.com/bB5ZytT.png"
+      }
+    ],
+    "shipping": 25.0,
+    "total": 54.0,
+    "payment": "Pobranie (Paczkomat)"
   }
 ]
