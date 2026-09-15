@@ -233,5 +233,24 @@
     "shipping": 25.0,
     "total": 90.0,
     "payment": "Pobranie (Paczkomat)"
+  },
+  {
+    "id": "LBK-95534",
+    "discord": "Filip9016",
+    "email": "wisniewskif629@gmail.com",
+    "phone": "730293565",
+    "paczkomat": "Linia",
+    "items": [
+      {
+        "id": "VAP-105",
+        "name": "WGA CRYSTAL ULTRA 35K",
+        "price": 65,
+        "selectedTaste": "Strawberry Watermelon",
+        "img": "https://www.vapes24h.net/api/uploads/1780853709325-159392263.png"
+      }
+    ],
+    "shipping": 25.0,
+    "total": 90.0,
+    "payment": "Pobranie (Paczkomat)"
   }
 ]
