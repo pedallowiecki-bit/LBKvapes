@@ -252,5 +252,24 @@
     "shipping": 25.0,
     "total": 90.0,
     "payment": "Pobranie (Paczkomat)"
+  },
+  {
+    "id": "LBK-W5E0H",
+    "discord": "To ja patryk",
+    "email": "patrykgarsku@gmail.com",
+    "phone": "666605469",
+    "paczkomat": "Linia",
+    "items": [
+      {
+        "id": "00002",
+        "name": "VAPEN FLOW 40k",
+        "price": 65,
+        "selectedTaste": "Blueberry Ice",
+        "img": "https://www.vapes24h.net/api/uploads/1780853948391-461762351.png"
+      }
+    ],
+    "shipping": 25.0,
+    "total": 90.0,
+    "payment": "Pobranie (Paczkomat)"
   }
 ]
