@@ -309,5 +309,31 @@
     "shipping": 25.0,
     "total": 45.0,
     "payment": "Pobranie (Paczkomat)"
+  },
+  {
+    "id": "LBK-5RAW0",
+    "discord": "vanisz23",
+    "email": "szymczykbartek5@gmail.com",
+    "phone": "795238761",
+    "paczkomat": "05-250",
+    "items": [
+      {
+        "id": "00006",
+        "name": "WGA SMART 20K",
+        "price": 45,
+        "selectedTaste": "Double Apple",
+        "img": "https://www.vapes24h.net/wga20k_new.png"
+      },
+      {
+        "id": "00002",
+        "name": "VAPEN FLOW 40k",
+        "price": 65,
+        "selectedTaste": "Watermelon Ice",
+        "img": "https://www.vapes24h.net/api/uploads/1780853948391-461762351.png"
+      }
+    ],
+    "shipping": 25.0,
+    "total": 135.0,
+    "payment": "Pobranie (Paczkomat)"
   }
 ]
