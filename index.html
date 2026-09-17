@@ -63,7 +63,7 @@
     }
   </style>
 </head>
-<body class="bg-neutral-950 text-neutral-100 font-sans min-h-screen flex flex-col justify-between antialiased pb-24 selection:bg-orange-500 selection:text-white" onload="loadProductsFromJSON(); loadReviews();">
+<body class="bg-neutral-950 text-neutral-100 font-sans min-h-screen flex flex-col justify-between antialiased pb-24 selection:bg-orange-500 selection:text-white" onload="loadProductsFromJSON(); loadReviews(); checkAuthSession();">
 
   <!-- 18+ WERYFIKACJA WIEKU MODAL -->
   <div id="age-modal" class="fixed inset-0 bg-black/90 backdrop-blur-xl z-50 flex items-center justify-center p-4">
@@ -87,6 +87,9 @@
         <span class="font-medium text-neutral-300">Ekspresowa realizacja zamówień 24/7 ⚡</span>
       </div>
       <div class="flex items-center gap-3">
+        <button onclick="openAuthModal()" id="auth-nav-btn" class="bg-neutral-900 border border-neutral-800 hover:border-orange-500 px-4 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all text-neutral-200 shadow-sm">
+          👤 <span id="auth-nav-text">Konto</span>
+        </button>
         <a href="https://discord.gg/y2xdvzx34V" target="_blank" class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-4 py-1.5 rounded-xl flex items-center gap-1.5 transition-all text-[11px] shadow-md shadow-orange-500/20 hover:scale-105">
           <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 127.14 96.36"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a74.57,74.57,0,0,0,64.3,0c.87.69,1.76,1.37,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,45.91,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,45.91,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
           DISCORD COMMUNITY
@@ -269,6 +272,37 @@
         </button>
       </div>
       <button onclick="closeProductModal()" class="absolute top-6 right-6 font-black text-base cursor-pointer w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center hover:bg-neutral-700 transition-colors text-neutral-300">✕</button>
+    </div>
+  </div>
+
+  <!-- MODAL LOGOWANIA / REJESTRACJI KONT -->
+  <div id="auth-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="bg-neutral-900 text-neutral-100 rounded-3xl max-w-sm w-full p-6 border border-neutral-800 relative shadow-2xl">
+      <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-neutral-400 hover:text-white font-bold cursor-pointer">✕</button>
+      
+      <div class="flex bg-neutral-950 p-1 rounded-2xl mb-6 border border-neutral-800">
+        <button onclick="switchAuthTab('login')" id="tab-login-btn" class="flex-1 py-2 text-xs font-bold rounded-xl bg-orange-500 text-white transition-all cursor-pointer">Logowanie</button>
+        <button onclick="switchAuthTab('register')" id="tab-register-btn" class="flex-1 py-2 text-xs font-bold rounded-xl text-neutral-400 transition-all cursor-pointer">Rejestracja</button>
+      </div>
+
+      <!-- Formularz Logowania -->
+      <div id="login-form" class="space-y-4">
+        <h3 class="text-sm font-black uppercase text-white">Zaloguj się</h3>
+        <input type="text" id="login-identifier" placeholder="Email lub Nazwa użytkownika" class="w-full bg-neutral-950 text-white border border-neutral-800 rounded-2xl px-4 py-3 text-xs focus:outline-none focus:border-orange-500">
+        <input type="password" id="login-password" placeholder="Hasło" class="w-full bg-neutral-950 text-white border border-neutral-800 rounded-2xl px-4 py-3 text-xs focus:outline-none focus:border-orange-500">
+        <button onclick="handleLogin()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs py-3.5 rounded-2xl uppercase transition-all cursor-pointer shadow-lg shadow-orange-500/20">Zaloguj się</button>
+      </div>
+
+      <!-- Formularz Rejestracji -->
+      <div id="register-form" class="space-y-4 hidden">
+        <h3 class="text-sm font-black uppercase text-white">Załóż stałe konto</h3>
+        <input type="text" id="reg-username" placeholder="Nazwa użytkownika" class="w-full bg-neutral-950 text-white border border-neutral-800 rounded-2xl px-4 py-3 text-xs focus:outline-none focus:border-orange-500">
+        <input type="email" id="reg-email" placeholder="Adres E-mail" class="w-full bg-neutral-950 text-white border border-neutral-800 rounded-2xl px-4 py-3 text-xs focus:outline-none focus:border-orange-500">
+        <input type="password" id="reg-password" placeholder="Hasło" class="w-full bg-neutral-950 text-white border border-neutral-800 rounded-2xl px-4 py-3 text-xs focus:outline-none focus:border-orange-500">
+        <button onclick="handleRegister()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs py-3.5 rounded-2xl uppercase transition-all cursor-pointer shadow-lg shadow-orange-500/20">Zarejestruj się</button>
+      </div>
+      
+      <div id="auth-error" class="text-red-400 text-xs mt-3 text-center hidden font-medium"></div>
     </div>
   </div>
 
@@ -524,7 +558,6 @@
 
       grid.innerHTML = html;
 
-      // Paginacja
       let paginationHtml = '';
       if (totalPages > 1) {
         for (let i = 1; i <= totalPages; i++) {
@@ -728,7 +761,6 @@
 
       const genBtn = document.getElementById('gen-btn');
       
-      // Blokada przed ponownym kliknięciem i dodanie kółka ładowania (spinnera)
       genBtn.disabled = true;
       genBtn.innerHTML = 'Składanie zamówienia... <span class="spinner"></span>';
 
@@ -773,6 +805,126 @@
       const codeText = document.getElementById('final-code').innerText;
       navigator.clipboard.writeText(codeText);
       alert('Skopiowano kod zamówienia: ' + codeText);
+    }
+
+    // --- SYSTEM STAŁYCH KONT (LOGOWANIE / REJESTRACJA) ---
+    function openAuthModal() {
+      const user = localStorage.getItem('lbk_user');
+      if (user) {
+        const parsed = JSON.parse(user);
+        if (confirm(`Jesteś zalogowany jako: ${parsed.username}\nCzy chcesz się wylogować?`)) {
+          localStorage.removeItem('lbk_user');
+          checkAuthSession();
+        }
+      } else {
+        document.getElementById('auth-modal').classList.remove('hidden');
+      }
+    }
+
+    function closeAuthModal() {
+      document.getElementById('auth-modal').classList.add('hidden');
+      document.getElementById('auth-error').classList.add('hidden');
+    }
+
+    function switchAuthTab(tab) {
+      const loginForm = document.getElementById('login-form');
+      const regForm = document.getElementById('register-form');
+      const loginBtn = document.getElementById('tab-login-btn');
+      const regBtn = document.getElementById('tab-register-btn');
+      document.getElementById('auth-error').classList.add('hidden');
+      
+      if (tab === 'login') {
+        loginForm.classList.remove('hidden');
+        regForm.classList.add('hidden');
+        loginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-xl bg-orange-500 text-white transition-all cursor-pointer';
+        regBtn.className = 'flex-1 py-2 text-xs font-bold rounded-xl text-neutral-400 transition-all cursor-pointer';
+      } else {
+        loginForm.classList.add('hidden');
+        regForm.classList.remove('hidden');
+        regBtn.className = 'flex-1 py-2 text-xs font-bold rounded-xl bg-orange-500 text-white transition-all cursor-pointer';
+        loginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-xl text-neutral-400 transition-all cursor-pointer';
+      }
+    }
+
+    async function handleRegister() {
+      const username = document.getElementById('reg-username').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value.trim();
+      const errDiv = document.getElementById('auth-error');
+
+      if (!username || !email || !password) {
+        errDiv.innerText = "Wypełnij wszystkie pola!";
+        errDiv.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        const res = await fetch('https://lbk.onrender.com/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email, password })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          alert("Konto zostało pomyślnie utworzone! Możesz się teraz zalogować.");
+          switchAuthTab('login');
+        } else {
+          errDiv.innerText = data.error || "Błąd rejestracji";
+          errDiv.classList.remove('hidden');
+        }
+      } catch (e) {
+        errDiv.innerText = "Błąd połączenia z serwerem";
+        errDiv.classList.remove('hidden');
+      }
+    }
+
+    async function handleLogin() {
+      const identifier = document.getElementById('login-identifier').value.trim();
+      const password = document.getElementById('login-password').value.trim();
+      const errDiv = document.getElementById('auth-error');
+
+      if (!identifier || !password) {
+        errDiv.innerText = "Wypełnij wszystkie pola!";
+        errDiv.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        const res = await fetch('https://lbk.onrender.com/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier, password })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          localStorage.setItem('lbk_user', JSON.stringify({ username: data.username, email: data.email }));
+          closeAuthModal();
+          checkAuthSession();
+        } else {
+          errDiv.innerText = data.error || "Nieprawidłowe dane logowania";
+          errDiv.classList.remove('hidden');
+        }
+      } catch (e) {
+        errDiv.innerText = "Błąd połączenia z serwerem";
+        errDiv.classList.remove('hidden');
+      }
+    }
+
+    function checkAuthSession() {
+      const user = localStorage.getItem('lbk_user');
+      const navText = document.getElementById('auth-nav-text');
+      if (user) {
+        const parsed = JSON.parse(user);
+        navText.innerText = parsed.username;
+        // Opcjonalnie: automatyczne uzupełnianie e-maila w formularzu zamówienia
+        const emailInput = document.getElementById('customer-email');
+        if (emailInput && !emailInput.value) {
+          emailInput.value = parsed.email;
+          checkCartForm();
+        }
+      } else {
+        navText.innerText = "Konto";
+      }
     }
   </script>
 </body>
