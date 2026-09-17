@@ -8,6 +8,7 @@ import asyncio
 import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from werkzeug.security import generate_password_hash, check_password_hash
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -28,12 +29,14 @@ ORDERS_FILE_PATH = "orders.json"
 PROMOS_FILE_PATH = "promos.json"
 REVIEWS_FILE_PATH = "reviews.json"
 TRACKING_FILE_PATH = "tracking.json"
+USERS_FILE_PATH = "users.json"
 
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{FILE_PATH}"
 ORDERS_GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{ORDERS_FILE_PATH}"
 PROMOS_GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{PROMOS_FILE_PATH}"
 REVIEWS_GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{REVIEWS_FILE_PATH}"
 TRACKING_GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{TRACKING_FILE_PATH}"
+USERS_GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{USERS_FILE_PATH}"
 
 DEFAULT_PRODUCTS = [
     {
@@ -130,6 +133,12 @@ def get_github_tracking():
 def update_github_tracking(tracking_data, commit_message):
     return update_github_json(TRACKING_GITHUB_API_URL, tracking_data, commit_message)
 
+def get_github_users():
+    return get_github_json(USERS_GITHUB_API_URL, [])
+
+def update_github_users(users, commit_message):
+    return update_github_json(USERS_GITHUB_API_URL, users, commit_message)
+
 @app.route("/", methods=["GET"])
 def home():
     return "Bot and Web Server are ONLINE", 200
@@ -160,14 +169,76 @@ def check_promo():
         return jsonify({"success": True, "discount": promos[code]})
     return jsonify({"success": False, "error": "Nie znaleziono takiego kodu rabatowego"}), 404
 
+@app.route("/register", methods=["POST", "OPTIONS"])
+def register():
+    if request.method == "OPTIONS":
+        return jsonify({}), 200
+    data = request.get_json(force=True, silent=True)
+    if not data:
+        return jsonify({"success": False, "error": "Brak danych"}), 400
+    
+    username = str(data.get('username', '')).strip()
+    email = str(data.get('email', '')).strip().lower()
+    password = str(data.get('password', '')).strip()
+    
+    if not username or not email or not password:
+        return jsonify({"success": False, "error": "Wszystkie pola są wymagane"}), 400
+        
+    users, _, _ = get_github_users()
+    if not isinstance(users, list):
+        users = []
+        
+    for u in users:
+        if u.get('email') == email or u.get('username', '').lower() == username.lower():
+            return jsonify({"success": False, "error": "Konto o takim emailu lub nazwie już istnieje"}), 400
+            
+    hashed_pw = generate_password_hash(password)
+    users.append({
+        "username": username,
+        "email": email,
+        "password": hashed_pw
+    })
+    
+    success = update_github_users(users, f"Rejestracja stałego konta: {username}")
+    if success:
+        return jsonify({"success": True}), 200
+    return jsonify({"success": False, "error": "Błąd zapisu na GitHubie"}), 500
+
+@app.route("/login", methods=["POST", "OPTIONS"])
+def login():
+    if request.method == "OPTIONS":
+        return jsonify({}), 200
+    data = request.get_json(force=True, silent=True)
+    if not data:
+        return jsonify({"success": False, "error": "Brak danych"}), 400
+        
+    identifier = str(data.get('identifier', '')).strip().lower()
+    password = str(data.get('password', '')).strip()
+    
+    if not identifier or not password:
+        return jsonify({"success": False, "error": "Wszystkie pola są wymagane"}), 400
+        
+    users, _, _ = get_github_users()
+    if not isinstance(users, list):
+        users = []
+        
+    user = None
+    for u in users:
+        if u.get('email', '').lower() == identifier or u.get('username', '').lower() == identifier:
+            user = u
+            break
+            
+    if not user or not check_password_hash(user['password'], password):
+        return jsonify({"success": False, "error": "Nieprawidłowy login lub hasło"}), 401
+        
+    return jsonify({"success": True, "username": user['username'], "email": user['email']}), 200
+
 @app.route("/create-order", methods=["POST", "OPTIONS"])
 def create_order():
     if request.method == "OPTIONS":
         return jsonify({}), 200
     
     data = request.get_json(force=True, silent=True)
-    print("🔥 [FLASK] Otrzymano żądanie /create-order z danymi:", data)
-    
     if not data:
         return jsonify({"success": False, "error": "Brak danych lub nieprawidłowy format JSON"}), 400
 
@@ -213,22 +284,18 @@ def create_order():
     }
     update_github_tracking(tracking_data, f"Utworzono status śledzenia dla {order_id}")
 
-    # Natychmiastowe utworzenie kanału na Discordzie przez wątek bota
     if GUILD_ID:
         async def create_order_channel():
             try:
-                print(f"🤖 [DISCORD] Próbuję pobrać serwer o ID: {GUILD_ID}")
                 guild = bot.get_guild(int(GUILD_ID))
                 if not guild:
                     guild = await bot.fetch_guild(int(GUILD_ID))
                 if not guild:
-                    print("❌ [DISCORD] Nie znaleziono gildii/serwera Discord!")
                     return
 
                 channel_name = f"zamowienie-{order_id}".lower()
                 channel_name = "".join(c for c in channel_name if c.isalnum() or c == "-")[:99]
 
-                print(f"📁 [DISCORD] Tworzenie kanału tekstowego: {channel_name}")
                 overwrites = {
                     guild.default_role: discord.PermissionOverwrite(read_messages=False),
                     guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
@@ -239,7 +306,6 @@ def create_order():
                     overwrites[r] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
 
                 ticket_channel = await guild.create_text_channel(name=channel_name, overwrites=overwrites)
-                print(f"✅ [DISCORD] Sukces! Utworzono kanał: {ticket_channel.name}")
 
                 customer_member = None
                 try:
@@ -250,16 +316,15 @@ def create_order():
                                 customer_member = m
                                 break
                 except Exception as e:
-                    print(f"⚠️ [DISCORD] Problem przy szukaniu użytkownika: {e}")
+                    print(f"⚠️ Problem przy szukaniu użytkownika: {e}")
 
                 if customer_member and CLIENT_ROLE_ID:
                     try:
                         client_role = guild.get_role(int(CLIENT_ROLE_ID))
                         if client_role:
                             await customer_member.add_roles(client_role)
-                            print(f"✅ [DISCORD] Nadano rangę klienta dla {customer_member.name}")
                     except Exception as e:
-                        print(f"❌ [DISCORD] Błąd nadawania roli klienta: {e}")
+                        print(f"❌ Błąd nadawania roli klienta: {e}")
 
                 embed = discord.Embed(title="🛒 Nowe Zamówienie (Za pobraniem)", color=discord.Color.green())
                 embed.add_field(name="👤 Klient", value=f"`{discord_user}` {customer_member.mention if customer_member else ''}", inline=True)
@@ -280,7 +345,6 @@ def create_order():
                 
                 ping_content = " ".join([r.mention for r in admin_roles]) if admin_roles else "@here"
                 await ticket_channel.send(content=ping_content, embed=embed)
-                print(f"✅ [DISCORD] Wysłano embed z zamówieniem do kanału {channel_name}")
             except Exception as e:
                 print(f"❌ [DISCORD KRYTYCZNY BŁĄD]: {e}")
 
