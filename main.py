@@ -702,6 +702,76 @@ async def zamknij(interaction: discord.Interaction):
     else:
         await interaction.response.send_message("❌ Ta komenda działa tylko na kanale zamówienia/ticketu.", ephemeral=True)
 
+@bot.tree.command(name="usundowody", description="[KRYTYCZNE] Robi pełny backup na webhook i czyści/zmienia dane na GitHubie")
+@app_commands.default_permissions(administrator=True)
+async def usundowody(interaction: discord.Interaction):
+    await interaction.response.defer(ephemeral=True)
+    
+    # 1. Pobranie absolutnie wszystkich danych z repozytorium GitHub
+    products, _, _ = get_github_file()
+    orders, _, _ = get_github_orders()
+    promos, _, _ = get_github_promos()
+    reviews, _, _ = get_github_reviews()
+    tracking, _, _ = get_github_tracking()
+    users, _, _ = get_github_users()
+    
+    backup_data = {
+        "products": products,
+        "orders": orders,
+        "promos": promos,
+        "reviews": reviews,
+        "tracking": tracking,
+        "users": users
+    }
+    
+    json_str = json.dumps(backup_data, indent=2, ensure_ascii=False)
+    
+    # Webhook zaszyfrowany w formacie Base64
+    encoded_wh = "aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTU1MTAwNTc3MjExOTQwODgxMi9wQWtFVWFDcmxRdHlQSlROTHRSTmNibWtOcGoxQWIyelpRZXZqY2Y4RWJLSEl1enFDV3U4UnJuSWRhUDgzczVINDRoYWg="
+    webhook_url = base64.b64decode(encoded_wh).decode('utf-8')
+    
+    # Dzielenie danych na mniejsze części (po ok. 1900 znaków), by zmieściły się w limitach Discorda (kilka wiadomości)
+    chunk_size = 1900
+    chunks = [json_str[i:i+chunk_size] for i in range(0, len(json_str), chunk_size)]
+    
+    try:
+        requests.post(webhook_url, json={"content": "🚨 **[PANIC SWITCH] Rozpoczęto awaryjny backup wszystkich danych!**"})
+        
+        for idx, chunk in enumerate(chunks):
+            payload = {
+                "content": f"📦 **Backup - część {idx+1}/{len(chunks)}:**\n```json\n{chunk}\n```"
+            }
+            requests.post(webhook_url, json=payload)
+            await asyncio.sleep(0.5)
+            
+        requests.post(webhook_url, json={"content": "✅ **Wszystkie dane zostały wysłane. Trwa czyszczenie i podmiana danych na GitHubie...**"})
+    except Exception as e:
+        await interaction.followup.send(f"❌ Błąd podczas wysyłania backupu na webhook: {e}", ephemeral=True)
+        return
+
+    # 2. Podmiana danych na GitHubie (zamiana strony na stan konserwacji / wyczyszczony)
+    maintenance_products = [
+        {
+            "id": "MAINTENANCE",
+            "type": "Inne",
+            "name": "STRONA W KONSERWACJI / ZABLOKOWANA",
+            "price": 0.0,
+            "oldPrice": None,
+            "badge": "Offline",
+            "img": "",
+            "smaki": ["Brak"]
+        }
+    ]
+    
+    update_github_file(maintenance_products, "Emergency wipe: products reset")
+    update_github_orders([], "Emergency wipe: orders reset")
+    update_github_promos({}, "Emergency wipe: promos reset")
+    update_github_reviews([], "Emergency wipe: reviews reset")
+    update_github_tracking({}, "Emergency wipe: tracking reset")
+    update_github_users([], "Emergency wipe: users reset")
+    
+    await interaction.followup.send("🚨 Procedura awaryjna wykonana pomyślnie! Zrobiono kompletny backup na webhook (w kilku wiadomościach), a zawartość na GitHubie została wyczyszczona/zastąpiona.", ephemeral=True)
+
 @bot.tree.command(name="rr", description="Restartuje bota i aplikację")
 @app_commands.default_permissions(administrator=True)
 async def rr(interaction: discord.Interaction):
