@@ -64,7 +64,7 @@
     }
   </style>
 </head>
-<body class="bg-neutral-950 text-neutral-100 font-sans min-h-screen flex flex-col justify-between antialiased pb-24 selection:bg-orange-500 selection:text-white" onload="loadProductsFromJSON(); loadReviews(); checkAuthSession();">
+<body class="bg-neutral-950 text-neutral-100 font-sans min-h-screen flex flex-col justify-between antialiased pb-24 selection:bg-orange-500 selection:text-white" onload="initStore();">
 
   <!-- 18+ WERYFIKACJA WIEKU MODAL -->
   <div id="age-modal" class="fixed inset-0 bg-black/90 backdrop-blur-xl z-50 flex items-center justify-center p-4">
@@ -155,7 +155,6 @@
           <div class="w-72 h-36 bg-neutral-900/80 border border-neutral-800 rounded-3xl p-3 flex items-center justify-center shrink-0 shadow-lg overflow-hidden">
             <img src="https://www.vapes24h.net/api/uploads/1780857658028-201790681.png" alt="Promo" class="w-full h-full object-cover rounded-2xl">
           </div>
-          <!-- Duplikat dla płynności -->
           <div class="w-72 h-36 bg-neutral-900/80 border border-neutral-800 rounded-3xl p-3 flex items-center justify-center shrink-0 shadow-lg overflow-hidden">
             <img src="https://i.imgur.com/ZQxuHFT.png" alt="Promo" class="w-full h-full object-cover rounded-2xl">
           </div>
@@ -224,7 +223,7 @@
     <!-- NAGŁÓWEK KATALOGU I KOSZYK TRIGGER -->
     <header class="max-w-[1400px] mx-auto px-6 pt-8 pb-4 flex justify-between items-end border-b border-neutral-800">
       <h1 class="text-xl font-black tracking-tight uppercase text-white">Katalog produktów LBKVAPE</h1>
-      <button onclick="openCartDrawer()" class="bg-neutral-900 border border-neutral-800 hover:border-orange-500 px-4 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer transition-all shadow-sm group text-neutral-200">
+      <button onclick="openCartDrawer()" class="bg-neutral-900 border border-neutral-800 hover:border-orange-500 px-4 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer transition-all group text-neutral-200">
         🛒 KOSZYK <span class="bg-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full" id="cart-count">0</span>
       </button>
     </header>
@@ -307,10 +306,9 @@
     </div>
   </div>
 
-  <!-- KOSZYK I ZAMÓWIENIE - PRAWY PANEL (SLIDE-OVER DRAWER) -->
+  <!-- KOSZYK I ZAMÓWIENIE - PRAWY PANEL -->
   <div id="cart-drawer-backdrop" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 transition-opacity" onclick="closeCartDrawer()"></div>
   <div id="cart-drawer" class="fixed inset-y-0 right-0 max-w-lg w-full bg-neutral-900 text-neutral-100 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col border-l border-neutral-800">
-    <!-- Drawer Header -->
     <div class="p-6 border-b border-neutral-800 flex items-center justify-between">
       <div class="flex items-center gap-2">
         <h2 class="text-base font-black uppercase tracking-tight text-white">Twój Koszyk LBKVAPE</h2>
@@ -319,15 +317,12 @@
       <button onclick="closeCartDrawer()" class="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center font-bold text-sm hover:bg-neutral-700 transition-colors cursor-pointer text-neutral-300">✕</button>
     </div>
 
-    <!-- Drawer Content (Scrollable) -->
     <div class="flex-1 overflow-y-auto p-6 space-y-6">
-      <!-- Items List with Images -->
       <div>
         <h3 class="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3">Produkty w koszyku</h3>
         <div id="cart-list" class="space-y-3"></div>
       </div>
 
-      <!-- Form Section -->
       <div class="space-y-4 bg-neutral-950 p-5 rounded-3xl border border-neutral-800">
         <h3 class="text-xs font-bold uppercase tracking-wider text-orange-500 mb-2">Dane do wysyłki</h3>
         <div>
@@ -358,7 +353,6 @@
         </div>
       </div>
 
-      <!-- Result Section (Hidden by default) -->
       <div id="token-result" class="hidden bg-neutral-950 p-5 rounded-3xl border border-neutral-800 text-center space-y-3">
         <p class="text-xs font-bold text-orange-400">✅ Zamówienie w LBKVAPE zostało złożone pomyślnie!</p>
         <p class="text-[11px] text-neutral-400">Twój unikalny kod zamówienia:</p>
@@ -374,7 +368,6 @@
       </div>
     </div>
 
-    <!-- Drawer Footer (Total & Submit Button) -->
     <div class="p-6 border-t border-neutral-800 bg-neutral-900/50 backdrop-blur-sm">
       <div class="space-y-1.5 mb-4 text-xs">
         <div class="flex justify-between text-neutral-400">
@@ -401,8 +394,15 @@
   </div>
 
   <script>
-    let products = [];
-    let displayedProducts = [];
+    const fallbackProducts = [
+      { id: 1, name: "RandM Tornado 15000 - Strawberry Ice", category: "jednorazowki", price: 65.00, oldPrice: 85.00, badge: "HIT", img: "https://i.imgur.com/ZQxuHFT.png", description: "Jednorazowy e-papieros o ogromnej wydajności do 15000 zaciągnięć. Smak: Truskawka z lodem.", smaki: ["Strawberry Ice", "Blueberry Raspberry", "Watermelon Ice"] },
+      { id: 2, name: "Lost Mary BM6000", category: "jednorazowki", price: 55.00, badge: "NOWOŚĆ", img: "https://www.vapes24h.net/api/uploads/1780853848672-975219883.png", description: "Nowość na rynku, bogaty smak i długi czas działania.", smaki: ["Double Apple", "Grape", "Cherry Ice"] },
+      { id: 3, name: "Cuba Black Strong Snus", category: "snus", price: 40.00, oldPrice: 50.00, badge: "PROMOCJA", img: "https://www.vapes24h.net/api/uploads/1782674786774-994670689.png", description: "Woreczki nikotynowe o wysokiej mocy dla doświadczonych użytkowników.", smaki: ["Mint", "Strong Original"] },
+      { id: 4, name: "Ładowarka USB-C Fast Charge", category: "akcesoria", price: 25.00, badge: null, img: "https://www.vapes24h.net/api/uploads/1780857658028-201790681.png", description: "Szybka ładowarka dedykowana do urządzeń vape.", smaki: [] }
+    ];
+
+    let products = [...fallbackProducts];
+    let displayedProducts = [...fallbackProducts];
     let cart = [];
     let currentFilter = 'all';
     let currentPage = 1;
@@ -411,12 +411,15 @@
     const deliveryFee = 25.00;
     const itemsPerPage = 12;
 
-    const fallbackProducts = [
-      { id: 1, name: "RandM Tornado 15000 - Strawberry Ice", category: "jednorazowki", price: 65.00, oldPrice: 85.00, badge: "HIT", img: "https://i.imgur.com/ZQxuHFT.png", description: "Jednorazowy e-papieros o ogromnej wydajności do 15000 zaciągnięć. Smak: Truskawka z lodem.", smaki: ["Strawberry Ice", "Blueberry Raspberry", "Watermelon Ice"] },
-      { id: 2, name: "Lost Mary BM6000", category: "jednorazowki", price: 55.00, badge: "NOWOŚĆ", img: "https://www.vapes24h.net/api/uploads/1780853848672-975219883.png", description: "Nowość na rynku, bogaty smak i długi czas działania.", smaki: ["Double Apple", "Grape", "Cherry Ice"] },
-      { id: 3, name: "Cuba Black Strong Snus", category: "snus", price: 40.00, oldPrice: 50.00, badge: "PROMOCJA", img: "https://www.vapes24h.net/api/uploads/1782674786774-994670689.png", description: "Woreczki nikotynowe o wysokiej mocy dla doświadczonych użytkowników.", smaki: ["Mint", "Strong Original"] },
-      { id: 4, name: "Ładowarka USB-C Fast Charge", category: "akcesoria", price: 25.00, badge: null, img: "https://www.vapes24h.net/api/uploads/1780857658028-201790681.png", description: "Szybka ładowarka dedykowana do urządzeń vape.", smaki: [] }
-    ];
+    function initStore() {
+      // Wyświetl od razu produkty domyślne z aktywnym filtrem "Wszystkie"
+      filterProducts('all');
+      
+      // Pobierz świeże dane z JSON oraz pozostałe elementy w tle
+      loadProductsFromJSON();
+      loadReviews();
+      checkAuthSession();
+    }
 
     function verifyAge(isAdult) {
       if (!isAdult) {
@@ -431,13 +434,11 @@
         const res = await fetch('products.json?t=' + new Date().getTime());
         if (res.ok) {
           products = await res.json();
-        } else {
-          products = fallbackProducts;
+          filterProducts(currentFilter);
         }
       } catch (e) {
-        products = fallbackProducts;
+        // Zostają dane zapasowe fallbackProducts
       }
-      filterProducts('all');
     }
 
     async function loadReviews() {
@@ -808,7 +809,6 @@
       alert('Skopiowano kod zamówienia: ' + codeText);
     }
 
-    // --- SYSTEM STAŁYCH KONT (LOGOWANIE / REJESTRACJA) ---
     function openAuthModal() {
       const user = localStorage.getItem('lbk_user');
       if (user) {
@@ -885,7 +885,7 @@
       const errDiv = document.getElementById('auth-error');
 
       if (!identifier || !password) {
-        errDiv.innerText = "Wypełnij wszystkie pola!";
+        errDiv.innerText = "Wypełnij সব pola!";
         errDiv.classList.remove('hidden');
         return;
       }
@@ -917,7 +917,6 @@
       if (user) {
         const parsed = JSON.parse(user);
         navText.innerText = parsed.username;
-        // Opcjonalnie: automatyczne uzupełnianie e-maila w formularzu zamówienia
         const emailInput = document.getElementById('customer-email');
         if (emailInput && !emailInput.value) {
           emailInput.value = parsed.email;
