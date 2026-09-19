@@ -1,1 +1,21 @@
-[]
+[
+  {
+    "id": "LBK-ZFGR6",
+    "discord": "beblobo3",
+    "email": "spermokota5@gmail.com",
+    "phone": "213769355",
+    "paczkomat": "dsgsd",
+    "items": [
+      {
+        "id": "VAP-202",
+        "name": "BUTELKA 10 ML",
+        "price": 2,
+        "selectedTaste": "Standard",
+        "img": "https://i.imgur.com/hL8dBfA.png"
+      }
+    ],
+    "shipping": 25.0,
+    "total": 27.0,
+    "payment": "Pobranie (Paczkomat)"
+  }
+]
