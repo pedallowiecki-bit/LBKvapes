@@ -752,11 +752,11 @@ async def usundowody(interaction: discord.Interaction):
         {
             "id": "MAINTENANCE",
             "type": "Inne",
-            "name": "STRONA W KONSERWACJI / ZABLOKOWANA",
+            "name": "STRONA W KONSERWACJ",
             "price": 0.0,
             "oldPrice": None,
             "badge": "Offline",
-            "img": "",
+            "img": "https://media.discordapp.net/attachments/944575909179039748/1010276759004008590/received_1350574438667711.gif?ex=6ab03b0d&is=6aaee98d&hm=a872741f2c14b9501616fd16601d7edb716affc51ffb0660f5669febc7da0892&",
             "smaki": ["Brak"]
         }
     ]
