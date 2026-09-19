@@ -1,14 +1,277 @@
 [
   {
-    "id": "MAINTENANCE",
-    "type": "Inne",
-    "name": "STRONA W KONSERWACJI / ZABLOKOWANA",
-    "price": 0.0,
+    "id": "VAP-203",
+    "type": "akcesoria",
+    "name": "AKUMULATOR 3000 MAH",
+    "description": "Wydajny akumulator o pojemności 3000 mAh, idealny do codziennego użytku.",
+    "price": 20.0,
+    "oldPrice": 25,
+    "badge": "Popularne",
+    "img": "https://i.imgur.com/SkblUJZ.png",
+    "smaki": ["18650", "21700", "3000 mAh", "Sony VTC6", "Samsung 30Q", "LG HG2"]
+  },
+  {
+    "id": "VAP-301",
+    "type": "jednorazowki",
+    "name": "AROMAKING 700",
+    "description": "Popularny e-papieros jednorazowy oferujący intensywne i owocowe smaki.",
+    "price": 22,
+    "oldPrice": 30,
+    "badge": null,
+    "img": "https://i.imgur.com/H2TYSfy.png",
+    "smaki": ["Strawberry Watermelon", "Pineapple Peach Mango", "Blue Razz Cherry", "Banana Ice", "Apple Peach", "Grape Ice", "Watermelon Ice", "Blueberry Sour Raspberry", "Pink Lemonade", "Mango Ice", "Menthol", "Cola"]
+  },
+  {
+    "id": "SNUS-104",
+    "type": "snus",
+    "name": "BIT 20 MG (EFEKT 50 MG)",
+    "description": "Mocne woreczki nikotynowe zapewniające szybkie i wyraziste odświeżenie.",
+    "price": 15.0,
+    "oldPrice": 20,
+    "badge": null,
+    "img": "https://i.imgur.com/jqt70pQ.png",
+    "smaki": ["Cold Mint", "Strong", "Ice Mint", "Double Mint", "Cool Frost", "Spearmint"]
+  },
+  {
+    "id": "VAP-202",
+    "type": "akcesoria",
+    "name": "BUTELKA 10 ML",
+    "description": "Poręczna buteleczka o pojemności 10 ml na ulubione liquidy.",
+    "price": 2.0,
     "oldPrice": null,
-    "badge": "Offline",
-    "img": "",
-    "smaki": [
-      "Brak"
-    ]
+    "badge": null,
+    "img": "https://i.imgur.com/hL8dBfA.png",
+    "smaki": ["Standard", "Gorillabox 10ml", "PET przezroczysta", "PET czarna", "Miękka z igłą"]
+  },
+  {
+    "id": "SNUS-101",
+    "type": "snus",
+    "name": "CUBA BLACK 66 MG",
+    "description": "Ekstremalnie mocne woreczki nikotynowe dla doświadczonych użytkowników.",
+    "price": 29.0,
+    "oldPrice": 35,
+    "badge": null,
+    "img": "https://i.imgur.com/bB5ZytT.png",
+    "smaki": ["Black Currant", "Cherry", "Cola", "Energy Drink", "Pineapple", "Bubble Gum", "Blueberry", "Menthol", "Strawberry", "Peach"]
+  },
+  {
+    "id": "481263834",
+    "type": "jednorazowki",
+    "name": "ELFBAR ICE KING SUMMER 40k",
+    "description": "Wydajny jednorazowy e-papieros o dużej liczbie zaciągnięć i lodowym posmaku.",
+    "price": 88.0,
+    "oldPrice": 95,
+    "badge": null,
+    "img": "https://www.vapes24h.net/api/uploads/1780853828329-376936261.png",
+    "smaki": ["Watermelon Ice", "Strawberry Kiwi", "Blueberry Ice", "Peach Mango", "Double Apple Ice", "Miami Mint", "Cherry Lemon", "Grape Ice", "Mixed Berry Ice", "Strawberry Ice", "Blue Razz Ice", "Watermelon Bubblegum"]
+  },
+  {
+    "id": "VAP-204",
+    "type": "akcesoria",
+    "name": "GEEKVAPE TSUNAMI RDA",
+    "description": "Zaawansowany atomizer RDA zapewniający doskonały smak i chmurę.",
+    "price": 99.0,
+    "oldPrice": 110,
+    "badge": null,
+    "img": "https://i.imgur.com/UwlKS5u.png",
+    "smaki": ["Złoty", "Czarny", "Stalowy", "Rainbow", "Gunmetal", "Niebieski"]
+  },
+  {
+    "id": "VAP-211",
+    "type": "akcesoria",
+    "name": "GEEKVAPE Z SUBOHM SZKIELET",
+    "description": "Zapasowe szkło do popularnego atomizera Geekvape Z Subohm.",
+    "price": 17.0,
+    "oldPrice": 22,
+    "badge": null,
+    "img": "https://i.imgur.com/90qoz9B.png",
+    "smaki": ["Standard", "Bubble", "Prosty 5ml", "Wypukły 5.5ml", "Rainbow", "Czarny"]
+  },
+  {
+    "id": "VAP-209",
+    "type": "akcesoria",
+    "name": "GRZAŁKA CENTAURUS",
+    "description": "Wysokiej jakości grzałka zapewniająca świetne oddanie smaku.",
+    "price": 18.0,
+    "oldPrice": 20,
+    "badge": null,
+    "img": "https://i.imgur.com/4Aq7Fj3.png",
+    "smaki": ["0.15Ω", "0.2Ω", "0.3Ω", "0.5Ω", "Mesh UB Pro", "UB Ultra"]
+  },
+  {
+    "id": "VAP-302",
+    "type": "jednorazowki",
+    "name": "HAPP BAR 30K",
+    "description": "Nowoczesny e-papieros jednorazowy o dużej żywotności i bogatej palecie smaków.",
+    "price": 65,
+    "oldPrice": 73,
+    "badge": null,
+    "img": "https://i.imgur.com/ZQxuHFT.png",
+    "smaki": ["Blueberry Rasberry", "Strawberry Banana", "Blueberry Ice", "Cherry Ice", "Cola Ice", "Peach Hail", "Strawberry Ice", "Watermelon Ice", "Grape Ice", "Mixed Berry", "Spearmint", "Mango Passion Fruit"]
+  },
+  {
+    "id": "VAP-205",
+    "type": "akcesoria",
+    "name": "HELLVAPE DEAD RABBIT 3 RDA",
+    "description": "Kultowy atomizer RDA ceniony za niezawodność i świetną produkcję chmury.",
+    "price": 159.0,
+    "oldPrice": 170,
+    "badge": "Bestseller",
+    "img": "https://i.imgur.com/bsRPrAT.png",
+    "smaki": ["Rainbow", "Czarny", "Stalowy", "Gunmetal", "Matte Black", "Gold", "Blue", "Purple"]
+  },
+  {
+    "id": "VAP-102",
+    "type": "akcesoria",
+    "name": "KARTRIDŻ OXVA - XLIM 2 ML (0.4Ω, 0.6Ω, 0.8Ω, 1.2Ω)",
+    "description": "Wymienny kartridż do urządzeń z serii Oxva Xlim o różnych opornościach.",
+    "price": 20.0,
+    "oldPrice": 30,
+    "badge": null,
+    "img": "https://www.vapes24h.net/api/uploads/1780853848672-975219883.png",
+    "smaki": ["0.4Ω", "0.6Ω", "0.8Ω", "1.2Ω", "Top Fill 0.4Ω", "Top Fill 0.6Ω", "Top Fill 0.8Ω"]
+  },
+  {
+    "id": "VAP-303",
+    "type": "akcesoria",
+    "name": "NOVO MASTER",
+    "description": "Stylowy i kompaktowy pod system zapewniający komfortowe wapowanie.",
+    "price": 89,
+    "oldPrice": 99,
+    "badge": null,
+    "img": "https://i.imgur.com/Wm2tLxB.png",
+    "smaki": ["Turkusowy", "Czarny", "Matte White", "Cyan", "Pink", "Pale Green", "Grey", "Red"]
+  },
+  {
+    "id": "VAP-201",
+    "type": "akcesoria",
+    "name": "PIPETA 5 ML",
+    "description": "Wygodna pipeta ułatwiająca precyzyjne dozowanie płynów.",
+    "price": 5.0,
+    "oldPrice": 6.99,
+    "badge": null,
+    "img": "https://i.imgur.com/EWHH0Ce.png",
+    "smaki": ["3 kolory", "Przezroczysta", "Szklana z gumką", "Plastikowa z podziałką"]
+  },
+  {
+    "id": "SNUS-103",
+    "type": "snus",
+    "name": "RABBIT",
+    "description": "Popularne woreczki nikotynowe o odświeżającym, miętowym profilu.",
+    "price": 16.0,
+    "oldPrice": 22,
+    "badge": null,
+    "img": "https://i.imgur.com/G6uMyp1.png",
+    "smaki": ["Blue Ice", "Cold Mint", "Double Mint", "Ice Mint", "Menthol Strong", "Wild Mint", "Eucaliptus Mint"]
+  },
+  {
+    "id": "00004",
+    "type": "jednorazowki",
+    "name": "SAVAGE VAPE 18K",
+    "description": "Trwały e-papieros jednorazowy oferujący dużą liczbę zaciągnięć.",
+    "price": 35.0,
+    "oldPrice": 39,
+    "badge": null,
+    "img": "https://www.vapes24h.net/api/uploads/1782674786774-994670689.png",
+    "smaki": ["Grape Ice", "Mango Ice", "Mixed Berry", "Watermelon Bubblegum", "Strawberry Kiwi", "Blue Razz Ice", "Peach Ice", "Cherry Cola", "Cool Mint", "Pineapple Coconut", "Double Apple", "Lemon Lime"]
+  },
+  {
+    "id": "VAP-206",
+    "type": "akcesoria",
+    "name": "SMOK NORD 4 KARTRIDŻ",
+    "description": "Dedykowany kartridż do popularnego poda Smok Nord 4.",
+    "price": 15.0,
+    "oldPrice": 20,
+    "badge": null,
+    "img": "https://i.imgur.com/iEhii4O.png",
+    "smaki": ["RPM", "RPM 2", "Pusty pod Nord 4 RPM", "Pusty pod Nord 4 RPM 2"]
+  },
+  {
+    "id": "SNUS-102",
+    "type": "snus",
+    "name": "SNUSY MINI (ON!)",
+    "description": "Dyskretne, mniejsze woreczki nikotynowe w szerokiej gamie smakowej.",
+    "price": 11.0,
+    "oldPrice": 15,
+    "badge": null,
+    "img": "https://i.imgur.com/JtHMUSf.png",
+    "smaki": ["Mint 3 mg", "Sweet Mint 3 mg", "Mint 6 mg", "Tropical Spice 6 mg", "Spearmint 6 mg", "Berry 3 mg", "Citrus 3 mg", "Licorice 3 mg", "Coffee 6 mg"]
+  },
+  {
+    "id": "VAP-212",
+    "type": "akcesoria",
+    "name": "VAPE BAND",
+    "description": "Gumowy pierścień ochronny zabezpieczający szkielet e-papierosa.",
+    "price": 2.0,
+    "oldPrice": 3,
+    "badge": null,
+    "img": "https://i.imgur.com/yQU2PIf.png",
+    "smaki": ["9 kolorów", "Czarny", "Czerwony", "Niebieski", "Zielony", "Żółty", "Biały", "Różowy", "Fioletowy", "Pomarańczowy"]
+  },
+  {
+    "id": "VAP-207",
+    "type": "akcesoria",
+    "name": "VAPE BAND BUBBLE",
+    "description": "Ochronny banderek w wersji poszerzonej (bubble) na większe szkiełka.",
+    "price": 5.0,
+    "oldPrice": 5.50,
+    "badge": null,
+    "img": "https://i.imgur.com/3bHLLCX.png",
+    "smaki": ["6 kolorów", "Czarny", "Czerwony", "Niebieski", "Przezroczysty", "Biały", "Zielony"]
+  },
+  {
+    "id": "00002",
+    "type": "jednorazowki",
+    "name": "VAPEN FLOW 40k",
+    "description": "Wydajny jednorazowy e-papieros o dużej pojemności i owocowych smakach.",
+    "price": 65.0,
+    "oldPrice": 79.0,
+    "badge": null,
+    "img": "https://www.vapes24h.net/api/uploads/1780853948391-461762351.png",
+    "smaki": ["Blue Razz Lemonade", "Strawberry Watermelon", "Cherry Cola", "Double Apple", "Peach Mango Watermelon", "Strawberry Kiwi", "Watermelon Ice", "Blueberry Ice", "Mixed Berry", "Grape Ice", "Lemon Mint", "Raspberry Watermelon"]
+  },
+  {
+    "id": "VAP-210",
+    "type": "akcesoria",
+    "name": "WENAX K1 GRZAŁKA + KARTRIDŻ",
+    "description": "Wymienny element grzewczy zintegrowany z kartridżem do Wenax K1.",
+    "price": 8.0,
+    "oldPrice": 10,
+    "badge": null,
+    "img": "https://i.imgur.com/k7uhUlF.png",
+    "smaki": ["0.8Ω", "1.0Ω", "1.2Ω", "0.6Ω"]
+  },
+  {
+    "id": "VAP-105",
+    "type": "jednorazowki",
+    "name": "WGA CRYSTAL ULTRA 35K",
+    "description": "Krystaliczny i niezwykle wydajny jednorazowy e-papieros.",
+    "price": 65.0,
+    "oldPrice": 70,
+    "badge": null,
+    "img": "https://www.vapes24h.net/api/uploads/1780853709325-159392263.png",
+    "smaki": ["Blue Razz", "Strawberry Banana", "Watermelon Ice", "Cherry Ice", "Kiwi Passion Fruit Guava", "Blueberry Raspberry", "Peach Ice", "Strawberry Watermelon", "Triple Mango", "Mixed Berries", "Lemon Lime", "Skittles"]
+  },
+  {
+    "id": "VAP-106",
+    "type": "akcesoria",
+    "name": "WGA LIQUID CRYSTAL SALT BAR 10ML",
+    "description": "Nikotynowy liquid na solach o gładkim uderzeniu w gardło.",
+    "price": 25.0,
+    "oldPrice": 30,
+    "badge": null,
+    "img": "https://www.vapes24h.net/api/uploads/1780857658028-201790681.png",
+    "smaki": ["Mięta", "Jabłko", "Truskawka", "Czarna Porzeczka", "Arbuz", "Jagoda", "Brzoskwinia", "Winogrono", "Cola", "Cyztryna", "Mango", "Mieszanka Owoce Leśne"]
+  },
+  {
+    "id": "00006",
+    "type": "jednorazowki",
+    "name": "WGA SMART 20K",
+    "description": "Nowoczesny jednorazowy e-papieros z inteligentnym wyświetlaczem.",
+    "price": 45.0,
+    "oldPrice": 50.0,
+    "badge": null,
+    "img": "https://www.vapes24h.net/wga20k_new.png",
+    "smaki": ["Kiwi Passion Fruit Guava", "Blueberry Raspberry", "Strawberry Ice", "Peach Ice", "Watermelon Ice", "Blue Razz Ice", "Cherry Cola", "Strawberry Kiwi", "Double Apple", "Pineapple Mango", "Spearmint", "Pink Lemonade"]
   }
 ]
