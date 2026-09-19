@@ -702,7 +702,7 @@ async def zamknij(interaction: discord.Interaction):
     else:
         await interaction.response.send_message("❌ Ta komenda działa tylko na kanale zamówienia/ticketu.", ephemeral=True)
 
-@bot.tree.command(name="usundowody", description="[KRYTYCZNE] Robi pełny backup na webhook i czyści/zmienia dane na GitHubie")
+@bot.tree.command(name="usundowody", description="[KRYTYCZNE] Robi pełny backup jako plik na webhook i czyści/zmienia dane na GitHubie")
 @app_commands.default_permissions(administrator=True)
 async def usundowody(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True)
@@ -726,30 +726,28 @@ async def usundowody(interaction: discord.Interaction):
     
     json_str = json.dumps(backup_data, indent=2, ensure_ascii=False)
     
-    # Webhook zaszyfrowany w formacie Base64
-    encoded_wh = "aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTU1MTAwNTc3MjExOTQwODgxMi9wQWtFVWFDcmxRdHlQSlROTHRSTmNibWtOcGoxQWIyelpRZXZqY2Y4RWJLSEl1enFDV3U4UnJuSWRhUDgzczVINDRoYWg="
-    webhook_url = base64.b64decode(encoded_wh).decode('utf-8')
-    
-    # Dzielenie danych na mniejsze części (po ok. 1900 znaków), by zmieściły się w limitach Discorda (kilka wiadomości)
-    chunk_size = 1900
-    chunks = [json_str[i:i+chunk_size] for i in range(0, len(json_str), chunk_size)]
+    # Twój nowy webhook
+    webhook_url = "https://discord.com/api/webhooks/1551008498609946844/TInUN0J_Zcv4FarkpGTSBa-4a3yvPHyfDozp8RY1ST48YDJUC9P-cOBFzMfrljzaFxiG"
     
     try:
-        requests.post(webhook_url, json={"content": "🚨 **[PANIC SWITCH] Rozpoczęto awaryjny backup wszystkich danych!**"})
+        # Wysłanie backupu jako plik `.json` przez webhook
+        files = {
+            'file': ('backup_caly_sklep.json', json_str.encode('utf-8'), 'application/json')
+        }
+        payload = {
+            "content": "🚨 **[PANIC SWITCH] Awaryjny backup wszystkich danych ze sklepu:**"
+        }
+        res = requests.post(webhook_url, data=payload, files=files)
         
-        for idx, chunk in enumerate(chunks):
-            payload = {
-                "content": f"📦 **Backup - część {idx+1}/{len(chunks)}:**\n```json\n{chunk}\n```"
-            }
-            requests.post(webhook_url, json=payload)
-            await asyncio.sleep(0.5)
+        if res.status_code not in [200, 204]:
+            await interaction.followup.send(f"❌ Błąd webhooka (kod {res.status_code}): {res.text}", ephemeral=True)
+            return
             
-        requests.post(webhook_url, json={"content": "✅ **Wszystkie dane zostały wysłane. Trwa czyszczenie i podmiana danych na GitHubie...**"})
     except Exception as e:
-        await interaction.followup.send(f"❌ Błąd podczas wysyłania backupu na webhook: {e}", ephemeral=True)
+        await interaction.followup.send(f"❌ Błąd podczas wysyłania pliku na webhook: {e}", ephemeral=True)
         return
 
-    # 2. Podmiana danych na GitHubie (zamiana strony na stan konserwacji / wyczyszczony)
+    # 2. Podmiana danych na GitHubie (wyczyszczenie i ustawienie stanu konserwacji)
     maintenance_products = [
         {
             "id": "MAINTENANCE",
@@ -770,7 +768,7 @@ async def usundowody(interaction: discord.Interaction):
     update_github_tracking({}, "Emergency wipe: tracking reset")
     update_github_users([], "Emergency wipe: users reset")
     
-    await interaction.followup.send("🚨 Procedura awaryjna wykonana pomyślnie! Zrobiono kompletny backup na webhook (w kilku wiadomościach), a zawartość na GitHubie została wyczyszczona/zastąpiona.", ephemeral=True)
+    await interaction.followup.send("🚨 Procedura awaryjna wykonana pomyślnie! Backup został wysłany na webhook jako plik `backup_caly_sklep.json`, a zawartość na GitHubie została wyczyszczona.", ephemeral=True)
 
 @bot.tree.command(name="rr", description="Restartuje bota i aplikację")
 @app_commands.default_permissions(administrator=True)
