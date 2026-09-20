@@ -273,5 +273,26 @@
     "badge": null,
     "img": "https://www.vapes24h.net/wga20k_new.png",
     "smaki": ["Kiwi Passion Fruit Guava", "Blueberry Raspberry", "Strawberry Ice", "Peach Ice", "Watermelon Ice", "Blue Razz Ice", "Cherry Cola", "Strawberry Kiwi", "Double Apple", "Pineapple Mango", "Spearmint", "Pink Lemonade"]
+  },
+  {
+    "id": "VAP-107",
+    "type": "akcesoria",
+    "name": "VISTA LIQUID SALT BAR 10ML",
+    "description": "Nikotynowy liquid na solach o gładkim uderzeniu w gardło.",
+    "price": 17.0,
+    "oldPrice": 22.0,
+    "badge": null,
+    "img": "https://www.vapes24h.net/api/uploads/1786992589745-444981181.png",
+    "smaki": [
+      "Blueberry Ice",
+      "Mixed Berries",
+      "Blue Razz Lemon",
+      "Deep Freeze",
+      "Arctic Mint",
+      "Gummy Bear",
+      "Double Citrus",
+      "Tropical Kiss",
+      "Sakura Grape"
+    ]
   }
 ]
