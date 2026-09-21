@@ -1,4 +1,5 @@
 flask
 flask-cors
-discord.py
 requests
+werkzeug
+discord.py
