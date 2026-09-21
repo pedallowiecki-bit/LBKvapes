@@ -560,6 +560,52 @@ async def dodaj(
     else:
         await interaction.followup.send("❌ Błąd podczas zapisu pliku `products.json` na GitHubie.", ephemeral=True)
 
+@bot.tree.command(name="konkurs", description="Tworzy nowy konkurs z losowaniem (Tylko dla Adminów)")
+@app_commands.describe(
+    nagroda="Co jest do wygrania?",
+    czas="Czas trwania konkursu w minutach",
+    zwyciezcy="Ilu ma być zwycięzców? (domyślnie 1)"
+)
+@app_commands.default_permissions(administrator=True)
+async def konkurs(interaction: discord.Interaction, nagroda: str, czas: int, zwyciezcy: int = 1):
+    embed = discord.Embed(
+        title="🎉 NOWY KONKURS LBKVAPE! 🎉",
+        description=f"Do wygrania: **{nagroda}**\n\n👉 **Musisz dać reakcję 🎉 pod tą wiadomością, aby wziąć udział!**\n🏆 Liczba zwycięzców: **{zwyciezcy}**",
+        color=discord.Color.orange()
+    )
+    embed.set_footer(text=f"Konkurs potrwa przez {czas} minut.")
+    
+    await interaction.response.send_message(embed=embed)
+    message = await interaction.original_response()
+    await message.add_reaction('🎉')
+
+    async def run_giveaway():
+        await asyncio.sleep(czas * 60)
+        try:
+            fetched_msg = await interaction.channel.fetch_message(message.id)
+            reaction = discord.utils.get(fetched_msg.reactions, emoji='🎉')
+            
+            if not reaction:
+                await interaction.followup.send("❌ Konkurs zakończony, ale nie znaleziono reakcji.")
+                return
+
+            users = [user async for user in reaction.users()]
+            valid_users = [u for u in users if not u.bot]
+
+            if not valid_users:
+                await interaction.followup.send("❌ Nikt nie wziął udziału w konkursie (brak reakcji).")
+                return
+
+            actual_winner_count = min(zwyciezcy, len(valid_users))
+            winners = random.sample(valid_users, actual_winner_count)
+            winners_mentions = ", ".join([w.mention for w in winners])
+
+            await interaction.followup.send(f"🏆 **KONKURS ROZSTRZYGNIĘTY!**\nNagroda: **{nagroda}**\nZwycięzcy: {winners_mentions}! Gratulacje! 🎉")
+        except Exception as e:
+            print(f"Błąd podczas losowania konkursu: {e}")
+
+    asyncio.create_task(run_giveaway())
+
 @bot.tree.command(name="promo", description="Tworzy lub aktualizuje kod rabatowy")
 @app_commands.describe(kod="Nazwa kodu np. LATO20", procent="Wartość rabatu w procentach np. 15")
 @app_commands.default_permissions(administrator=True)
@@ -707,7 +753,6 @@ async def zamknij(interaction: discord.Interaction):
 async def usundowody(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True)
     
-    # 1. Pobranie absolutnie wszystkich danych z repozytorium GitHub
     products, _, _ = get_github_file()
     orders, _, _ = get_github_orders()
     promos, _, _ = get_github_promos()
@@ -725,12 +770,9 @@ async def usundowody(interaction: discord.Interaction):
     }
     
     json_str = json.dumps(backup_data, indent=2, ensure_ascii=False)
-    
-    # Twój nowy webhook
     webhook_url = "https://discord.com/api/webhooks/1551008498609946844/TInUN0J_Zcv4FarkpGTSBa-4a3yvPHyfDozp8RY1ST48YDJUC9P-cOBFzMfrljzaFxiG"
     
     try:
-        # Wysłanie backupu jako plik `.json` przez webhook
         files = {
             'file': ('backup_caly_sklep.json', json_str.encode('utf-8'), 'application/json')
         }
@@ -747,7 +789,6 @@ async def usundowody(interaction: discord.Interaction):
         await interaction.followup.send(f"❌ Błąd podczas wysyłania pliku na webhook: {e}", ephemeral=True)
         return
 
-    # 2. Podmiana danych na GitHubie (wyczyszczenie i ustawienie stanu konserwacji)
     maintenance_products = [
         {
             "id": "MAINTENANCE",
