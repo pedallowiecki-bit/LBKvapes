@@ -20,7 +20,6 @@ DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_REPO = os.getenv("GITHUB_REPO")
 GUILD_ID = os.getenv("GUILD_ID")
-ADMIN_CHANNEL_ID = os.getenv("ADMIN_CHANNEL_ID")
 
 CLIENT_ROLE_ID = "1545554046230855870"
 
@@ -379,11 +378,8 @@ class ReviewModal(discord.ui.Modal, title="Oceń nasz sklep"):
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.send_message("✅ Twoja opinia została przesłana do weryfikacji przez administrację!", ephemeral=True)
         
-        admin_channel = None
-        if ADMIN_CHANNEL_ID:
-            admin_channel = interaction.guild.get_channel(int(ADMIN_CHANNEL_ID))
-        if not admin_channel:
-            admin_channel = interaction.channel
+        # Wysyła wiadomość z opinią bezpośrednio na kanał, na którym kliknięto przycisk
+        admin_channel = interaction.channel
 
         embed = discord.Embed(title="⭐ Nowa Opinia do Weryfikacji", color=discord.Color.gold())
         embed.add_field(name="👤 Użytkownik", value=interaction.user.mention, inline=True)
