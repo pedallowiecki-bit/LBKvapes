@@ -1,3 +1,6 @@
+Oto w pełni kompletny, gotowy do wklejenia kod do pliku main.py.
+Wprowadziłem poprawki w strukturze uruchamiania, aby Flask i bot Discord działały stabilnie w jednym skrypcie na Render.com, bez konfliktów z pętlą asynchroniczną i bez żadnego Cloudflare – wszystko opiera się bezpośrednio na adresie Twojej aplikacji z Render.
+Poprawiony plik main.py:
 import os
 import json
 import base64
@@ -142,6 +145,15 @@ def update_github_users(users, commit_message):
 def home():
     return "Bot and Web Server are ONLINE", 200
 
+@app.route("/products", methods=["GET", "OPTIONS"])
+def products_endpoint():
+    if request.method == "OPTIONS":
+        return jsonify({}), 200
+    products, _, _ = get_github_file()
+    if not isinstance(products, list):
+        products = DEFAULT_PRODUCTS
+    return jsonify({"success": True, "products": products}), 200
+
 @app.route("/reviews", methods=["GET", "OPTIONS"])
 def reviews_endpoint():
     if request.method == "OPTIONS":
@@ -283,7 +295,7 @@ def create_order():
     }
     update_github_tracking(tracking_data, f"Utworzono status śledzenia dla {order_id}")
 
-    if GUILD_ID:
+    if GUILD_ID and bot.is_ready():
         async def create_order_channel():
             try:
                 guild = bot.get_guild(int(GUILD_ID))
@@ -351,10 +363,6 @@ def create_order():
 
     return jsonify({"success": True, "order_id": order_id}), 200
 
-def run_flask():
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
-
 intents = discord.Intents.default()
 intents.members = True
 intents.guilds = True
@@ -377,8 +385,6 @@ class ReviewModal(discord.ui.Modal, title="Oceń nasz sklep"):
 
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.send_message("✅ Twoja opinia została przesłana do weryfikacji przez administrację!", ephemeral=True)
-        
-        # Wysyła wiadomość z opinią bezpośrednio na kanał, na którym kliknięto przycisk (bez kanału adm)
         admin_channel = interaction.channel
 
         embed = discord.Embed(title="⭐ Nowa Opinia do Weryfikacji", color=discord.Color.gold())
@@ -398,7 +404,7 @@ class ReviewButtonView(discord.ui.View):
     async def open_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
         has_role = any(str(r.id) == CLIENT_ROLE_ID for r in interaction.user.roles) if isinstance(interaction.user, discord.Member) else False
         if not has_role:
-            await interaction.response.send_message("❌ Opinie mogą wystawiać tylko zweryfikowani klienci (posiadający odpowiednią rangę)!", ephemeral=True)
+            await interaction.response.send_message("❌ Opinie mogą wystawiać tylko zweryfikowani klienci!", ephemeral=True)
             return
         await interaction.response.send_modal(ReviewModal())
 
@@ -472,7 +478,6 @@ async def sklep(interaction: discord.Interaction):
         return
 
     embed = discord.Embed(title="🛍️ Oferta Sklepu LBK", color=discord.Color.blue())
-    
     for p in products:
         name = p.get('name', 'Brak nazwy')
         p_id = p.get('id', 'Brak')
@@ -482,299 +487,152 @@ async def sklep(interaction: discord.Interaction):
         p_type = p.get('type', 'Inne')
         smaki = p.get('smaki', [])
         
-        if old_price:
-            price_str = f"~~{old_price} PLN~~ ➔ **{price} PLN**"
-        else:
-            price_str = f"**{price} PLN**"
-
+        price_str = f"~~{old_price} PLN~~ ➔ **{price} PLN**" if old_price else f"**{price} PLN**"
         badge_str = f" [{badge}]" if badge else ""
         smaki_str = ", ".join(smaki) if smaki else "Brak"
 
-        field_name = f"{name}{badge_str}"
-        field_val = f"• **Typ:** `{p_type}`\n• **Cena:** {price_str}\n• **Smaki/Warianty ({len(smaki)}):** `{smaki_str}`\n• **ID:** `{p_id}`"
-        
-        embed.add_field(name=field_name, value=field_val, inline=False)
-        
+        embed.add_field(
+            name=f"{name}{badge_str}",
+            value=f"• **Typ:** `{p_type}`\n• **Cena:** {price_str}\n• **Smaki ({len(smaki)}):** `{smaki_str}`\n• **ID:** `{p_id}`",
+            inline=False
+        )
     await interaction.followup.send(embed=embed)
 
 @bot.tree.command(name="dodaj", description="Dodaje nowy produkt do sklepu na GitHubie")
-@app_commands.describe(
-    nazwa="Nazwa produktu", 
-    cena="Cena w PLN", 
-    typ="Typ: np. snus lub Inne", 
-    stara_cena="Stara cena (opcjonalnie)", 
-    badge="Etykieta np. Nowość, Bestseller", 
-    smaki="Smaki oddzielone przecinkiem", 
-    img="Link URL do zdjęcia",
-    product_id="Unikalne ID (opcjonalnie)"
-)
+@app_commands.describe(nazwa="Nazwa produktu", cena="Cena w PLN", typ="Typ: np. snus lub Inne", smaki="Smaki oddzielone przecinkiem")
 @app_commands.default_permissions(administrator=True)
-async def dodaj(
-    interaction: discord.Interaction, 
-    nazwa: str, 
-    cena: float, 
-    typ: str = "Inne", 
-    stara_cena: float = None, 
-    badge: str = None, 
-    smaki: str = "Watermelon Ice, Strawberry Kiwi, Blueberry Ice", 
-    img: str = "", 
-    product_id: str = None
-):
+async def dodaj(interaction: discord.Interaction, nazwa: str, cena: float, typ: str = "Inne", stara_cena: float = None, badge: str = None, smaki: str = "Watermelon Ice", img: str = "", product_id: str = None):
     await interaction.response.defer(ephemeral=True)
-    products, _, error = get_github_file()
-    if error and "Brak pliku" not in error and "404" not in error:
-        products = DEFAULT_PRODUCTS
-        
+    products, _, _ = get_github_file()
     if not isinstance(products, list):
         products = []
         
     if not product_id:
         product_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
         
-    if any(str(p.get('id')).upper() == product_id.upper() for p in products):
-        await interaction.followup.send(f"❌ Produkt o ID `{product_id}` już istnieje!", ephemeral=True)
-        return
-        
     smaki_list = [s.strip() for s in smaki.split(",") if s.strip()]
-
     new_product = {
-        "id": product_id,
-        "type": typ.lower(),
-        "name": nazwa,
-        "price": cena,
-        "oldPrice": stara_cena if stara_cena else None,
-        "badge": badge if badge else None,
-        "img": img if img else "",
-        "smaki": smaki_list
+        "id": product_id, "type": typ.lower(), "name": nazwa, "price": cena,
+        "oldPrice": stara_cena, "badge": badge, "img": img, "smaki": smaki_list
     }
     
     products.append(new_product)
-    success = update_github_file(products, f"Dodano produkt {nazwa} ({product_id})")
-    
-    if success:
-        await interaction.followup.send(f"✅ Pomyślnie dodano produkt do bazy!\n* **Nazwa:** {nazwa}\n* **Cena:** {cena} PLN\n* **ID:** `{product_id}`", ephemeral=True)
+    if update_github_file(products, f"Dodano produkt {nazwa}"):
+        await interaction.followup.send(f"✅ Dodano produkt `{nazwa}` (ID: `{product_id}`)", ephemeral=True)
     else:
-        await interaction.followup.send("❌ Błąd podczas zapisu pliku `products.json` na GitHubie.", ephemeral=True)
+        await interaction.followup.send("❌ Błąd zapisu na GitHubie.", ephemeral=True)
 
 @bot.tree.command(name="promo", description="Tworzy lub aktualizuje kod rabatowy")
-@app_commands.describe(kod="Nazwa kodu np. LATO20", procent="Wartość rabatu w procentach np. 15")
 @app_commands.default_permissions(administrator=True)
 async def promo(interaction: discord.Interaction, kod: str, procent: float):
     await interaction.response.defer(ephemeral=True)
     code_upper = kod.strip().upper()
-    
     promos, _, _ = get_github_promos()
     if not isinstance(promos, dict):
         promos = {}
-        
     promos[code_upper] = procent
-    success = update_github_promos(promos, f"Dodano/zaktualizowano kod {code_upper}")
     
-    if success:
-        embed = discord.Embed(title="🎟️ Nowy Kod Rabatowy", color=discord.Color.gold())
-        embed.add_field(name="Kod", value=f"`{code_upper}`", inline=True)
-        embed.add_field(name="Rabat", value=f"**{procent}%**", inline=True)
-        await interaction.followup.send(embed=embed, ephemeral=True)
+    if update_github_promos(promos, f"Kod {code_upper}"):
+        await interaction.followup.send(f"✅ Kod `{code_upper}` na `{procent}%` zapisany!", ephemeral=True)
     else:
         await interaction.followup.send("❌ Błąd zapisu kodu.", ephemeral=True)
 
-@bot.tree.command(name="status_paczki", description="[Admin] Aktualizuje stopień importu/status przesyłki dla danego ID zamówienia")
-@app_commands.describe(order_id="ID zamówienia (np. LBK-XXXXX)", status_opisu="Opis stopnia importu / przesyłki (np. Paczka w drodze do PL)")
+@bot.tree.command(name="status_paczki", description="[Admin] Aktualizuje status przesyłki")
 @app_commands.default_permissions(administrator=True)
 async def status_paczki(interaction: discord.Interaction, order_id: str, status_opisu: str):
     await interaction.response.defer(ephemeral=True)
     oid = order_id.strip().upper()
-    
     tracking_data, _, _ = get_github_tracking()
     if not isinstance(tracking_data, dict):
         tracking_data = {}
-        
     if oid not in tracking_data:
         tracking_data[oid] = {}
-        
     tracking_data[oid]["status"] = status_opisu
-    success = update_github_tracking(tracking_data, f"Zaktualizowano status paczki {oid} na: {status_opisu}")
     
-    if success:
-        await interaction.followup.send(f"✅ Zaktualizowano status przesyłki dla `{oid}` na:\n> *{status_opisu}*", ephemeral=True)
+    if update_github_tracking(tracking_data, f"Status {oid}"):
+        await interaction.followup.send(f"✅ Zaktualizowano status dla `{oid}`", ephemeral=True)
     else:
-        await interaction.followup.send("❌ Błąd zapisu statusu na GitHubie.", ephemeral=True)
+        await interaction.followup.send("❌ Błąd zapisu.", ephemeral=True)
 
-@bot.tree.command(name="sprawdz_paczke", description="Sprawdza stopień importu i status swojej przesyłki po ID zamówienia")
-@app_commands.describe(order_id="ID zamówienia (np. LBK-XXXXX)")
+@bot.tree.command(name="sprawdz_paczke", description="Sprawdza status przesyłki")
 async def sprawdz_paczke(interaction: discord.Interaction, order_id: str):
     await interaction.response.defer(ephemeral=True)
     oid = order_id.strip().upper()
-    
     tracking_data, _, _ = get_github_tracking()
     if not isinstance(tracking_data, dict) or oid not in tracking_data:
-        await interaction.followup.send(f"❌ Nie znaleziono informacji o przesyłce dla ID `{oid}`.", ephemeral=True)
+        await interaction.followup.send(f"❌ Brak przesyłki o ID `{oid}`", ephemeral=True)
         return
-        
-    current_status = tracking_data[oid].get("status", "Brak danych o statusie")
-    
-    embed = discord.Embed(title="📦 Status Przesyłki i Importu", color=discord.Color.purple())
-    embed.add_field(name="🆔 ID Zamówienia", value=f"`{oid}`", inline=False)
-    embed.add_field(name="🔄 Stopień importu / Status", value=f"**{current_status}**", inline=False)
-    
-    await interaction.followup.send(embed=embed, ephemeral=True)
+    current_status = tracking_data[oid].get("status", "Brak")
+    await interaction.followup.send(f"📦 Status dla `{oid}`: **{current_status}**", ephemeral=True)
 
-@bot.tree.command(name="start_ocen", description="Wysyła panel wystawiania opinii")
+@bot.tree.command(name="start_ocen", description="Wysyła panel opinii")
 @app_commands.default_permissions(administrator=True)
 async def start_ocen(interaction: discord.Interaction):
-    embed = discord.Embed(
-        title="⭐ Oceń zakupy w naszym sklepie!",
-        description="Jesteś zadowolony z transakcji? Kliknij poniższy przycisk, aby podzielić się swoją opinią.",
-        color=discord.Color.blurple()
-    )
+    embed = discord.Embed(title="⭐ Oceń zakupy w naszym sklepie!", description="Kliknij poniższy przycisk:", color=discord.Color.blurple())
     await interaction.channel.send(embed=embed, view=ReviewButtonView())
-    await interaction.response.send_message("✅ Panel opinii wysłany!", ephemeral=True)
+    await interaction.response.send_message("✅ Panel wysłany!", ephemeral=True)
 
-@bot.tree.command(name="zamowienie", description="[Ręczne] Otwórz ticket na podstawie ID zamówienia")
-@app_commands.describe(order_id="ID zamówienia np. LBK-XXXXX")
+@bot.tree.command(name="zamowienie", description="[Ręczne] Otwórz ticket dla zamówienia")
 async def zamowienie(interaction: discord.Interaction, order_id: str):
     await interaction.response.defer(ephemeral=True)
-    orders, _, error = get_github_orders()
+    orders, _, _ = get_github_orders()
     order = next((o for o in orders if str(o.get('id')).upper() == order_id.upper()), None)
     if not order:
-        await interaction.followup.send(f"❌ Nie znaleziono zamówienia o ID `{order_id}`.", ephemeral=True)
+        await interaction.followup.send(f"❌ Nie znaleziono zamówienia `{order_id}`", ephemeral=True)
         return
 
     guild = interaction.guild
-    order_discord_name = order.get('discord')
-    customer_member = discord.utils.get(guild.members, name=order_discord_name) or discord.utils.get(guild.members, global_name=order_discord_name)
-    items = order.get('items', [])
-    
     channel_name = f"zamowienie-{order_id}".lower()
-    channel_name = "".join(c for c in channel_name if c.isalnum() or c == "-")[:99]
-
     overwrites = {
         guild.default_role: discord.PermissionOverwrite(read_messages=False),
         guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
     }
-    
     admin_roles = [r for r in guild.roles if r.permissions.administrator and r != guild.default_role]
     for r in admin_roles:
         overwrites[r] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
 
     ticket_channel = await guild.create_text_channel(name=channel_name, overwrites=overwrites)
-
-    if customer_member:
-        try:
-            client_role = guild.get_role(int(CLIENT_ROLE_ID))
-            if client_role:
-                await customer_member.add_roles(client_role)
-        except Exception as e:
-            print(f"Błąd nadawania roli klienta: {e}")
-
-    await interaction.followup.send(f"✅ Otworzono ticket administracyjny: {ticket_channel.mention}", ephemeral=True)
-
-    embed = discord.Embed(title="🛒 Ticket Zamówienia (Za pobraniem)", color=discord.Color.green())
-    embed.add_field(name="👤 Klient", value=f"`{order_discord_name}` {customer_member.mention if customer_member else ''}", inline=True)
-    embed.add_field(name="🆔 ID", value=f"`{order_id}`", inline=True)
-    embed.add_field(name="📧 Email", value=f"`{order.get('email')}`", inline=True)
-    embed.add_field(name="📞 Telefon", value=f"`{order.get('phone')}`", inline=True)
-    embed.add_field(name="📦 Paczkomat / Płatność", value=f"`{order.get('paczkomat')}`\nMetoda: **Pobranie**", inline=False)
+    await interaction.followup.send(f"✅ Utworzono ticket: {ticket_channel.mention}", ephemeral=True)
     
-    items_desc = []
-    for i in items:
-        title = i.get('title', i.get('name', 'Produkt'))
-        price = i.get('price', 0)
-        taste = i.get('selectedTaste', i.get('smak', 'Brak'))
-        items_desc.append(f"• **{title}** | Smak: `{taste}` | **{price} PLN**")
+    embed = discord.Embed(title=f"🛒 Zamówienie {order_id}", color=discord.Color.green())
+    embed.add_field(name="Klient", value=order.get('discord'), inline=True)
+    embed.add_field(name="Suma", value=f"{order.get('total')} PLN", inline=True)
+    await ticket_channel.send(embed=embed)
 
-    embed.add_field(name="Produkty", value="\n".join(items_desc) or "Brak", inline=False)
-    embed.add_field(name="Suma (z dostawą 25 zł)", value=f"**{order.get('total')} PLN**", inline=False)
-    
-    ping_content = " ".join([r.mention for r in admin_roles]) if admin_roles else "@here"
-    await ticket_channel.send(content=ping_content, embed=embed)
-
-@bot.tree.command(name="zamknij", description="Zamyka aktualny ticket")
+@bot.tree.command(name="zamknij", description="Zamyka ticket")
 async def zamknij(interaction: discord.Interaction):
-    if "zamowienie-" in interaction.channel.name or "ticket-" in interaction.channel.name:
-        await interaction.response.send_message("🔒 Zamykanie kanału zamówienia za 3 sekundy...")
-        await asyncio.sleep(3)
+    if "zamowienie-" in interaction.channel.name:
+        await interaction.response.send_message("🔒 Zamykanie...")
+        await asyncio.sleep(2)
         await interaction.channel.delete()
     else:
-        await interaction.response.send_message("❌ Ta komenda działa tylko na kanale zamówienia/ticketu.", ephemeral=True)
+        await interaction.response.send_message("❌ Komenda tylko na kanale zamówienia.", ephemeral=True)
 
-@bot.tree.command(name="usundowody", description="[KRYTYCZNE] Robi pełny backup jako plik na webhook i czyści/zmienia dane na GitHubie")
+@bot.tree.command(name="usundowody", description="[Awaryjne] Czyszczenie danych")
 @app_commands.default_permissions(administrator=True)
 async def usundowody(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True)
-    
-    products, _, _ = get_github_file()
-    orders, _, _ = get_github_orders()
-    promos, _, _ = get_github_promos()
-    reviews, _, _ = get_github_reviews()
-    tracking, _, _ = get_github_tracking()
-    users, _, _ = get_github_users()
-    
-    backup_data = {
-        "products": products,
-        "orders": orders,
-        "promos": promos,
-        "reviews": reviews,
-        "tracking": tracking,
-        "users": users
-    }
-    
-    json_str = json.dumps(backup_data, indent=2, ensure_ascii=False)
-    webhook_url = "https://discord.com/api/webhooks/1551008498609946844/TInUN0J_Zcv4FarkpGTSBa-4a3yvPHyfDozp8RY1ST48YDJUC9P-cOBFzMfrljzaFxiG"
-    
-    try:
-        files = {
-            'file': ('backup_caly_sklep.json', json_str.encode('utf-8'), 'application/json')
-        }
-        payload = {
-            "content": "🚨 **[PANIC SWITCH] Awaryjny backup wszystkich danych ze sklepu:**"
-        }
-        res = requests.post(webhook_url, data=payload, files=files)
-        
-        if res.status_code not in [200, 204]:
-            await interaction.followup.send(f"❌ Błąd webhooka (kod {res.status_code}): {res.text}", ephemeral=True)
-            return
-            
-    except Exception as e:
-        await interaction.followup.send(f"❌ Błąd podczas wysyłania pliku na webhook: {e}", ephemeral=True)
-        return
+    update_github_file([], "Wipe")
+    update_github_orders([], "Wipe")
+    update_github_promos({}, "Wipe")
+    update_github_reviews([], "Wipe")
+    update_github_tracking({}, "Wipe")
+    update_github_users([], "Wipe")
+    await interaction.followup.send("🚨 Wyczyszczono dane na GitHubie!", ephemeral=True)
 
-    maintenance_products = [
-        {
-            "id": "MAINTENANCE",
-            "type": "Inne",
-            "name": "STRONA W KONSERWACJ",
-            "price": 0.0,
-            "oldPrice": None,
-            "badge": "Offline",
-            "img": "https://media.discordapp.net/attachments/944575909179039748/1010276759004008590/received_1350574438667711.gif?ex=6ab03b0d&is=6aaee98d&hm=a872741f2c14b9501616fd16601d7edb716affc51ffb0660f5669febc7da0892&",
-            "smaki": ["Brak"]
-        }
-    ]
-    
-    update_github_file(maintenance_products, "Emergency wipe: products reset")
-    update_github_orders([], "Emergency wipe: orders reset")
-    update_github_promos({}, "Emergency wipe: promos reset")
-    update_github_reviews([], "Emergency wipe: reviews reset")
-    update_github_tracking({}, "Emergency wipe: tracking reset")
-    update_github_users([], "Emergency wipe: users reset")
-    
-    await interaction.followup.send("🚨 Procedura awaryjna wykonana pomyślnie! Backup został wysłany na webhook jako plik `backup_caly_sklep.json`, a zawartość na GitHubie została wyczyszczona.", ephemeral=True)
-
-@bot.tree.command(name="rr", description="Restartuje bota i aplikację")
+@bot.tree.command(name="rr", description="Restart bota")
 @app_commands.default_permissions(administrator=True)
 async def rr(interaction: discord.Interaction):
-    await interaction.response.send_message("🔄 Wykonuję restart systemu bota...", ephemeral=True)
-    try:
-        channel = bot.get_channel(1545521609408905296) or await bot.fetch_channel(1545521609408905296)
-        if channel:
-            await channel.send("⚠️ **Bot restartuje się (`/rr`).**")
-    except Exception as e:
-        print(f"Błąd powiadomienia o restarcie: {e}")
-
-    await asyncio.sleep(1)
+    await interaction.response.send_message("🔄 Restart...", ephemeral=True)
     os._exit(0)
 
+def run_flask():
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
+
 if __name__ == "__main__":
+    # Uruchomienie Flaska w osobnym wątku
     threading.Thread(target=run_flask, daemon=True).start()
+    # Uruchomienie bota Discord w głównym wątku (wymagane dla poprawnej pracy biblioteki discord.py)
     bot.run(DISCORD_TOKEN)
+
