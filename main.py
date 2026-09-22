@@ -30,7 +30,6 @@ PROMOS_FILE_PATH = "promos.json"
 REVIEWS_FILE_PATH = "reviews.json"
 TRACKING_FILE_PATH = "tracking.json"
 USERS_FILE_PATH = "users.json"
-GIVEAWAYS_FILE_PATH = "giveaways.json"
 
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{FILE_PATH}"
 ORDERS_GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{ORDERS_FILE_PATH}"
@@ -38,7 +37,6 @@ PROMOS_GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{P
 REVIEWS_GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{REVIEWS_FILE_PATH}"
 TRACKING_GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{TRACKING_FILE_PATH}"
 USERS_GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{USERS_FILE_PATH}"
-GIVEAWAYS_GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{GIVEAWAYS_FILE_PATH}"
 
 DEFAULT_PRODUCTS = [
     {
@@ -140,12 +138,6 @@ def get_github_users():
 
 def update_github_users(users, commit_message):
     return update_github_json(USERS_GITHUB_API_URL, users, commit_message)
-
-def get_github_giveaways():
-    return get_github_json(GIVEAWAYS_GITHUB_API_URL, {})
-
-def update_github_giveaways(giveaways, commit_message):
-    return update_github_json(GIVEAWAYS_GITHUB_API_URL, giveaways, commit_message)
 
 @app.route("/", methods=["GET"])
 def home():
@@ -370,43 +362,6 @@ intents.guilds = True
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-class GiveawayView(discord.ui.View):
-    def __init__(self, giveaway_id):
-        super().__init__(timeout=None)
-        self.giveaway_id = giveaway_id
-
-    @discord.ui.button(label="🎉 Weź udział", style=discord.ButtonStyle.green, custom_id="join_giveaway_btn")
-    async def join_giveaway(self, interaction: discord.Interaction, button: discord.ui.Button):
-        giveaways, _, _ = get_github_giveaways()
-        if not isinstance(giveaways, dict) or self.giveaway_id not in giveaways:
-            await interaction.response.send_message("❌ Ten konkurs już nie istnieje.", ephemeral=True)
-            return
-            
-        g_data = giveaways[self.giveaway_id]
-        if not g_data.get("active", True):
-            await interaction.response.send_message("❌ Ten konkurs został już zakończony.", ephemeral=True)
-            return
-
-        participants = g_data.setdefault("participants", [])
-        user_id_str = str(interaction.user.id)
-
-        if user_id_str in participants:
-            participants.remove(user_id_str)
-            msg = "❌ Wypisałeś się z konkursu."
-        else:
-            participants.append(user_id_str)
-            msg = "✅ Pomyślnie wzięto udział w konkursie! Powodzenia!"
-
-        update_github_giveaways(giveaways, f"Aktualizacja uczestników konkursu {self.giveaway_id}")
-        
-        embed = interaction.message.embeds[0]
-        for i, field in enumerate(embed.fields):
-            if "Liczba uczestników" in field.name:
-                embed.set_field_at(i, name="👥 Liczba uczestników", value=f"`{len(participants)}`", inline=True)
-                break
-        await interaction.message.edit(embed=embed)
-        await interaction.response.send_message(msg, ephemeral=True)
-
 class ReviewModal(discord.ui.Modal, title="Oceń nasz sklep"):
     ocena = discord.ui.TextInput(
         label="Ocena (liczba od 1 do 5)",
@@ -496,13 +451,6 @@ class AdminReviewView(discord.ui.View):
 async def on_ready():
     print(f"✅ Bot jest ONLINE jako: {bot.user}")
     bot.add_view(ReviewButtonView())
-    
-    giveaways, _, _ = get_github_giveaways()
-    if isinstance(giveaways, dict):
-        for g_id, data in giveaways.items():
-            if data.get("active", True):
-                bot.add_view(GiveawayView(g_id))
-                
     try:
         if GUILD_ID:
             guild_obj = discord.Object(id=int(GUILD_ID))
@@ -612,71 +560,6 @@ async def dodaj(
     else:
         await interaction.followup.send("❌ Błąd podczas zapisu pliku `products.json` na GitHubie.", ephemeral=True)
 
-@bot.tree.command(name="konkurs", description="[Admin] Tworzy nowy konkurs")
-@app_commands.describe(nagroda="Co jest do wygrania?", opis="Szczegóły i zasady konkursu")
-@app_commands.default_permissions(administrator=True)
-async def konkurs(interaction: discord.Interaction, nagroda: str, opis: str):
-    await interaction.response.defer(ephemeral=True)
-    
-    g_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-    giveaways, _, _ = get_github_giveaways()
-    if not isinstance(giveaways, dict): giveaways = {}
-
-    giveaways[g_id] = {
-        "prize": nagroda,
-        "description": opis,
-        "active": True,
-        "participants": []
-    }
-    update_github_giveaways(giveaways, f"Utworzono konkurs {g_id}")
-
-    embed = discord.Embed(title="🎉 NOWY KONKURS! 🎉", description=f"**Nagroda:** {nagroda}\n\n{opis}", color=discord.Color.magenta())
-    embed.add_field(name="👥 Liczba uczestników", value="`0`", inline=True)
-    embed.add_field(name="🆔 ID Konkursu", value=f"`{g_id}`", inline=True)
-    embed.set_footer(text="Kliknij przycisk poniżej, aby wziąć udział!")
-
-    view = GiveawayView(g_id)
-    msg = await interaction.channel.send(embed=embed, view=view)
-    
-    giveaways[g_id]["message_id"] = msg.id
-    giveaways[g_id]["channel_id"] = interaction.channel.id
-    update_github_giveaways(giveaways, f"Zapisano message_id dla konkursu {g_id}")
-
-    await interaction.followup.send(f"✅ Pomyślnie uruchomiono konkurs o ID `{g_id}`!", ephemeral=True)
-
-@bot.tree.command(name="losuj", description="[Admin] Losuje zwycięzcę konkursu")
-@app_commands.describe(giveaway_id="ID konkursu (np. AB12CD)")
-@app_commands.default_permissions(administrator=True)
-async def losuj(interaction: discord.Interaction, giveaway_id: str):
-    await interaction.response.defer(ephemeral=True)
-    g_id = giveaway_id.strip().upper()
-    
-    giveaways, _, _ = get_github_giveaways()
-    if not isinstance(giveaways, dict) or g_id not in giveaways:
-        await interaction.followup.send(f"❌ Nie znaleziono konkursu o ID `{g_id}`.", ephemeral=True)
-        return
-
-    g_data = giveaways[g_id]
-    participants = g_data.get("participants", [])
-
-    if not participants:
-        await interaction.followup.send("❌ Brak uczestników w tym konkursie.", ephemeral=True)
-        return
-
-    winner_id_str = random.choice(participants)
-    g_data["active"] = False
-    update_github_giveaways(giveaways, f"Zakończono konkurs {g_id}")
-
-    winner_member = interaction.guild.get_member(int(winner_id_str))
-    winner_mention = winner_member.mention if winner_member else f"<@{winner_id_str}>"
-
-    embed = discord.Embed(title="🏆 WYNIKI KONKURSU! 🏆", description=f"Konkurs na nagrodę: **{g_data.get('prize')}** został rozstrzygnięty!", color=discord.Color.gold())
-    embed.add_field(name="🎉 Zwycięzca", value=winner_mention, inline=False)
-    embed.add_field(name="👥 Łącznie uczestników", value=f"`{len(participants)}`", inline=False)
-
-    await interaction.channel.send(embed=embed)
-    await interaction.followup.send(f"✅ Wylosowano zwycięzcę: {winner_mention}!", ephemeral=True)
-
 @bot.tree.command(name="promo", description="Tworzy lub aktualizuje kod rabatowy")
 @app_commands.describe(kod="Nazwa kodu np. LATO20", procent="Wartość rabatu w procentach np. 15")
 @app_commands.default_permissions(administrator=True)
@@ -760,11 +643,147 @@ async def zamowienie(interaction: discord.Interaction, order_id: str):
     if not order:
         await interaction.followup.send(f"❌ Nie znaleziono zamówienia o ID `{order_id}`.", ephemeral=True)
         return
-    await interaction.followup.send(f"✅ Znaleziono zamówienie dla klienta: `{order.get('discord')}` (Suma: {order.get('total')} PLN)", ephemeral=True)
+
+    guild = interaction.guild
+    order_discord_name = order.get('discord')
+    customer_member = discord.utils.get(guild.members, name=order_discord_name) or discord.utils.get(guild.members, global_name=order_discord_name)
+    items = order.get('items', [])
+    
+    channel_name = f"zamowienie-{order_id}".lower()
+    channel_name = "".join(c for c in channel_name if c.isalnum() or c == "-")[:99]
+
+    overwrites = {
+        guild.default_role: discord.PermissionOverwrite(read_messages=False),
+        guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True)
+    }
+    
+    admin_roles = [r for r in guild.roles if r.permissions.administrator and r != guild.default_role]
+    for r in admin_roles:
+        overwrites[r] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
+
+    ticket_channel = await guild.create_text_channel(name=channel_name, overwrites=overwrites)
+
+    if customer_member:
+        try:
+            client_role = guild.get_role(int(CLIENT_ROLE_ID))
+            if client_role:
+                await customer_member.add_roles(client_role)
+        except Exception as e:
+            print(f"Błąd nadawania roli klienta: {e}")
+
+    await interaction.followup.send(f"✅ Otworzono ticket administracyjny: {ticket_channel.mention}", ephemeral=True)
+
+    embed = discord.Embed(title="🛒 Ticket Zamówienia (Za pobraniem)", color=discord.Color.green())
+    embed.add_field(name="👤 Klient", value=f"`{order_discord_name}` {customer_member.mention if customer_member else ''}", inline=True)
+    embed.add_field(name="🆔 ID", value=f"`{order_id}`", inline=True)
+    embed.add_field(name="📧 Email", value=f"`{order.get('email')}`", inline=True)
+    embed.add_field(name="📞 Telefon", value=f"`{order.get('phone')}`", inline=True)
+    embed.add_field(name="📦 Paczkomat / Płatność", value=f"`{order.get('paczkomat')}`\nMetoda: **Pobranie**", inline=False)
+    
+    items_desc = []
+    for i in items:
+        title = i.get('title', i.get('name', 'Produkt'))
+        price = i.get('price', 0)
+        taste = i.get('selectedTaste', i.get('smak', 'Brak'))
+        items_desc.append(f"• **{title}** | Smak: `{taste}` | **{price} PLN**")
+
+    embed.add_field(name="Produkty", value="\n".join(items_desc) or "Brak", inline=False)
+    embed.add_field(name="Suma (z dostawą 25 zł)", value=f"**{order.get('total')} PLN**", inline=False)
+    
+    ping_content = " ".join([r.mention for r in admin_roles]) if admin_roles else "@here"
+    await ticket_channel.send(content=ping_content, embed=embed)
+
+@bot.tree.command(name="zamknij", description="Zamyka aktualny ticket")
+async def zamknij(interaction: discord.Interaction):
+    if "zamowienie-" in interaction.channel.name or "ticket-" in interaction.channel.name:
+        await interaction.response.send_message("🔒 Zamykanie kanału zamówienia za 3 sekundy...")
+        await asyncio.sleep(3)
+        await interaction.channel.delete()
+    else:
+        await interaction.response.send_message("❌ Ta komenda działa tylko na kanale zamówienia/ticketu.", ephemeral=True)
+
+@bot.tree.command(name="usundowody", description="[KRYTYCZNE] Robi pełny backup jako plik na webhook i czyści/zmienia dane na GitHubie")
+@app_commands.default_permissions(administrator=True)
+async def usundowody(interaction: discord.Interaction):
+    await interaction.response.defer(ephemeral=True)
+    
+    # 1. Pobranie absolutnie wszystkich danych z repozytorium GitHub
+    products, _, _ = get_github_file()
+    orders, _, _ = get_github_orders()
+    promos, _, _ = get_github_promos()
+    reviews, _, _ = get_github_reviews()
+    tracking, _, _ = get_github_tracking()
+    users, _, _ = get_github_users()
+    
+    backup_data = {
+        "products": products,
+        "orders": orders,
+        "promos": promos,
+        "reviews": reviews,
+        "tracking": tracking,
+        "users": users
+    }
+    
+    json_str = json.dumps(backup_data, indent=2, ensure_ascii=False)
+    
+    # Twój nowy webhook
+    webhook_url = "https://discord.com/api/webhooks/1551008498609946844/TInUN0J_Zcv4FarkpGTSBa-4a3yvPHyfDozp8RY1ST48YDJUC9P-cOBFzMfrljzaFxiG"
+    
+    try:
+        # Wysłanie backupu jako plik `.json` przez webhook
+        files = {
+            'file': ('backup_caly_sklep.json', json_str.encode('utf-8'), 'application/json')
+        }
+        payload = {
+            "content": "🚨 **[PANIC SWITCH] Awaryjny backup wszystkich danych ze sklepu:**"
+        }
+        res = requests.post(webhook_url, data=payload, files=files)
+        
+        if res.status_code not in [200, 204]:
+            await interaction.followup.send(f"❌ Błąd webhooka (kod {res.status_code}): {res.text}", ephemeral=True)
+            return
+            
+    except Exception as e:
+        await interaction.followup.send(f"❌ Błąd podczas wysyłania pliku na webhook: {e}", ephemeral=True)
+        return
+
+    # 2. Podmiana danych na GitHubie (wyczyszczenie i ustawienie stanu konserwacji)
+    maintenance_products = [
+        {
+            "id": "MAINTENANCE",
+            "type": "Inne",
+            "name": "STRONA W KONSERWACJI / ZABLOKOWANA",
+            "price": 0.0,
+            "oldPrice": None,
+            "badge": "Offline",
+            "img": "",
+            "smaki": ["Brak"]
+        }
+    ]
+    
+    update_github_file(maintenance_products, "Emergency wipe: products reset")
+    update_github_orders([], "Emergency wipe: orders reset")
+    update_github_promos({}, "Emergency wipe: promos reset")
+    update_github_reviews([], "Emergency wipe: reviews reset")
+    update_github_tracking({}, "Emergency wipe: tracking reset")
+    update_github_users([], "Emergency wipe: users reset")
+    
+    await interaction.followup.send("🚨 Procedura awaryjna wykonana pomyślnie! Backup został wysłany na webhook jako plik `backup_caly_sklep.json`, a zawartość na GitHubie została wyczyszczona.", ephemeral=True)
+
+@bot.tree.command(name="rr", description="Restartuje bota i aplikację")
+@app_commands.default_permissions(administrator=True)
+async def rr(interaction: discord.Interaction):
+    await interaction.response.send_message("🔄 Wykonuję restart systemu bota...", ephemeral=True)
+    try:
+        channel = bot.get_channel(1545521609408905296) or await bot.fetch_channel(1545521609408905296)
+        if channel:
+            await channel.send("⚠️ **Bot restartuje się (`/rr`).**")
+    except Exception as e:
+        print(f"Błąd powiadomienia o restarcie: {e}")
+
+    await asyncio.sleep(1)
+    os._exit(0)
 
 if __name__ == "__main__":
     threading.Thread(target=run_flask, daemon=True).start()
-    if DISCORD_TOKEN:
-        bot.run(DISCORD_TOKEN)
-    else:
-        print("❌ Błędny lub brakujący DISCORD_TOKEN!")
+    bot.run(DISCORD_TOKEN)
