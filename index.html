@@ -125,7 +125,7 @@
           <div class="bg-neutral-950/80 border border-neutral-800 hover:border-orange-500/50 p-4 rounded-2xl text-center flex flex-col items-center justify-center shadow-sm transition-all">
             <span class="text-xl mb-1">📦</span>
             <strong class="text-xs font-black block text-white">Paczkomat (+25 zł)</strong>
-            <span class="text-[10px] text-neutral-400 font-medium">Stały koszt dostawy</span>
+            <span class="text-[10px] text-neutral-400 font-medium">Stały kosz dostawy</span>
           </div>
           <div class="bg-neutral-950/80 border border-neutral-800 hover:border-orange-500/50 p-4 rounded-2xl text-center flex flex-col items-center justify-center shadow-sm transition-all">
             <span class="text-xl mb-1">🛡️</span>
@@ -223,7 +223,7 @@
     <!-- NAGŁÓWEK KATALOGU I KOSZYK TRIGGER -->
     <header class="max-w-[1400px] mx-auto px-6 pt-8 pb-4 flex justify-between items-end border-b border-neutral-800">
       <h1 class="text-xl font-black tracking-tight uppercase text-white">Katalog produktów LBKVAPE</h1>
-      <button onclick="openCartDrawer()" class="bg-neutral-900 border border-neutral-800 hover:border-orange-500 px-4 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer transition-all group text-neutral-200 shadow-sm">
+      <button onclick="openCartDrawer()" class="bg-neutral-900 border border-neutral-800 hover:border-orange-500 px-4 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer transition-all group text-neutral-200">
         🛒 KOSZYK <span class="bg-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full" id="cart-count">0</span>
       </button>
     </header>
@@ -412,7 +412,10 @@
     const itemsPerPage = 12;
 
     function initStore() {
+      // Wyświetl od razu produkty domyślne z aktywnym filtrem "Wszystkie"
       filterProducts('all');
+      
+      // Pobierz świeże dane z JSON oraz pozostałe elementy w tle
       loadProductsFromJSON();
       loadReviews();
       checkAuthSession();
@@ -882,7 +885,7 @@
       const errDiv = document.getElementById('auth-error');
 
       if (!identifier || !password) {
-        errDiv.innerText = "Wypełnij wszystkie pola!";
+        errDiv.innerText = "Wypełnij সব pola!";
         errDiv.classList.remove('hidden');
         return;
       }
