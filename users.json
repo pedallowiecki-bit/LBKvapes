@@ -1,1 +1,7 @@
-[]
+[
+  {
+    "username": "Pawelczyk122",
+    "email": "dzdzpawel2000@gmail.com",
+    "password": "scrypt:32768:8:1$I3c92qsAYDUUzYfp$5206738e11b15ba3071cb51cf31dbab1822d6e2fd950f62b5ad2f7bb165cd948459c7ea8cf4fee0c4f52d0c211936b37d01a81f4f35e6ab7301e14f1191e77dc"
+  }
+]
