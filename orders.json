@@ -55,5 +55,24 @@
     "shipping": 25.0,
     "total": 45.0,
     "payment": "Pobranie (Paczkomat)"
+  },
+  {
+    "id": "LBK-QH6M1",
+    "discord": "dejku2115",
+    "email": "dejdjdjdj.@gmail.com",
+    "phone": "212454649",
+    "paczkomat": "Mechan",
+    "items": [
+      {
+        "id": "VAP-102",
+        "name": "KARTRIDŻ OXVA - XLIM 2 ML (0.4Ω, 0.6Ω, 0.8Ω, 1.2Ω)",
+        "price": 20,
+        "selectedTaste": "0.4Ω",
+        "img": "https://www.vapes24h.net/api/uploads/1780853848672-975219883.png"
+      }
+    ],
+    "shipping": 25.0,
+    "total": 45.0,
+    "payment": "Pobranie (Paczkomat)"
   }
 ]
