@@ -74,5 +74,24 @@
     "shipping": 25.0,
     "total": 45.0,
     "payment": "Pobranie (Paczkomat)"
+  },
+  {
+    "id": "LBK-VR1W1",
+    "discord": "beblobo",
+    "email": "cwel@gmail.com",
+    "phone": "278967846",
+    "paczkomat": "dsgsd",
+    "items": [
+      {
+        "id": 1,
+        "name": "RandM Tornado 15000 - Strawberry Ice",
+        "price": 65,
+        "selectedTaste": "Watermelon Ice",
+        "img": "https://i.imgur.com/ZQxuHFT.png"
+      }
+    ],
+    "shipping": 25.0,
+    "total": 90.0,
+    "payment": "Pobranie (Paczkomat)"
   }
 ]
