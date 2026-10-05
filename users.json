@@ -3,5 +3,10 @@
     "username": "Pawelczyk122",
     "email": "dzdzpawel2000@gmail.com",
     "password": "scrypt:32768:8:1$DoPi6ODS59ekkDfd$3c38bc8e374c18ac5b65ef440fc061923c964b70e7201938f1d8d240a050800af8b422b8cb7a1949ab4a3d7f7274214927e631f27e825ac842b1f910d8b87aa5"
+  },
+  {
+    "username": "Fizzy_050",
+    "email": "hubertplotka9@gmail.com",
+    "password": "scrypt:32768:8:1$39gkG7I9hPJcaoDg$b7973367b20b72ad6c772dd08f5332e622d40934c813ee9e7779e8b737bd5dbcff9da0f6073cfbf198c8e023e22f644b0d59bf7d01ea5f588b2dcd25e623da63"
   }
 ]
