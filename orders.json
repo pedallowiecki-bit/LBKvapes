@@ -93,5 +93,24 @@
     "shipping": 25.0,
     "total": 90.0,
     "payment": "Pobranie (Paczkomat)"
+  },
+  {
+    "id": "LBK-V7KCU",
+    "discord": "Pawelczyk122",
+    "email": "dzdzpawel2000@gmail.com",
+    "phone": "536 539 401",
+    "paczkomat": "LII02M",
+    "items": [
+      {
+        "id": "00006",
+        "name": "WGA SMART 20K",
+        "price": 45,
+        "selectedTaste": "Watermelon Ice",
+        "img": "https://www.vapes24h.net/wga20k_new.png"
+      }
+    ],
+    "shipping": 25.0,
+    "total": 70.0,
+    "payment": "Pobranie (Paczkomat)"
   }
 ]
