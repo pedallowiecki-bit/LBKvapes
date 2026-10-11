@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pl" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LBKVAPE - Stan Magazynowy i Ilości</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } }
+    }
+  </script>
+</head>
+<body class="bg-neutral-950 text-neutral-100 font-sans min-h-screen p-6" onload="initInventory()">
+  <div class="max-w-4xl mx-auto w-full space-y-6">
+    <div class="flex items-center justify-between bg-neutral-900 p-5 rounded-3xl border border-neutral-800 shadow-xl">
+      <div>
+        <span class="text-[10px] font-black uppercase tracking-widest text-orange-500 block">Panel Kontrolny</span>
+        <h1 class="text-lg font-black uppercase text-white">Stan Magazynowy (Sztuki i Smaki)</h1>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="saveInventory()" class="bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold px-4 py-2.5 rounded-2xl transition-all cursor-pointer">💾 Zapisz stany</button>
+        <a href="index.html" class="bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-bold px-4 py-2.5 rounded-2xl transition-all">← Sklep</a>
+      </div>
+    </div>
+
+    <div class="bg-neutral-900 rounded-3xl p-6 border border-neutral-800 shadow-xl space-y-4">
+      <div class="flex justify-between items-center">
+        <p class="text-xs text-neutral-400">Tutaj widzisz każdy produkt i jego dokładne warianty smakowe. Wpisz aktualną liczbę sztuk.</p>
+        <span id="status-msg" class="text-xs text-green-400 font-bold hidden">Zapisano pomyślnie!</span>
+      </div>
+
+      <div id="inventory-list" class="space-y-4">
+        <p class="text-center text-neutral-500 py-8">Ładowanie stanów magazynowych...</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let products = [];
+    let inventoryData = {};
+
+    async function initInventory() {
+      try {
+        const res = await fetch('products.json?t=' + new Date().getTime());
+        products = await res.json();
+        
+        // Wczytaj zapisane ilości z localStorage
+        const saved = localStorage.getItem('lbk_inventory_qtys');
+        if (saved) {
+          inventoryData = JSON.parse(saved);
+        }
+
+        renderInventoryList();
+      } catch (e) {
+        document.getElementById('inventory-list').innerHTML = '<p class="text-center text-red-400 py-8">Błąd wczytywania bazy products.json.</p>';
+      }
+    }
+
+    function renderInventoryList() {
+      const container = document.getElementById('inventory-list');
+      let html = '';
+
+      products.forEach(p => {
+        html += `
+          <div class="bg-neutral-950 p-5 rounded-2xl border border-neutral-800 space-y-3">
+            <div class="flex items-center justify-between border-b border-neutral-800/80 pb-3">
+              <div class="flex items-center gap-3">
+                <img src="${p.img}" class="w-10 h-10 object-contain bg-neutral-900 rounded-xl p-1 border border-neutral-800">
+                <div>
+                  <span class="text-[10px] font-mono text-orange-500">${p.id}</span>
+                  <h3 class="text-xs font-black uppercase text-white">${p.name}</h3>
+                </div>
+              </div>
+              <span class="text-xs font-bold text-neutral-400 uppercase">${p.type || 'produkt'}</span>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 pt-1">
+        `;
+
+        if (p.smaki && p.smaki.length > 0) {
+          p.smaki.forEach(flavor => {
+            const key = `${p.id}_${flavor}`;
+            const qty = inventoryData[key] !== undefined ? inventoryData[key] : 0;
+            html += `
+              <div class="bg-neutral-900 p-3 rounded-xl border border-neutral-800 flex items-center justify-between gap-2">
+                <span class="text-xs text-neutral-300 font-medium truncate" title="${flavor}">${flavor}</span>
+                <input type="number" min="0" value="${qty}" onchange="updateQty('${p.id}', '${flavor}', this.value)" class="w-16 bg-neutral-950 text-orange-400 font-black text-center text-xs border border-neutral-700 rounded-lg py-1.5 focus:outline-none focus:border-orange-500">
+              </div>
+            `;
+          });
+        } else {
+          const key = `${p.id}_default`;
+          const qty = inventoryData[key] !== undefined ? inventoryData[key] : 0;
+          html += `
+            <div class="bg-neutral-900 p-3 rounded-xl border border-neutral-800 flex items-center justify-between gap-2 col-span-full">
+              <span class="text-xs text-neutral-300 font-medium">Brak wariantów (Ogólna ilość)</span>
+              <input type="number" min="0" value="${qty}" onchange="updateQty('${p.id}', 'default', this.value)" class="w-20 bg-neutral-950 text-orange-400 font-black text-center text-xs border border-neutral-700 rounded-lg py-1.5 focus:outline-none focus:border-orange-500">
+            </div>
+          `;
+        }
+
+        html += `</div></div>`;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function updateQty(productId, flavor, val) {
+      const key = `${productId}_${flavor}`;
+      inventoryData[key] = parseInt(val) || 0;
+    }
+
+    function saveInventory() {
+      localStorage.setItem('lbk_inventory_qtys', JSON.stringify(inventoryData));
+      const msg = document.getElementById('status-msg');
+      msg.classList.remove('hidden');
+      setTimeout(() => msg.classList.add('hidden'), 2500);
+    }
+  </script>
+</body>
+</html>
