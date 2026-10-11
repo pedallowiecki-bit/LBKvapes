@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pl" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LBKVAPE - Skaner Magazynowy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@zxing/library@0.19.10/umd/index.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } }
+    }
+  </script>
+</head>
+<body class="bg-neutral-950 text-neutral-100 font-sans min-h-screen p-6" onload="initScannerPage()">
+  <div class="max-w-xl mx-auto w-full space-y-6">
+    <div class="flex items-center justify-between bg-neutral-900 p-5 rounded-3xl border border-neutral-800 shadow-xl">
+      <div>
+        <span class="text-[10px] font-black uppercase tracking-widest text-orange-500 block">Magazyn LBKVAPE</span>
+        <h1 class="text-lg font-black uppercase text-white">Skaner Produktów</h1>
+      </div>
+      <a href="index.html" class="bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-bold px-4 py-2.5 rounded-2xl transition-all">← Sklep</a>
+    </div>
+
+    <div class="bg-neutral-900 rounded-3xl p-5 border border-neutral-800 shadow-xl space-y-4">
+      <div class="w-full h-64 bg-neutral-950 rounded-2xl overflow-hidden relative border border-neutral-800 flex items-center justify-center">
+        <video id="scanner-video" class="w-full h-full object-cover"></video>
+        <div class="absolute inset-0 border-2 border-orange-500/40 pointer-events-none rounded-2xl m-6 flex items-center justify-center">
+          <div class="w-full h-0.5 bg-orange-500 animate-pulse"></div>
+        </div>
+      </div>
+      <div id="scanner-status" class="text-xs text-orange-400 font-medium text-center">Ładowanie bazy z products.json...</div>
+      
+      <div class="flex gap-2">
+        <input type="text" id="manual-code-input" placeholder="Wpisz ID (np. SNUS-101)..." class="flex-1 bg-neutral-950 text-white border border-neutral-800 rounded-2xl px-4 py-3 text-xs focus:outline-none focus:border-orange-500">
+        <button onclick="handleManualSearch()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs px-5 rounded-2xl transition-all cursor-pointer">Szukaj</button>
+      </div>
+    </div>
+
+    <div id="scanned-result-card" class="hidden bg-neutral-900 rounded-3xl p-6 border border-neutral-800 shadow-xl space-y-4">
+      <div class="flex items-center gap-4">
+        <div class="w-24 h-24 bg-neutral-950 rounded-2xl overflow-hidden flex items-center justify-center p-2 border border-neutral-800 shrink-0">
+          <img id="res-img" src="" class="max-h-full object-contain">
+        </div>
+        <div class="flex-1 min-w-0">
+          <span id="res-id" class="text-[10px] font-mono text-orange-500 block">ID: ---</span>
+          <h3 id="res-name" class="text-sm font-black uppercase text-white truncate mt-1">Nazwa</h3>
+          <span id="res-price" class="text-base font-black text-orange-500 block mt-2">0.00 PLN</span>
+        </div>
+      </div>
+      <div class="bg-neutral-950 p-4 rounded-2xl border border-neutral-800">
+        <p class="text-xs text-neutral-400 mb-2 font-bold uppercase">Warianty / Smaki w bazie:</p>
+        <div id="res-flavors" class="flex flex-wrap gap-1.5"></div>
+      </div>
+      <button onclick="resetScanner()" class="w-full bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs py-3.5 rounded-2xl uppercase transition-all cursor-pointer">Skanuj kolejny</button>
+    </div>
+  </div>
+
+  <script>
+    let products = [];
+    let codeReader = null;
+    async function initScannerPage() {
+      try {
+        const res = await fetch('products.json?t=' + new Date().getTime());
+        products = await res.json();
+        document.getElementById('scanner-status').innerText = `Załadowano ${products.length} produktów.`;
+        startCamera();
+      } catch (e) {
+        document.getElementById('scanner-status').innerText = 'Błąd wczytywania products.json (wymagany serwer lokalny).';
+      }
+    }
+    function startCamera() {
+      codeReader = new ZXing.BrowserBarcodeReader();
+      codeReader.listVideoInputDevices().then(devices => {
+        if (devices.length > 0) {
+          codeReader.decodeFromVideoDevice(devices[0].deviceId, 'scanner-video', (result) => {
+            if (result) processCode(result.text);
+          });
+        }
+      }).catch(() => { document.getElementById('scanner-status').innerText = 'Błąd kamery.'; });
+    }
+    function handleManualSearch() {
+      const val = document.getElementById('manual-code-input').value.trim();
+      if (val) processCode(val);
+    }
+    function processCode(codeText) {
+      const clean = codeText.trim().toLowerCase();
+      const found = products.find(p => String(p.id).toLowerCase() === clean || p.name.toLowerCase().includes(clean));
+      if (found) displayProductResult(found);
+      else alert('Brak w bazie: ' + codeText);
+    }
+    function displayProductResult(p) {
+      document.getElementById('res-img').src = p.img || '';
+      document.getElementById('res-id').innerText = 'ID: ' + p.id;
+      document.getElementById('res-name').innerText = p.name;
+      document.getElementById('res-price').innerText = parseFloat(p.price).toFixed(2) + ' PLN';
+      const flavorsContainer = document.getElementById('res-flavors');
+      flavorsContainer.innerHTML = '';
+      if (p.smaki && p.smaki.length > 0) {
+        p.smaki.forEach(f => {
+          flavorsContainer.innerHTML += `<span class="bg-neutral-900 text-neutral-300 text-[10px] font-bold px-2.5 py-1 rounded-xl border border-neutral-800">${f}</span>`;
+        });
+      } else {
+        flavorsContainer.innerHTML = '<span class="text-xs text-neutral-500">Brak wariantów</span>';
+      }
+      document.getElementById('scanned-result-card').classList.remove('hidden');
+    }
+    function resetScanner() {
+      document.getElementById('scanned-result-card').classList.add('hidden');
+      document.getElementById('manual-code-input').value = '';
+    }
+  </script>
+</body>
+</html>
