@@ -2,85 +2,15 @@
   {
     "id": "SNUS-POP-100",
     "type": "snus",
-    "category": "snus",
     "name": "POP 100 MG",
-    "description": "Ekstremalnie mocne woreczki nikotynowe dla doświadczonych użytkowników od Vapespot.",
-    "price": 25.00,
-    "oldPrice": 32.00,
-    "badge": "MOCNY",
     "img": "https://i.imgur.com/jqt70pQ.png",
-    "smaki": ["Cold Mint", "Ice Mint", "Double Mint", "Strong Original"]
-  },
-  {
-    "id": "SNUS-STRIPE-40",
-    "type": "snus",
-    "category": "snus",
-    "name": "SNUSY STRIPE 40 MG",
-    "description": "Woreczki nikotynowe o zbalansowanej, średniej mocy z oferty Vapespot.",
-    "price": 22.00,
-    "oldPrice": 28.00,
-    "badge": "HIT",
-    "img": "https://i.imgur.com/G6uMyp1.png",
-    "smaki": ["Mint", "Blueberry", "Ice Cool", "Watermelon"]
-  },
-  {
-    "id": "SNUS-CUBA-66",
-    "type": "snus",
-    "category": "snus",
-    "name": "CUBA BLACK 66 MG",
-    "description": "Jedne z najmocniejszych woreczków nikotynowych dostarczane przez Vapespot.",
-    "price": 39.99,
-    "oldPrice": 49.99,
-    "badge": "TOP",
-    "img": "https://i.imgur.com/bB5ZytT.png",
-    "smaki": ["Black Currant", "Cherry", "Cola", "Energy Drink", "Pineapple", "Bubble Gum", "Blueberry", "Menthol", "Strawberry", "Peach"]
-  },
-  {
-    "id": "SNUS-BIT-20",
-    "type": "snus",
-    "category": "snus",
-    "name": "BIT 20 MG (EFEKT 50 MG)",
-    "description": "Woreczki nikotynowe o wysokiej wydajności z kolekcji Vapespot.",
-    "price": 24.99,
-    "oldPrice": 30.00,
-    "badge": null,
-    "img": "https://i.imgur.com/jqt70pQ.png",
-    "smaki": ["Cold Mint", "Strong", "Ice Mint", "Double Mint", "Cool Frost", "Spearmint"]
-  },
-  {
-    "id": "LIQ-FUCKED-65",
-    "type": "liquidy",
-    "category": "liquidy",
-    "name": "FUCKEDLAB 30 ML 65 MG",
-    "description": "Wysokiej jakości liquid solny o dużej mocy od Vapes 24h.",
-    "price": 49.99,
-    "oldPrice": 59.99,
-    "badge": "PREMIUM",
-    "img": "https://www.vapes24h.net/api/uploads/1780857658028-201790681.png",
-    "smaki": ["Mint", "Strawberry", "Grape", "Mango", "Blueberry"]
-  },
-  {
-    "id": "LIQ-WGA-10",
-    "type": "liquidy",
-    "category": "liquidy",
-    "name": "WGA LIQUID CRYSTAL SALT BAR 10ML",
-    "description": "Nikotynowy liquid na solach o gładkim uderzeniu w gardło z Vapes 24h.",
-    "price": 29.99,
-    "oldPrice": 38.00,
-    "badge": null,
-    "img": "https://www.vapes24h.net/api/uploads/1780857658028-201790681.png",
-    "smaki": ["Mięta", "Jabłko", "Truskawka", "Czarna Porzeczka", "Arbuz", "Jagoda", "Brzoskwinia", "Winogrono", "Cola", "Cytryna", "Mango", "Owoce Leśne"]
-  },
-  {
-    "id": "LIQ-VISTA-10",
-    "type": "liquidy",
-    "category": "liquidy",
-    "name": "VISTA LIQUID SALT BAR 10ML",
-    "description": "Odświeżający liquid solny do e-papierosów dostarczany przez Vapes 24h.",
-    "price": 24.99,
-    "oldPrice": 32.00,
-    "badge": null,
-    "img": "https://www.vapes24h.net/api/uploads/1786992589745-444981181.png",
-    "smaki": ["Blueberry Ice", "Mixed Berries", "Blue Razz Lemon", "Deep Freeze", "Arctic Mint", "Gummy Bear", "Double Citrus", "Tropical Kiss", "Sakura Grape"]
+    "smaki": [
+      "Cold Mint",
+      "Ice Mint"
+    ],
+    "stock": {
+      "Cold Mint": 10,
+      "Ice Mint": 5
+    }
   }
 ]
