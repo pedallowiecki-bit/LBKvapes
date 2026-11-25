@@ -1,955 +1,2833 @@
 <!DOCTYPE html>
-<html lang="pl" class="dark">
+<html lang="pl">
 <head>
-  <link rel="icon" type="image/gif" href="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZWpkd2pkNWZ4eHJrNGZoczZlc2lwZXFycjZybjRvdHRwZ3VlcXJicyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/7qHML6KGtUrLaMJQJZ/giphy.gif">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LBKVAPE - Oficjalny Sklep Snus i Liquid</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Inter', 'sans-serif'] },
-          colors: {
-            brand: {
-              50: '#fff7ed',
-              500: '#f97316',
-              600: '#ea580c',
-              700: '#c2410c',
-            }
-          },
-          borderRadius: {
-            '3xl': '1.75rem',
-            '4xl': '2rem',
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AETHER DAW — Web Audio Workstation & Synthesizer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* ==========================================================================
+           1. DESIGN TOKENS & PALETA STUDYJNA (HARDWARE DARK UI)
+           ========================================================================== */
+        :root {
+            --bg-chassis: #0b0d11;
+            --bg-panel: #13161d;
+            --bg-module: #191d26;
+            --bg-card: #202531;
+            --bg-input: #0e1015;
+            --border-dark: #07080a;
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-highlight: rgba(255, 255, 255, 0.16);
+
+            --accent-cyan: #00f0ff;
+            --accent-cyan-dim: rgba(0, 240, 255, 0.18);
+            --accent-amber: #ff9e00;
+            --accent-amber-dim: rgba(255, 158, 0, 0.2);
+            --accent-rose: #ff2a6d;
+            --accent-emerald: #05ffa1;
+            --accent-violet: #9d4edd;
+
+            --text-main: #f1f5f9;
+            --text-dim: #94a3b8;
+            --text-muted: #64748b;
+
+            --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+
+            --shadow-panel: 0 8px 24px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            --shadow-inset: inset 0 2px 6px rgba(0, 0, 0, 0.65);
         }
-      }
-    }
-  </script>
-  <style>
-    @keyframes marquee {
-      0% { transform: translateX(0%); }
-      100% { transform: translateX(-50%); }
-    }
-    .animate-marquee {
-      display: flex;
-      width: max-content;
-      animation: marquee 30s linear infinite;
-    }
-    .animate-marquee:hover {
-      animation-play-state: paused;
-    }
-    .spinner {
-      width: 16px;
-      height: 16px;
-      border: 3px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      border-top-color: #fff;
-      animation: spin 0.8s ease-in-out infinite;
-      display: inline-block;
-      vertical-align: middle;
-      margin-left: 8px;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed !important;
-    }
-  </style>
+
+        /* ==========================================================================
+           2. RESET I UKŁAD GŁÓWNY (DAW WORKSPACE GRID)
+           ========================================================================== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        html, body {
+            width: 100%;
+            min-height: 100vh;
+            background-color: var(--bg-chassis);
+            color: var(--text-main);
+            font-family: var(--font-ui);
+            font-size: 12px;
+            overflow-x: hidden;
+        }
+
+        /* Paski przewijania */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-input);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2e3545;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #434d63;
+        }
+
+        .daw-shell {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            max-width: 1920px;
+            margin: 0 auto;
+            padding: 8px;
+            gap: 8px;
+        }
+
+        /* ==========================================================================
+           3. GÓRNY PASEK TRANSPORTU (TRANSPORT BAR)
+           ========================================================================== */
+        .transport-bar {
+            background: linear-gradient(180deg, #1b1f29 0%, #12151c 100%);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            box-shadow: var(--shadow-panel);
+        }
+
+        .brand-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.35);
+            color: #05070a;
+            font-weight: 900;
+            font-size: 16px;
+        }
+
+        .brand-title {
+            font-weight: 800;
+            font-size: 15px;
+            letter-spacing: 0.8px;
+            color: #fff;
+        }
+
+        .brand-sub {
+            font-size: 10px;
+            color: var(--accent-cyan);
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Kontrolki Transportu */
+        .transport-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg-input);
+            padding: 5px 8px;
+            border-radius: 8px;
+            border: 1px solid var(--border-subtle);
+            box-shadow: var(--shadow-inset);
+        }
+
+        .hw-btn {
+            background: linear-gradient(180deg, #282e3d 0%, #1c202b 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 2px solid #090b0f;
+            color: var(--text-dim);
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-family: var(--font-ui);
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: all 0.1s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .hw-btn:hover {
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.22);
+            background: linear-gradient(180deg, #31384a 0%, #222734 100%);
+        }
+
+        .hw-btn:active {
+            transform: translateY(1px);
+            border-bottom-width: 1px;
+        }
+
+        .hw-btn.play.active {
+            background: linear-gradient(180deg, #05ffa1 0%, #00b874 100%);
+            color: #041f14;
+            border-color: #6bffc7;
+            box-shadow: 0 0 16px rgba(5, 255, 161, 0.5);
+        }
+
+        .hw-btn.rec.active {
+            background: linear-gradient(180deg, #ff2a6d 0%, #c9144d 100%);
+            color: #fff;
+            border-color: #ff7aa3;
+            box-shadow: 0 0 16px rgba(255, 42, 109, 0.6);
+            animation: pulseRec 1s infinite alternate;
+        }
+
+        .hw-btn.loop.active, .hw-btn.metro.active, .hw-btn.toggle-on {
+            background: linear-gradient(180deg, #00f0ff 0%, #00a8b3 100%);
+            color: #04191c;
+            border-color: #8cf8ff;
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+        }
+
+        @keyframes pulseRec {
+            from { box-shadow: 0 0 8px rgba(255, 42, 109, 0.4); }
+            to { box-shadow: 0 0 20px rgba(255, 42, 109, 0.95); }
+        }
+
+        /* Wyświetlacz LCD */
+        .lcd-display {
+            background: #070b0e;
+            border: 1px solid #1e293b;
+            border-radius: 7px;
+            padding: 5px 14px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.9);
+            font-family: var(--font-mono);
+        }
+
+        .lcd-block {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .lcd-label {
+            font-size: 9px;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .lcd-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 8px rgba(0, 240, 255, 0.45);
+        }
+
+        .lcd-value.amber {
+            color: var(--accent-amber);
+            text-shadow: 0 0 8px rgba(255, 158, 0, 0.45);
+        }
+
+        .bpm-control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-module);
+            padding: 5px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .hw-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 5px;
+            background: #090b10;
+            border-radius: 3px;
+            outline: none;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            cursor: pointer;
+        }
+
+        .hw-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            border: 2px solid #fff;
+            box-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
+            cursor: pointer;
+        }
+
+        /* Selecty studyjne */
+        .hw-select {
+            background: var(--bg-input);
+            color: var(--text-main);
+            border: 1px solid var(--border-highlight);
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-family: var(--font-ui);
+            font-size: 11px;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .hw-select:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        /* Master VU & DSP */
+        .master-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .vu-canvas-box {
+            background: #06080b;
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            padding: 3px 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* ==========================================================================
+           4. GŁÓWNY OBSZAR ROBOCZY (DRUM MACHINE + SYNTH + PIANO ROLL)
+           ========================================================================== */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1.15fr 1fr;
+            gap: 8px;
+            flex: 1;
+        }
+
+        @media (max-width: 1260px) {
+            .workspace-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .studio-panel {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-panel);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: linear-gradient(180deg, #1d222e 0%, #151922 100%);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 800;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #fff;
+        }
+
+        .led-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 8px var(--accent-cyan);
+        }
+
+        .led-indicator.amber {
+            background: var(--accent-amber);
+            box-shadow: 0 0 8px var(--accent-amber);
+        }
+
+        .panel-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        /* ==========================================================================
+           5. STEP SEQUENCER / DRUM MACHINE
+           ========================================================================== */
+        .sequencer-body {
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            overflow-x: auto;
+        }
+
+        .step-header-row {
+            display: grid;
+            grid-template-columns: 225px repeat(16, minmax(24px, 1fr));
+            gap: 4px;
+            align-items: center;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .step-num {
+            text-align: center;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--text-muted);
+            padding: 2px 0;
+            border-radius: 4px;
+        }
+
+        .step-num.beat-start {
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        .step-num.current {
+            background: var(--accent-cyan);
+            color: #05080c;
+            font-weight: 800;
+            box-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        .drum-row {
+            display: grid;
+            grid-template-columns: 225px repeat(16, minmax(24px, 1fr));
+            gap: 4px;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 4px 6px;
+            border-radius: 7px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: background 0.15s;
+        }
+
+        .drum-row:hover {
+            background: rgba(255, 255, 255, 0.045);
+        }
+
+        .track-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding-right: 6px;
+        }
+
+        .track-trigger-btn {
+            width: 74px;
+            text-align: left;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-left: 3px solid var(--track-color, var(--accent-cyan));
+            color: #fff;
+            padding: 5px 7px;
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: transform 0.08s, filter 0.1s;
+        }
+
+        .track-trigger-btn:active {
+            transform: scale(0.95);
+            filter: brightness(1.3);
+        }
+
+        .ms-btn {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-input);
+            color: var(--text-muted);
+            font-size: 10px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ms-btn.mute.active {
+            background: var(--accent-rose);
+            color: #fff;
+            border-color: #ff7aa3;
+        }
+
+        .ms-btn.solo.active {
+            background: var(--accent-amber);
+            color: #1a0f00;
+            border-color: #ffd180;
+        }
+
+        /* Pady sekwencera */
+        .seq-pad {
+            height: 28px;
+            border-radius: 5px;
+            background: #1d222d;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.06s, background 0.1s, box-shadow 0.1s;
+        }
+
+        .seq-pad.beat-alt {
+            background: #242a38;
+        }
+
+        .seq-pad:hover {
+            border-color: rgba(255, 255, 255, 0.28);
+        }
+
+        .seq-pad.active {
+            background: var(--track-color, var(--accent-cyan));
+            border-color: #fff;
+            box-shadow: 0 0 10px var(--track-color, var(--accent-cyan));
+        }
+
+        .seq-pad.playing {
+            outline: 2px solid #ffffff;
+            outline-offset: -2px;
+            transform: scale(1.06);
+            z-index: 2;
+        }
+
+        /* ==========================================================================
+           6. POKRĘTŁA OBROTOWE (ROTARY KNOBS)
+           ========================================================================== */
+        .knob-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            min-width: 46px;
+        }
+
+        .knob-unit.mini {
+            min-width: 26px;
+        }
+
+        .rotary-knob {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 30%, #3a4254 0%, #171b24 75%, #0d1016 100%);
+            border: 2px solid #090b0f;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.18);
+            position: relative;
+            cursor: ns-resize;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .knob-unit.mini .rotary-knob {
+            width: 22px;
+            height: 22px;
+        }
+
+        .knob-pointer {
+            position: absolute;
+            top: 3px;
+            left: 50%;
+            width: 2.5px;
+            height: 10px;
+            background: var(--knob-color, var(--accent-cyan));
+            border-radius: 2px;
+            transform-origin: 50% 14px;
+            transform: translateX(-50%) rotate(0deg);
+            box-shadow: 0 0 5px var(--knob-color, var(--accent-cyan));
+            pointer-events: none;
+        }
+
+        .knob-unit.mini .knob-pointer {
+            top: 2px;
+            width: 2px;
+            height: 6px;
+            transform-origin: 50% 9px;
+        }
+
+        .knob-label {
+            font-size: 9.5px;
+            font-weight: 700;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .knob-val {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            color: var(--accent-cyan);
+        }
+
+        /* ==========================================================================
+           7. MODUŁ SYNTEZATORA (AETHER SYNTH) & PIANO ROLL
+           ========================================================================== */
+        .synth-rack {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            padding: 10px;
+            border-bottom: 1px solid var(--border-subtle);
+            background: #10131a;
+        }
+
+        @media (max-width: 760px) {
+            .synth-rack {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .synth-module {
+            background: var(--bg-module);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .module-header {
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--accent-amber);
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .knobs-row {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .adsr-canvas {
+            width: 100%;
+            height: 46px;
+            background: #080a0f;
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        /* PIANO ROLL */
+        .pianoroll-wrapper {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 260px;
+            background: #0d1017;
+        }
+
+        .pianoroll-toolbar {
+            padding: 6px 12px;
+            background: #161a24;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .pianoroll-scroll {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: auto;
+            max-height: 290px;
+            position: relative;
+        }
+
+        .pianoroll-grid {
+            display: grid;
+            grid-template-columns: 58px repeat(16, minmax(26px, 1fr));
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .pr-key-label {
+            height: 20px;
+            padding: 0 6px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-right: 1px solid #000;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+            cursor: pointer;
+        }
+
+        .pr-key-label.white {
+            background: #cbd5e1;
+            color: #0f172a;
+        }
+
+        .pr-key-label.black {
+            background: #1e293b;
+            color: #94a3b8;
+        }
+
+        .pr-key-label.in-scale {
+            border-left: 3px solid var(--accent-emerald);
+        }
+
+        .pr-cell {
+            height: 20px;
+            border-right: 1px solid rgba(255, 255, 255, 0.04);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            background: #121620;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .pr-cell.black-row {
+            background: #0d1018;
+        }
+
+        .pr-cell.beat-col {
+            border-left: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .pr-cell.out-scale {
+            opacity: 0.45;
+        }
+
+        .pr-cell:hover {
+            background: rgba(0, 240, 255, 0.15);
+        }
+
+        .pr-cell.note-on {
+            background: linear-gradient(90deg, var(--accent-cyan), #38bdf8);
+            border: 1px solid #fff;
+            border-radius: 3px;
+            box-shadow: 0 0 8px rgba(0, 240, 255, 0.55);
+            z-index: 2;
+        }
+
+        .pr-cell.note-sustain {
+            background: rgba(0, 240, 255, 0.45);
+            border-top: 1px solid var(--accent-cyan);
+            border-bottom: 1px solid var(--accent-cyan);
+        }
+
+        .pr-cell.playing-col {
+            background-color: rgba(255, 255, 255, 0.12);
+        }
+
+        /* ==========================================================================
+           8. DOLNA SEKCJA: WIZUALIZATOR AUDIO + KLAWIATURA MIDI (2 OKTAWY)
+           ========================================================================== */
+        .bottom-deck {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 10px 14px;
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 14px;
+            align-items: center;
+            box-shadow: var(--shadow-panel);
+        }
+
+        @media (max-width: 980px) {
+            .bottom-deck {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .visualizer-panel {
+            background: #06080c;
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .viz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            color: var(--text-dim);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .viz-modes {
+            display: flex;
+            gap: 4px;
+        }
+
+        .viz-mode-btn {
+            background: #141822;
+            border: 1px solid var(--border-subtle);
+            color: var(--text-dim);
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .viz-mode-btn.active {
+            background: var(--accent-cyan);
+            color: #05080c;
+        }
+
+        #main-visualizer {
+            width: 100%;
+            height: 92px;
+            border-radius: 4px;
+            display: block;
+        }
+
+        /* Klawiatura fortepianowa */
+        .keyboard-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .keyboard-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        .piano-keys {
+            position: relative;
+            height: 112px;
+            display: flex;
+            background: #07090d;
+            padding: 4px;
+            border-radius: 8px;
+            border: 1px solid var(--border-subtle);
+            box-shadow: var(--shadow-inset);
+        }
+
+        .key-white {
+            flex: 1;
+            height: 100%;
+            background: linear-gradient(180deg, #f8fafc 0%, #cbd5e1 100%);
+            border: 1px solid #64748b;
+            border-radius: 0 0 6px 6px;
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 6px;
+            color: #334155;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 700;
+            transition: background 0.05s, transform 0.05s;
+        }
+
+        .key-white:hover {
+            background: #ffffff;
+        }
+
+        .key-white.active {
+            background: linear-gradient(180deg, #a5f3fc 0%, var(--accent-cyan) 100%);
+            transform: translateY(2px);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.7);
+            color: #04191c;
+        }
+
+        .key-black {
+            position: absolute;
+            top: 4px;
+            width: 4.4%;
+            height: 62%;
+            background: linear-gradient(180deg, #272d3d 0%, #0b0d12 100%);
+            border: 1px solid #000;
+            border-radius: 0 0 5px 5px;
+            z-index: 3;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 6px;
+            color: #94a3b8;
+            font-family: var(--font-mono);
+            font-size: 9px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.7);
+            transition: background 0.05s, transform 0.05s;
+        }
+
+        .key-black.active {
+            background: linear-gradient(180deg, var(--accent-amber) 0%, #b45309 100%);
+            color: #fff;
+            transform: translateY(2px);
+            box-shadow: 0 0 12px rgba(255, 158, 0, 0.8);
+        }
+
+        /* ==========================================================================
+           9. TOASTY / POWIADOMIENIA STATUSU
+           ========================================================================== */
+        #daw-toast {
+            position: fixed;
+            bottom: 18px;
+            right: 18px;
+            background: #181d28;
+            border: 1px solid var(--accent-cyan);
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65);
+            z-index: 9999;
+            opacity: 0;
+            transform: translateY(12px);
+            pointer-events: none;
+            transition: all 0.25s ease;
+        }
+
+        #daw-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
 </head>
-<body class="bg-neutral-950 text-neutral-100 font-sans min-h-screen flex flex-col justify-between antialiased pb-24 selection:bg-orange-500 selection:text-white" onload="initStore();">
+<body>
 
-  <!-- 18+ WERYFIKACJA WIEKU MODAL -->
-  <div id="age-modal" class="fixed inset-0 bg-black/90 backdrop-blur-xl z-50 flex items-center justify-center p-4">
-    <div class="bg-neutral-900 text-neutral-100 rounded-3xl max-w-sm w-full p-8 text-center shadow-2xl border border-neutral-800 relative overflow-hidden">
-      <div class="absolute -top-12 -right-12 w-32 h-32 bg-orange-500/10 rounded-full blur-2xl"></div>
-      <div class="w-16 h-16 bg-orange-500/10 text-orange-500 rounded-2xl mx-auto flex items-center justify-center text-3xl mb-4 border border-orange-500/20">🔞</div>
-      <h2 class="text-xl font-black tracking-tight uppercase mb-2">Weryfikacja wieku</h2>
-      <p class="text-xs text-neutral-400 font-medium mb-6">Musisz mieć ukończone 18 lat, aby wejść do sklepu i przeglądać oferty produktów nikotynowych[cite: 3].</p>
-      <div class="flex gap-3">
-        <button onclick="verifyAge(false)" class="flex-1 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-bold py-3.5 rounded-2xl uppercase transition-all cursor-pointer">Nie</button>
-        <button onclick="verifyAge(true)" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold py-3.5 rounded-2xl uppercase transition-all cursor-pointer shadow-lg shadow-orange-500/25">Tak, mam 18 lat</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- TOP BAR -->
-  <div class="bg-neutral-900/80 backdrop-blur-md text-neutral-400 text-xs py-3 px-6 border-b border-neutral-800/80 sticky top-0 z-40">
-    <div class="max-w-[1400px] mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
-      <div class="flex items-center gap-2.5">
-        <span class="inline-block w-2 h-2 rounded-full bg-orange-500 animate-pulse shadow-lg shadow-orange-500"></span>
-        <span class="font-medium text-neutral-300">Ekspresowa realizacja zamówień 24/7 ⚡[cite: 3]</span>
-      </div>
-      <div class="flex items-center gap-3">
-        <button onclick="openAuthModal()" id="auth-nav-btn" class="bg-neutral-900 border border-neutral-800 hover:border-orange-500 px-4 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all text-neutral-200 shadow-sm">
-          👤 <span id="auth-nav-text">Konto</span>
-        </button>
-        <a href="skaner.html" class="bg-neutral-800 hover:bg-neutral-700 text-white font-bold px-3 py-1.5 rounded-xl text-[11px] transition-all">Skaner</a>
-        <a href="magazyn.html" class="bg-neutral-800 hover:bg-neutral-700 text-white font-bold px-3 py-1.5 rounded-xl text-[11px] transition-all">Magazyn</a>
-        <a href="https://discord.gg/y2xdvzx34V" target="_blank" class="bg-orange-500 hover:bg-orange-600 text-white font-bold px-4 py-1.5 rounded-xl flex items-center gap-1.5 transition-all text-[11px] shadow-md shadow-orange-500/20 hover:scale-105">
-          <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 127.14 96.36"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a74.57,74.57,0,0,0,64.3,0c.87.69,1.76,1.37,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,45.91,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,45.91,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
-          DISCORD
-        </a>
-      </div>
-    </div>
-  </div>
-
-  <div>
-    <!-- HERO BANNER -->
-    <section class="max-w-[1400px] mx-auto px-6 pt-8 pb-4">
-      <div class="bg-gradient-to-r from-neutral-900 via-neutral-900 to-neutral-900/90 rounded-4xl border border-neutral-800 p-8 md:p-10 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
-        <div class="absolute -right-20 -bottom-20 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div class="flex flex-col md:flex-row items-center md:items-start gap-6 text-center md:text-left relative z-10">
-          <div class="w-24 h-24 bg-neutral-950 rounded-3xl flex items-center justify-center p-3 border border-orange-500/30 shadow-xl shrink-0 overflow-hidden">
-            <img src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExZWpkd2pkNWZ4eHJrNGZoczZlc2lwZXFycjZybjRvdHRwZ3VlcXJicyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/7qHML6KGtUrLaMJQJZ/giphy.gif" alt="LBKVAPE Logo" class="w-full h-full object-cover rounded-2xl">
-          </div>
-          <div class="max-w-xl">
-            <span class="text-[11px] font-black uppercase tracking-widest block mb-1.5 text-orange-500">Oficjalny sklep internetowy LBKVAPE[cite: 3]</span>
-            <h2 class="text-2xl md:text-3xl font-black uppercase tracking-tight mb-2 text-white">Najlepsze Snusy i Liquidy Salt</h2>
-            <p class="text-xs md:text-sm text-neutral-400 font-medium leading-relaxed">
-              Wyselekcjonowane woreczki nikotynowe i liquidy solne z aktualnym podglądem stanów magazynowych w czasie rzeczywistym[cite: 3].
-            </p>
-          </div>
+<div class="daw-shell">
+    <!-- ======================================================================
+         1. GÓRNY PASEK TRANSPORTU (TRANSPORT BAR)
+         ====================================================================== -->
+    <header class="transport-bar">
+        <div class="brand-box">
+            <div class="brand-logo">Æ</div>
+            <div>
+                <div class="brand-title">AETHER DAW</div>
+                <div class="brand-sub">Studio Engine v2.4</div>
+            </div>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full md:w-auto shrink-0 relative z-10">
-          <div class="bg-neutral-950/80 border border-neutral-800 hover:border-orange-500/50 p-4 rounded-2xl text-center flex flex-col items-center justify-center shadow-sm transition-all">
-            <span class="text-xl mb-1">⚡</span>
-            <strong class="text-xs font-black block text-white">Wysyłka 24h</strong>
-            <span class="text-[10px] text-neutral-400 font-medium">Błyskawicznie</span>
-          </div>
-          <div class="bg-neutral-950/80 border border-neutral-800 hover:border-orange-500/50 p-4 rounded-2xl text-center flex flex-col items-center justify-center shadow-sm transition-all">
-            <span class="text-xl mb-1">📦</span>
-            <strong class="text-xs font-black block text-white">Paczkomat (+25 zł)[cite: 3]</strong>
-            <span class="text-[10px] text-neutral-400 font-medium">Stały kosz dostawy[cite: 3]</span>
-          </div>
-          <div class="bg-neutral-950/80 border border-neutral-800 hover:border-orange-500/50 p-4 rounded-2xl text-center flex flex-col items-center justify-center shadow-sm transition-all">
-            <span class="text-xl mb-1">🛡️</span>
-            <strong class="text-xs font-black block text-white">100% Pewność[cite: 3]</strong>
-            <span class="text-[10px] text-neutral-400 font-medium">Zaufany serwis[cite: 3]</span>
-          </div>
-        </div>
-      </div>
-    </section>
 
-    <!-- KATEGORIE QUICK CARDS -->
-    <section class="max-w-[1400px] mx-auto px-6 py-4">
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div onclick="filterProducts('all')" class="cursor-pointer bg-neutral-900/60 border border-neutral-800 rounded-2xl p-5 flex items-center justify-between hover:border-orange-500/60 transition-all shadow-sm group">
-          <div>
-            <span class="text-[10px] font-bold text-neutral-500 uppercase tracking-wider block">Katalog[cite: 3]</span>
-            <h3 class="text-sm font-black text-neutral-200 group-hover:text-orange-400 transition-colors">Wszystkie produkty</h3>
-          </div>
-          <span class="text-2xl">📦</span>
+        <!-- Przyciski Transportu -->
+        <div class="transport-controls">
+            <button class="hw-btn play" id="btn-play" title="Odtwarzaj / Pauza (Spacja)">▶ Play</button>
+            <button class="hw-btn" id="btn-stop" title="Zatrzymaj i przewiń do początku">■ Stop</button>
+            <button class="hw-btn rec" id="btn-rec" title="Nagrywaj nuty z klawiatury w czasie rzeczywistym">● Rec</button>
+            <button class="hw-btn loop active" id="btn-loop" title="Zapętlanie patternu">↻ Loop</button>
+            <button class="hw-btn metro" id="btn-metro" title="Metronom">⏱ Click</button>
         </div>
-        <div onclick="filterProducts('snus')" class="cursor-pointer bg-neutral-900/60 border border-neutral-800 rounded-2xl p-5 flex items-center justify-between hover:border-orange-500/60 transition-all shadow-sm group">
-          <div>
-            <span class="text-[10px] font-bold text-neutral-500 uppercase tracking-wider block">Kategoria 1</span>
-            <h3 class="text-sm font-black text-neutral-200 group-hover:text-orange-400 transition-colors">Snusy 🍃[cite: 3]</h3>
-          </div>
-          <span class="text-2xl">🍃</span>
-        </div>
-        <div onclick="filterProducts('liquidy')" class="cursor-pointer bg-neutral-900/60 border border-neutral-800 rounded-2xl p-5 flex items-center justify-between hover:border-orange-500/60 transition-all shadow-sm group">
-          <div>
-            <span class="text-[10px] font-bold text-neutral-500 uppercase tracking-wider block">Kategoria 2</span>
-            <h3 class="text-sm font-black text-neutral-200 group-hover:text-orange-400 transition-colors">Liquidy 💧</h3>
-          </div>
-          <span class="text-2xl">💧</span>
-        </div>
-      </div>
-    </section>
 
-    <!-- FILTRY I WYSZUKIWARKA -->
-    <div class="max-w-[1400px] mx-auto px-6 pt-4 flex flex-col sm:flex-row gap-4 justify-between items-center">
-      <div class="flex flex-wrap gap-2" id="filter-buttons">
-        <button id="btn-all" onclick="filterProducts('all')" class="filter-btn bg-orange-500 text-white border border-orange-500 text-xs font-bold px-4 py-2.5 rounded-2xl transition-all shadow-md shadow-orange-500/20 cursor-pointer">Wszystkie[cite: 3]</button>
-        <button id="btn-snus" onclick="filterProducts('snus')" class="filter-btn bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white text-xs font-bold px-4 py-2.5 rounded-2xl transition-all shadow-sm cursor-pointer">Snusy 🍃[cite: 3]</button>
-        <button id="btn-liquidy" onclick="filterProducts('liquidy')" class="filter-btn bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white text-xs font-bold px-4 py-2.5 rounded-2xl transition-all shadow-sm cursor-pointer">Liquidy 💧</button>
-      </div>
-      <div class="relative w-full sm:w-80">
-        <input type="text" id="search-input" onkeyup="searchProducts()" placeholder="Szukaj snusu lub liquidu..." class="w-full bg-neutral-900 text-neutral-100 placeholder-neutral-500 border border-neutral-800 rounded-2xl px-4 py-2.5 text-xs focus:outline-none focus:border-orange-500 shadow-sm transition-colors">
-      </div>
-    </div>
+        <!-- Wyświetlacz LCD -->
+        <div class="lcd-display">
+            <div class="lcd-block">
+                <span class="lcd-label">Pozycja (Bar:Beat:Step)</span>
+                <span class="lcd-value" id="lcd-pos">001 : 1 : 01</span>
+            </div>
+            <div class="lcd-block">
+                <span class="lcd-label">Czas</span>
+                <span class="lcd-value" id="lcd-time">00:00.0</span>
+            </div>
+            <div class="lcd-block">
+                <span class="lcd-label">Tempo</span>
+                <span class="lcd-value amber" id="lcd-bpm">124 BPM</span>
+            </div>
+        </div>
 
-    <!-- NAGŁÓWEK KATALOGU I KOSZYK TRIGGER -->
-    <header class="max-w-[1400px] mx-auto px-6 pt-8 pb-4 flex justify-between items-end border-b border-neutral-800">
-      <h1 class="text-xl font-black tracking-tight uppercase text-white">Oferta: Snusy i Liquidy</h1>
-      <button onclick="openCartDrawer()" class="bg-neutral-900 border border-neutral-800 hover:border-orange-500 px-4 py-2.5 rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 cursor-pointer transition-all group text-neutral-200">
-        🛒 KOSZYK <span class="bg-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full" id="cart-count">0</span>
-      </button>
+        <!-- Regulacja BPM i Tap Tempo -->
+        <div class="bpm-control-group">
+            <input type="range" class="hw-slider" id="bpm-slider" min="60" max="200" value="124" style="width:90px;" title="Regulacja tempa BPM">
+            <button class="hw-btn" id="btn-tap" title="Klikaj rytmicznie, aby ustawić tempo">Tap</button>
+        </div>
+
+        <!-- Zarządzanie projektami i presetami utworów -->
+        <div class="bpm-control-group">
+            <select class="hw-select" id="song-preset-select" title="Wczytaj gotowy projekt demonstracyjny">
+                <option value="cyberpunk">Demo: Cyberpunk Synthwave</option>
+                <option value="deephouse">Demo: Deep House Groove</option>
+                <option value="lofi">Demo: Lo-Fi Chill Beat</option>
+                <option value="dnb">Demo: Drum & Bass Roller</option>
+                <option value="empty">Pusty Projekt</option>
+            </select>
+            <button class="hw-btn" id="btn-save-proj" title="Zapisz projekt w pamięci przeglądarki">Zapisz</button>
+            <button class="hw-btn" id="btn-load-proj" title="Wczytaj zapisany projekt">Wczytaj</button>
+            <button class="hw-btn" id="btn-export-json" title="Eksportuj projekt do pliku JSON">JSON</button>
+        </div>
+
+        <!-- Master Volume, DSP & VU Meter -->
+        <div class="master-section">
+            <div class="knob-unit" id="knob-master-vol" data-min="0" data-max="1" data-val="0.82" data-label="Master" data-unit="%"></div>
+            <div class="vu-canvas-box">
+                <div style="display:flex;flex-direction:column;font-family:var(--font-mono);font-size:9px;color:var(--text-muted);">
+                    <span>L</span>
+                    <span>R</span>
+                </div>
+                <canvas id="vu-meter-canvas" width="90" height="24"></canvas>
+                <div style="font-family:var(--font-mono);font-size:9px;color:var(--accent-emerald);" id="dsp-load">DSP 14%</div>
+            </div>
+        </div>
     </header>
 
-    <!-- PRODUKTY GRID & PAGINACJA -->
-    <main class="max-w-[1400px] mx-auto px-6 py-8">
-      <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
-      <div id="pagination-container" class="flex justify-center items-center gap-2 mt-10"></div>
+    <!-- ======================================================================
+         2. GŁÓWNA PRZESTRZEŃ ROBOCZA (PERKUSJA + SYNTEZATOR/PIANO ROLL)
+         ====================================================================== -->
+    <main class="workspace-grid">
+        <!-- LEWY MODUŁ: DRUM MACHINE / STEP SEQUENCER -->
+        <section class="studio-panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <span class="led-indicator"></span>
+                    <span>Step Sequencer — Drum Engine</span>
+                </div>
+                <div class="panel-toolbar">
+                    <div style="display:flex;align-items:center;gap:5px;background:var(--bg-input);padding:3px 8px;border-radius:6px;">
+                        <span style="font-size:10px;color:var(--text-dim);font-weight:700;">SWING</span>
+                        <input type="range" class="hw-slider" id="swing-slider" min="0" max="75" value="15" style="width:60px;">
+                        <span style="font-family:var(--font-mono);font-size:10px;color:var(--accent-cyan);" id="swing-val">15%</span>
+                    </div>
+                    <button class="hw-btn toggle-on" id="btn-page-1" onclick="DAW.setDrumPage(0)">1–16</button>
+                    <button class="hw-btn" id="btn-page-2" onclick="DAW.setDrumPage(1)">17–32</button>
+                    <button class="hw-btn" id="btn-drum-rand" title="Wygeneruj losowy rytm">🎲 Losuj</button>
+                    <button class="hw-btn" id="btn-drum-clear" title="Wyczyść wszystkie ścieżki perkusyjne">Wyczyść</button>
+                </div>
+            </div>
+
+            <div class="sequencer-body" id="drum-sequencer-body">
+                <!-- Generowane dynamicznie przez JS -->
+            </div>
+        </section>
+
+        <!-- PRAWY MODUŁ: AETHER SYNTH + PIANO ROLL -->
+        <section class="studio-panel">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <span class="led-indicator amber"></span>
+                    <span>Aether Poly-Synth & Piano Roll</span>
+                </div>
+                <div class="panel-toolbar">
+                    <select class="hw-select" id="synth-preset-select" title="Wybierz barwę syntezatora">
+                        <option value="neonPluck">Preset: Neon Pluck</option>
+                        <option value="reeseBass">Preset: Reese Bass</option>
+                        <option value="dreamPad">Preset: Dream Pad</option>
+                        <option value="acidLead">Preset: Acid Lead 303</option>
+                        <option value="sub808">Preset: 808 Sub Bass</option>
+                    </select>
+                    <button class="hw-btn" id="btn-synth-mute" title="Wycisz syntezator">M</button>
+                </div>
+            </div>
+
+            <!-- PANEL SYNTEZATORA (4 MODUŁY) -->
+            <div class="synth-rack">
+                <!-- Moduł 1: Oscylatory -->
+                <div class="synth-module">
+                    <div class="module-header">
+                        <span>OSC 1 & 2</span>
+                        <select class="hw-select" id="osc1-wave" style="padding:1px 4px;font-size:10px;">
+                            <option value="sawtooth">SAW</option>
+                            <option value="square">SQR</option>
+                            <option value="triangle">TRI</option>
+                            <option value="sine">SIN</option>
+                        </select>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:10px;color:var(--text-dim);">OSC 2 Fala:</span>
+                        <select class="hw-select" id="osc2-wave" style="padding:1px 4px;font-size:10px;">
+                            <option value="square">SQR</option>
+                            <option value="sawtooth">SAW</option>
+                            <option value="triangle">TRI</option>
+                            <option value="sine">SIN</option>
+                        </select>
+                    </div>
+                    <div class="knobs-row">
+                        <div class="knob-unit" id="knob-osc-mix" data-min="0" data-max="1" data-val="0.5" data-label="Mix"></div>
+                        <div class="knob-unit" id="knob-osc-detune" data-min="0" data-max="50" data-val="14" data-label="Detune" data-unit="ct"></div>
+                        <div class="knob-unit" id="knob-osc-oct" data-min="-2" data-max="2" data-val="0" data-step="1" data-label="Oct"></div>
+                    </div>
+                </div>
+
+                <!-- Moduł 2: Filtr LP -->
+                <div class="synth-module">
+                    <div class="module-header">
+                        <span>LP Filter</span>
+                        <span style="font-size:9px;color:var(--text-muted);">24dB/oct</span>
+                    </div>
+                    <div class="knobs-row" style="margin-top:auto;margin-bottom:auto;">
+                        <div class="knob-unit" id="knob-flt-cutoff" data-min="80" data-max="12000" data-val="3200" data-exp="true" data-label="Cutoff" data-unit="Hz"></div>
+                        <div class="knob-unit" id="knob-flt-res" data-min="0.5" data-max="18" data-val="3.5" data-label="Reso"></div>
+                        <div class="knob-unit" id="knob-flt-env" data-min="0" data-max="6000" data-val="2200" data-label="Env Amt"></div>
+                    </div>
+                </div>
+
+                <!-- Moduł 3: Obwiednia ADSR -->
+                <div class="synth-module">
+                    <div class="module-header">
+                        <span>Amp ADSR</span>
+                    </div>
+                    <canvas class="adsr-canvas" id="adsr-canvas" width="160" height="46"></canvas>
+                    <div class="knobs-row">
+                        <div class="knob-unit mini" id="knob-env-a" data-min="0.005" data-max="1.5" data-val="0.02" data-label="A"></div>
+                        <div class="knob-unit mini" id="knob-env-d" data-min="0.02" data-max="2.0" data-val="0.28" data-label="D"></div>
+                        <div class="knob-unit mini" id="knob-env-s" data-min="0" data-max="1" data-val="0.45" data-label="S"></div>
+                        <div class="knob-unit mini" id="knob-env-r" data-min="0.02" data-max="2.5" data-val="0.35" data-label="R"></div>
+                    </div>
+                </div>
+
+                <!-- Moduł 4: Efekty Master FX -->
+                <div class="synth-module">
+                    <div class="module-header">
+                        <span>Master FX</span>
+                    </div>
+                    <div class="knobs-row" style="margin-top:auto;margin-bottom:auto;">
+                        <div class="knob-unit" id="knob-fx-drive" data-min="0" data-max="100" data-val="12" data-label="Drive" data-unit="%"></div>
+                        <div class="knob-unit" id="knob-fx-delay" data-min="0" data-max="0.7" data-val="0.25" data-label="Delay"></div>
+                        <div class="knob-unit" id="knob-fx-reverb" data-min="0" data-max="0.8" data-val="0.3" data-label="Reverb"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EDYTOR MELODII: PIANO ROLL -->
+            <div class="pianoroll-wrapper">
+                <div class="pianoroll-toolbar">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-weight:800;font-size:11px;color:var(--accent-cyan);text-transform:uppercase;">Piano Roll (C3–B4)</span>
+                        <select class="hw-select" id="scale-select" title="Podświetl dźwięki należące do skali">
+                            <option value="chromatic">Skala: Chromatic (Wszystkie)</option>
+                            <option value="cMinor" selected>Skala: C Minor (Naturalna)</option>
+                            <option value="cMajor">Skala: C Major</option>
+                            <option value="cPentatonic">Skala: C Minor Pentatonic</option>
+                            <option value="cDorian">Skala: C Dorian</option>
+                        </select>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <span style="font-size:10px;color:var(--text-muted);">LPM: Dodaj/Usuń • PPM: Wydłuż nutę</span>
+                        <button class="hw-btn" id="btn-pr-clear">Wyczyść Melodię</button>
+                    </div>
+                </div>
+
+                <div class="pianoroll-scroll" id="pianoroll-scroll">
+                    <div id="pianoroll-container"></div>
+                </div>
+            </div>
+        </section>
     </main>
 
-    <!-- OPINIE -->
-    <section class="max-w-[1400px] mx-auto px-6 py-12 border-t border-neutral-800">
-      <div class="text-center mb-8">
-        <span class="text-xs font-bold uppercase tracking-widest text-orange-500">Opinie społeczności</span>
-        <h2 class="text-xl font-black uppercase mt-1 text-white">Co mówią o nas klienci LBKVAPE?[cite: 3]</h2>
-      </div>
-      <div id="reviews-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <p class="col-span-full text-center text-neutral-500 py-4">Ładowanie opinii...</p>
-      </div>
-    </section>
-  </div>
-
-  <!-- MODAL SZCZEGÓŁÓW PRODUKTU -->
-  <div id="product-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-    <div class="bg-neutral-900 text-neutral-100 rounded-3xl max-w-md w-full p-8 shadow-2xl relative border border-neutral-800">
-      <div class="flex flex-col items-center text-center">
-        <div class="w-48 h-48 bg-neutral-950 rounded-2xl mb-5 overflow-hidden flex items-center justify-center p-4 border border-neutral-800 shadow-inner">
-          <img id="modal-product-img" src="" alt="" class="max-h-full object-contain">
-        </div>
-        <h2 id="modal-product-title" class="text-base font-black uppercase mb-2 text-white"></h2>
-        <p id="modal-product-desc" class="text-xs text-neutral-400 font-medium mb-5 leading-relaxed text-left w-full bg-neutral-950 p-4 rounded-2xl border border-neutral-800"></p>
-        
-        <div id="modal-flavor-container" class="w-full mb-5 text-left hidden">
-          <label class="block text-[11px] font-bold uppercase mb-1.5 text-neutral-300">Wybierz smak / wariant (i stan sztuk):</label>
-          <select id="modal-flavor-select" onchange="checkFlavorStockSelection()" class="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-4 py-3 text-xs font-bold text-white focus:outline-none focus:border-orange-500 cursor-pointer shadow-sm">
-          </select>
-          <p id="flavor-stock-info" class="text-[11px] mt-2 font-bold"></p>
-        </div>
-
-        <div class="flex items-center justify-between w-full mb-6 px-1">
-          <span class="text-xs font-bold uppercase text-neutral-400">Cena jednostkowa:</span>
-          <span id="modal-product-price" class="text-xl font-black text-orange-500">0.00 PLN</span>
-        </div>
-
-        <button id="modal-add-btn" class="w-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold py-4 rounded-2xl uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-orange-500/25">
-          DODAJ DO KOSZYKA
-        </button>
-      </div>
-      <button onclick="closeProductModal()" class="absolute top-6 right-6 font-black text-base cursor-pointer w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center hover:bg-neutral-700 transition-colors text-neutral-300">✕</button>
-    </div>
-  </div>
-
-  <!-- MODAL LOGOWANIA / REJESTRACJI KONT -->
-  <div id="auth-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-    <div class="bg-neutral-900 text-neutral-100 rounded-3xl max-w-sm w-full p-6 border border-neutral-800 relative shadow-2xl">
-      <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-neutral-400 hover:text-white font-bold cursor-pointer">✕</button>
-      
-      <div class="flex bg-neutral-950 p-1 rounded-2xl mb-6 border border-neutral-800">
-        <button onclick="switchAuthTab('login')" id="tab-login-btn" class="flex-1 py-2 text-xs font-bold rounded-xl bg-orange-500 text-white transition-all cursor-pointer">Logowanie</button>
-        <button onclick="switchAuthTab('register')" id="tab-register-btn" class="flex-1 py-2 text-xs font-bold rounded-xl text-neutral-400 transition-all cursor-pointer">Rejestracja</button>
-      </div>
-
-      <!-- Formularz Logowania -->
-      <div id="login-form" class="space-y-4">
-        <h3 class="text-sm font-black uppercase text-white">Zaloguj się</h3>
-        <input type="text" id="login-identifier" placeholder="Email lub Nazwa użytkownika" class="w-full bg-neutral-950 text-white border border-neutral-800 rounded-2xl px-4 py-3 text-xs focus:outline-none focus:border-orange-500">
-        <input type="password" id="login-password" placeholder="Hasło" class="w-full bg-neutral-950 text-white border border-neutral-800 rounded-2xl px-4 py-3 text-xs focus:outline-none focus:border-orange-500">
-        <button onclick="handleLogin()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs py-3.5 rounded-2xl uppercase transition-all cursor-pointer shadow-lg shadow-orange-500/20">Zaloguj się</button>
-      </div>
-
-      <!-- Formularz Rejestracji -->
-      <div id="register-form" class="space-y-4 hidden">
-        <h3 class="text-sm font-black uppercase text-white">Załóż stałe konto</h3>
-        <input type="text" id="reg-username" placeholder="Nazwa użytkownika" class="w-full bg-neutral-950 text-white border border-neutral-800 rounded-2xl px-4 py-3 text-xs focus:outline-none focus:border-orange-500">
-        <input type="email" id="reg-email" placeholder="Adres E-mail" class="w-full bg-neutral-950 text-white border border-neutral-800 rounded-2xl px-4 py-3 text-xs focus:outline-none focus:border-orange-500">
-        <input type="password" id="reg-password" placeholder="Hasło" class="w-full bg-neutral-950 text-white border border-neutral-800 rounded-2xl px-4 py-3 text-xs focus:outline-none focus:border-orange-500">
-        <button onclick="handleRegister()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs py-3.5 rounded-2xl uppercase transition-all cursor-pointer shadow-lg shadow-orange-500/20">Zarejestruj się</button>
-      </div>
-      
-      <div id="auth-error" class="text-red-400 text-xs mt-3 text-center hidden font-medium"></div>
-    </div>
-  </div>
-
-  <!-- KOSZYK I ZAMÓWIENIE - PRAWY PANEL -->
-  <div id="cart-drawer-backdrop" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 transition-opacity" onclick="closeCartDrawer()"></div>
-  <div id="cart-drawer" class="fixed inset-y-0 right-0 max-w-lg w-full bg-neutral-900 text-neutral-100 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col border-l border-neutral-800">
-    <div class="p-6 border-b border-neutral-800 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <h2 class="text-base font-black uppercase tracking-tight text-white">Twój Koszyk LBKVAPE[cite: 3]</h2>
-        <span class="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full" id="drawer-cart-count">0</span>
-      </div>
-      <button onclick="closeCartDrawer()" class="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center font-bold text-sm hover:bg-neutral-700 transition-colors cursor-pointer text-neutral-300">✕</button>
-    </div>
-
-    <div class="flex-1 overflow-y-auto p-6 space-y-6">
-      <div>
-        <h3 class="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-3">Produkty w koszyku</h3>
-        <div id="cart-list" class="space-y-3"></div>
-      </div>
-
-      <div class="space-y-4 bg-neutral-950 p-5 rounded-3xl border border-neutral-800">
-        <h3 class="text-xs font-bold uppercase tracking-wider text-orange-500 mb-2">Dane do wysyłki</h3>
-        <div>
-          <label class="block text-[11px] font-bold uppercase mb-1.5 text-neutral-300">Twój nick na Discordzie <span class="text-orange-500">*</span>:</label>
-          <input type="text" id="discord-nick" placeholder="np. nazwa_uzytkownika" oninput="checkCartForm()" class="w-full bg-neutral-900 text-white placeholder-neutral-500 border border-neutral-800 rounded-2xl px-4 py-3 text-xs focus:outline-none focus:border-orange-500 shadow-sm transition-colors">
-        </div>
-        <div>
-          <label class="block text-[11px] font-bold uppercase mb-1.5 text-neutral-300">Adres E-mail Gmail <span class="text-orange-500">*@gmail.com</span>:</label>
-          <input type="email" id="customer-email" placeholder="np. imie@gmail.com" oninput="checkCartForm()" class="w-full bg-neutral-900 text-white placeholder-neutral-500 border border-neutral-800 rounded-2xl px-4 py-3 text-xs focus:outline-none focus:border-orange-500 shadow-sm transition-colors">
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-[11px] font-bold uppercase mb-1.5 text-neutral-300">Telefon <span class="text-orange-500">*9 cyfr</span>:</label>
-            <input type="tel" id="customer-phone" placeholder="np. 500600700" maxlength="11" oninput="checkCartForm()" class="w-full bg-neutral-900 text-white placeholder-neutral-500 border border-neutral-800 rounded-2xl px-4 py-3 text-xs focus:outline-none focus:border-orange-500 shadow-sm transition-colors">
-          </div>
-          <div>
-            <label class="block text-[11px] font-bold uppercase mb-1.5 text-neutral-300">Paczkomat <span class="text-orange-500">*kod</span>:</label>
-            <input type="text" id="customer-paczkomat" placeholder="np. WAW01M" oninput="checkCartForm()" class="w-full bg-neutral-900 text-white placeholder-neutral-500 border border-neutral-800 rounded-2xl px-4 py-3 text-xs focus:outline-none focus:border-orange-500 shadow-sm transition-colors">
-          </div>
-        </div>
-        <div>
-          <label class="block text-[11px] font-bold uppercase mb-1.5 text-neutral-300">Kod rabatowy z Discorda <span class="text-neutral-500 font-normal">(opcjonalnie)</span>:</label>
-          <div class="flex gap-2">
-            <input type="text" id="promo-code-input" placeholder="np. RABAT10" class="w-full bg-neutral-900 text-white placeholder-neutral-500 border border-neutral-800 rounded-2xl px-4 py-3 text-xs uppercase focus:outline-none focus:border-orange-500 shadow-sm transition-colors">
-            <button onclick="applyPromoCode()" type="button" class="bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-bold px-4 rounded-2xl border border-neutral-700 cursor-pointer transition-colors">Sprawdź</button>
-          </div>
-          <p id="promo-msg" class="text-[11px] mt-1.5 hidden"></p>
-        </div>
-      </div>
-
-      <div id="token-result" class="hidden bg-neutral-950 p-5 rounded-3xl border border-neutral-800 text-center space-y-3">
-        <p class="text-xs font-bold text-orange-400">✅ Zamówienie w LBKVAPE zostało złożone pomyślnie![cite: 3]</p>
-        <p class="text-[11px] text-neutral-400">Twój unikalny kod zamówienia:</p>
-        <code id="final-code" class="block font-mono font-bold text-sm bg-neutral-900 text-orange-400 p-3 rounded-2xl border border-neutral-800 select-all">LBK-XXXXX</code>
-        <div class="flex gap-2 pt-1">
-          <button onclick="copyCode()" class="flex-1 text-xs bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-white font-bold py-3 rounded-2xl cursor-pointer transition-colors shadow-sm">
-            📋 Kopiuj kod
-          </button>
-          <a href="https://discord.gg/y2xdvzx34V" target="_blank" class="flex-1 text-xs bg-orange-500 text-white font-bold py-3 rounded-2xl text-center cursor-pointer transition-colors flex items-center justify-center gap-1 shadow-sm">
-            💬 Discord
-          </a>
-        </div>
-      </div>
-    </div>
-
-    <div class="p-6 border-t border-neutral-800 bg-neutral-900/50 backdrop-blur-sm">
-      <div class="space-y-1.5 mb-4 text-xs">
-        <div class="flex justify-between text-neutral-400">
-          <span>Wartość produktów:</span>
-          <span id="subtotal-amount">0,00 PLN</span>
-        </div>
-        <div class="flex justify-between text-neutral-400">
-          <span>Koszt dostawy (Paczkomat):[cite: 3]</span>
-          <span>25,00 PLN[cite: 3]</span>
-        </div>
-        <div id="discount-row" class="flex justify-between text-orange-400 hidden">
-          <span>Rabat z kodu:</span>
-          <span id="discount-amount">-0,00 PLN</span>
-        </div>
-        <div class="flex justify-between font-black text-base pt-2 border-t border-neutral-800">
-          <span class="text-neutral-200 uppercase">Razem do zapłaty:</span>
-          <span id="cart-total" class="text-lg text-orange-500">25,00 PLN[cite: 3]</span>
-        </div>
-      </div>
-      <button onclick="submitOrder()" id="gen-btn" disabled class="w-full bg-neutral-800 text-neutral-500 font-bold text-xs py-4 rounded-2xl uppercase tracking-wider cursor-not-allowed border border-neutral-700 transition-all flex items-center justify-center gap-2">
-        Wypełnij wymagane pola
-      </button>
-    </div>
-  </div>
-
-  <script>
-    const fallbackProducts = [
-      { id: "SNUS-POP-100", type: "snus", name: "POP 100 MG", description: "Ekstremalnie mocne woreczki nikotynowe dla doświadczonych użytkowników.", price: 25.00, oldPrice: 32.00, badge: "MOCNY", img: "https://i.imgur.com/jqt70pQ.png", smaki: ["Cold Mint", "Ice Mint", "Double Mint", "Strong Original"] },
-      { id: "SNUS-STRIPE-40", type: "snus", name: "SNUSY STRIPE 40 MG", description: "Woreczki nikotynowe o zbalansowanej, średniej mocy i świetnym smaku.", price: 22.00, oldPrice: 28.00, badge: "HIT", img: "https://i.imgur.com/G6uMyp1.png", smaki: ["Mint", "Blueberry", "Ice Cool", "Watermelon"] },
-      { id: "LIQ-FUCKED-65", type: "liquidy", name: "FUCKEDLAB 30 ML 65 MG", description: "Wysokiej jakości liquid o dużej mocy na solach nikotynowych.", price: 49.99, oldPrice: 59.99, badge: "PREMIUM", img: "https://www.vapes24h.net/api/uploads/1780857658028-201790681.png", smaki: ["Mint", "Strawberry", "Grape", "Mango", "Blueberry"] },
-      { id: "SNUS-101", type: "snus", name: "CUBA BLACK 66 MG", description: "Ekstremalnie mocne woreczki nikotynowe dla doświadczonych użytkowników.", price: 39.99, oldPrice: 49.99, badge: "TOP", img: "https://i.imgur.com/bB5ZytT.png", smaki: ["Black Currant", "Cherry", "Cola", "Energy Drink", "Pineapple", "Bubble Gum", "Blueberry", "Menthol", "Strawberry", "Peach"] }
-    ];
-
-    let products = [...fallbackProducts];
-    let displayedProducts = [...fallbackProducts];
-    let cart = [];
-    let currentFilter = 'all';
-    let currentPage = 1;
-    let activeDiscount = 0;
-    let appliedPromoCode = '';
-    let inventoryQtys = {}; // Stany magazynowe łaczone z localStorage
-    const deliveryFee = 25.00;
-    const itemsPerPage = 12;
-
-    function initStore() {
-      loadInventoryQtys();
-      filterProducts('all');
-      loadProductsFromJSON();
-      loadReviews();
-      checkAuthSession();
-    }
-
-    function loadInventoryQtys() {
-      const saved = localStorage.getItem('lbk_inventory_qtys');
-      if (saved) {
-        try {
-          inventoryQtys = JSON.parse(saved);
-        } catch (e) {
-          inventoryQtys = {};
-        }
-      }
-    }
-
-    function verifyAge(isAdult) {
-      const modal = document.getElementById('age-modal');
-      if (!isAdult) {
-        window.location.href = 'https://youtu.be/hKJ_4LEvxOs?si=xHtaz3n6FDYyCbWa';
-      } else {
-        if (modal) {
-          modal.style.display = 'none';
-          modal.remove();
-        }
-      }
-    }
-
-    async function loadProductsFromJSON() {
-      try {
-        const res = await fetch('products.json?t=' + new Date().getTime());
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            products = data.filter(p => p.type === 'snus' || p.type === 'liquidy' || p.category === 'snus' || p.category === 'liquidy');
-            if (products.length === 0) products = fallbackProducts;
-            filterProducts(currentFilter);
-          }
-        }
-      } catch (e) {
-        // Zostaje fallback
-      }
-    }
-
-    async function loadReviews() {
-      try {
-        const res = await fetch('https://lbk.onrender.com/reviews');
-        const data = await res.json();
-        const reviewsContainer = document.getElementById('reviews-container');
-        
-        if (data.success && data.reviews && data.reviews.length > 0) {
-          reviewsContainer.innerHTML = '';
-          data.reviews.forEach(rev => {
-            const ratingNum = parseInt(rev.rating) || 5;
-            const stars = '★'.repeat(Math.min(Math.max(ratingNum, 1), 5));
-            reviewsContainer.innerHTML += `
-              <div class="bg-neutral-900/60 p-6 rounded-3xl border border-neutral-800 shadow-sm flex flex-col justify-between hover:border-neutral-700 transition-all">
-                <div>
-                  <div class="flex items-center gap-1 text-orange-500 text-xs mb-3">${stars}</div>
-                  <p class="text-xs text-neutral-300 font-medium mb-4 leading-relaxed">"${rev.comment}"</p>
+    <!-- ======================================================================
+         3. DOLNY POKŁAD: WIZUALIZATOR AUDIO + KLAWIATURA MIDI (2 OKTAWY)
+         ====================================================================== -->
+    <footer class="bottom-deck">
+        <!-- Wizualizator Spectrum / Oscilloscope -->
+        <div class="visualizer-panel">
+            <div class="viz-header">
+                <span>Real-Time Audio Analyzer</span>
+                <div class="viz-modes">
+                    <button class="viz-mode-btn active" data-mode="spectrum">Spectrum</button>
+                    <button class="viz-mode-btn" data-mode="scope">Scope</button>
+                    <button class="viz-mode-btn" data-mode="phase">Stereo</button>
                 </div>
-                <div class="flex items-center justify-between text-[11px] pt-4 border-t border-neutral-800">
-                  <strong class="font-bold text-white">@${rev.user}</strong>
-                  <span class="text-orange-400 font-medium">Zweryfikowany zakup</span>
-                </div>
-              </div>
-            `;
-          });
-        } else {
-          reviewsContainer.innerHTML = '<p class="col-span-full text-center text-neutral-500 py-6">Brak opinii.</p>';
-        }
-      } catch (e) {
-        document.getElementById('reviews-container').innerHTML = '<p class="col-span-full text-center text-neutral-500 py-6">Opinie niedostępne (serwer może się budzić).</p>';
-      }
-    }
-
-    function filterProducts(category) {
-      currentFilter = category;
-      currentPage = 1;
-      
-      document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove('bg-orange-500', 'text-white', 'border-orange-500', 'shadow-md');
-        btn.classList.add('bg-neutral-900', 'border-neutral-800', 'text-neutral-400');
-      });
-      
-      const activeBtn = document.getElementById('btn-' + category);
-      if (activeBtn) {
-        activeBtn.classList.remove('bg-neutral-900', 'border-neutral-800', 'text-neutral-400');
-        activeBtn.classList.add('bg-orange-500', 'text-white', 'border-orange-500', 'shadow-md', 'shadow-orange-500/20');
-      }
-
-      if (category === 'all') {
-        displayedProducts = products;
-      } else {
-        displayedProducts = products.filter(p => p.type === category || p.category === category);
-      }
-      renderProducts();
-    }
-
-    function searchProducts() {
-      const query = document.getElementById('search-input').value.toLowerCase();
-      const base = currentFilter === 'all' ? products : products.filter(p => p.type === currentFilter || p.category === currentFilter);
-      displayedProducts = base.filter(p => p.name.toLowerCase().includes(query) || (p.description && p.description.toLowerCase().includes(query)));
-      currentPage = 1;
-      renderProducts();
-    }
-
-    function renderProducts() {
-      loadInventoryQtys(); // Odśwież stany
-      const grid = document.getElementById('products-grid');
-      const paginationContainer = document.getElementById('pagination-container');
-      let html = '';
-      
-      if (displayedProducts.length === 0) {
-        grid.innerHTML = '<p class="col-span-full text-center text-neutral-500 py-10 font-semibold">Brak dostępnych produktów w tej kategorii.</p>';
-        paginationContainer.innerHTML = '';
-        return;
-      }
-
-      const totalPages = Math.ceil(displayedProducts.length / itemsPerPage);
-      if (currentPage > totalPages) currentPage = totalPages || 1;
-
-      const start = (currentPage - 1) * itemsPerPage;
-      const end = start + itemsPerPage;
-      const paginatedProducts = displayedProducts.slice(start, end);
-
-      paginatedProducts.forEach(p => {
-        const price = typeof p.price === 'number' ? p.price : parseFloat(p.price);
-        const oldPrice = p.oldPrice ? (typeof p.oldPrice === 'number' ? p.oldPrice : parseFloat(p.oldPrice)) : null;
-        const badgeText = p.badge || null;
-
-        // Oblicz łączną ilość sztuk dla tego produktu ze wszystkich smaków
-        let totalStock = 0;
-        if (p.smaki && p.smaki.length > 0) {
-          p.smaki.forEach(flavor => {
-            const key = `${p.id}_${flavor}`;
-            totalStock += (inventoryQtys[key] !== undefined ? inventoryQtys[key] : 0);
-          });
-        } else {
-          const key = `${p.id}_default`;
-          totalStock = (inventoryQtys[key] !== undefined ? inventoryQtys[key] : 0);
-        }
-
-        const isOutOfStock = totalStock <= 0;
-
-        html += `
-          <div class="group bg-neutral-900/60 rounded-3xl p-5 border border-neutral-800 shadow-sm hover:border-orange-500/60 transition-all duration-300 flex flex-col justify-between relative overflow-hidden">
-            ${badgeText ? `<span class="absolute top-4 left-4 bg-orange-500 text-white text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-wider z-10 shadow-md shadow-orange-500/30">${badgeText}</span>` : ''}
-            
-            <div class="cursor-pointer" onclick="openProductModal('${p.id}')">
-              <div class="w-full h-48 bg-neutral-950 rounded-2xl mb-4 overflow-hidden flex items-center justify-center p-4 border border-neutral-800/80 shadow-inner group-hover:border-orange-500/30 transition-colors relative">
-                <img src="${p.img || 'https://via.placeholder.com/200'}" alt="${p.name}" class="max-h-full object-contain group-hover:scale-105 transition-transform duration-300">
-                ${isOutOfStock ? `<div class="absolute inset-0 bg-black/70 backdrop-blur-[2px] flex items-center justify-center"><span class="bg-red-500 text-white font-black text-xs px-3 py-1.5 rounded-xl uppercase tracking-wider">WYPRZEDANE</span></div>` : ''}
-              </div>
-              <h3 class="text-xs font-bold uppercase leading-snug mb-1 min-h-[32px] text-white">
-                ${p.name}
-              </h3>
-              <p class="text-[10px] ${isOutOfStock ? 'text-red-400 font-bold' : 'text-neutral-400'} mb-3">
-                ${isOutOfStock ? 'Brak sztuk w magazynie' : `Dostępne sztuki: <span class="text-white font-black">${totalStock} szt.</span>`}
-              </p>
             </div>
+            <canvas id="main-visualizer" width="340" height="92"></canvas>
+        </div>
 
-            <div class="pt-3 border-t border-neutral-800/80 flex items-center justify-between">
-              <div>
-                ${oldPrice ? `<span class="text-[10px] text-neutral-500 line-through block font-medium">${oldPrice.toFixed(2)} PLN</span>` : ''}
-                <span class="text-sm font-black text-orange-500">${price.toFixed(2)} PLN</span>
-              </div>
-              <button onclick="openProductModal('${p.id}')" ${isOutOfStock ? 'disabled' : ''} class="${isOutOfStock ? 'bg-neutral-800 text-neutral-600' : 'bg-neutral-800 hover:bg-orange-500 text-white'} text-xs font-bold px-3.5 py-2.5 rounded-xl transition-all cursor-pointer shadow-sm">
-                ${isOutOfStock ? 'Brak' : 'Wybierz'}
-              </button>
+        <!-- Klawiatura MIDI -->
+        <div class="keyboard-container">
+            <div class="keyboard-info">
+                <span><strong>Klawiatura MIDI (C3–B4)</strong> — Graj myszką lub klawiaturą komputera: <code style="color:var(--accent-cyan);">Z S X D C V G B H N J M</code> (Dolna oktawa) | <code style="color:var(--accent-amber);">Q 2 W 3 E R 5 T 6 Y 7 U</code> (Górna oktawa)</span>
+                <span style="font-family:var(--font-mono);color:var(--accent-emerald);" id="active-note-display">Ostatnia nuta: —</span>
             </div>
-          </div>
+            <div class="piano-keys" id="piano-keyboard"></div>
+        </div>
+    </footer>
+</div>
+
+<div id="daw-toast">Powiadomienie</div>
+
+<script>
+/**
+ * ============================================================================
+ * AETHER DAW — SILNIK AUDIO (WEB AUDIO API) + SEKWENCER + SYNTEZATOR
+ * ============================================================================
+ */
+
+/* 1. STAŁE MUZYCZNE I DEFINICJE NUT (C3 DO B4 — 24 PÓŁTONY) */
+const NOTES_24 = [
+    { midi: 71, name: 'B4',  black: false, keyHint: 'U' },
+    { midi: 70, name: 'A#4', black: true,  keyHint: '7' },
+    { midi: 69, name: 'A4',  black: false, keyHint: 'Y' },
+    { midi: 68, name: 'G#4', black: true,  keyHint: '6' },
+    { midi: 67, name: 'G4',  black: false, keyHint: 'T' },
+    { midi: 66, name: 'F#4', black: true,  keyHint: '5' },
+    { midi: 65, name: 'F4',  black: false, keyHint: 'R' },
+    { midi: 64, name: 'E4',  black: false, keyHint: 'E' },
+    { midi: 63, name: 'D#4', black: true,  keyHint: '3' },
+    { midi: 62, name: 'D4',  black: false, keyHint: 'W' },
+    { midi: 61, name: 'C#4', black: true,  keyHint: '2' },
+    { midi: 60, name: 'C4',  black: false, keyHint: 'Q' },
+    { midi: 59, name: 'B3',  black: false, keyHint: 'M' },
+    { midi: 58, name: 'A#3', black: true,  keyHint: 'J' },
+    { midi: 57, name: 'A3',  black: false, keyHint: 'N' },
+    { midi: 56, name: 'G#3', black: true,  keyHint: 'H' },
+    { midi: 55, name: 'G3',  black: false, keyHint: 'B' },
+    { midi: 54, name: 'F#3', black: true,  keyHint: 'G' },
+    { midi: 53, name: 'F3',  black: false, keyHint: 'V' },
+    { midi: 52, name: 'E3',  black: false, keyHint: 'C' },
+    { midi: 51, name: 'D#3', black: true,  keyHint: 'D' },
+    { midi: 50, name: 'D3',  black: false, keyHint: 'X' },
+    { midi: 49, name: 'C#3', black: true,  keyHint: 'S' },
+    { midi: 48, name: 'C3',  black: false, keyHint: 'Z' }
+];
+
+const SCALES = {
+    chromatic:   [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+    cMinor:      [0, 2, 3, 5, 7, 8, 10],
+    cMajor:      [0, 2, 4, 5, 7, 9, 11],
+    cPentatonic: [0, 3, 5, 7, 10],
+    cDorian:     [0, 2, 3, 5, 7, 9, 10]
+};
+
+const DRUM_TRACKS_META = [
+    { id: 'kick',   name: 'Kick 909',   color: '#ff2a6d' },
+    { id: 'snare',  name: 'Snare',      color: '#ff9e00' },
+    { id: 'chh',    name: 'Closed HH',  color: '#00f0ff' },
+    { id: 'ohh',    name: 'Open HH',    color: '#38bdf8' },
+    { id: 'clap',   name: 'Clap',       color: '#9d4edd' },
+    { id: 'rim',    name: 'Rimshot',    color: '#05ffa1' },
+    { id: 'tom',    name: 'Low Tom',    color: '#f43f5e' },
+    { id: 'crash',  name: 'Cyber Perc', color: '#eab308' }
+];
+
+const SYNTH_PRESETS = {
+    neonPluck: { osc1: 'sawtooth', osc2: 'square', mix: 0.45, detune: 14, oct: 0, cutoff: 3400, res: 4.2, envAmt: 2800, a: 0.01, d: 0.24, s: 0.25, r: 0.32, drive: 15, delay: 0.28, reverb: 0.32 },
+    reeseBass: { osc1: 'sawtooth', osc2: 'sawtooth', mix: 0.5, detune: 36, oct: -1, cutoff: 850, res: 5.5, envAmt: 900, a: 0.03, d: 0.45, s: 0.75, r: 0.25, drive: 42, delay: 0.05, reverb: 0.12 },
+    dreamPad:  { osc1: 'triangle', osc2: 'sawtooth', mix: 0.6, detune: 22, oct: 0, cutoff: 1800, res: 2.0, envAmt: 1100, a: 0.45, d: 0.85, s: 0.70, r: 1.20, drive: 5,  delay: 0.35, reverb: 0.65 },
+    acidLead:  { osc1: 'sawtooth', osc2: 'square', mix: 0.2, detune: 5,  oct: 0, cutoff: 650,  res: 14.5,envAmt: 4600, a: 0.01, d: 0.18, s: 0.15, r: 0.15, drive: 55, delay: 0.32, reverb: 0.22 },
+    sub808:    { osc1: 'sine',     osc2: 'triangle', mix: 0.25,detune: 0,  oct: -1, cutoff: 320,  res: 1.5, envAmt: 250,  a: 0.01, d: 0.55, s: 0.40, r: 0.45, drive: 28, delay: 0.0,  reverb: 0.05 }
+};
+
+/* 2. SILNIK AUDIO (WEB AUDIO API) */
+class AetherAudioEngine {
+    constructor() {
+        this.ctx = null;
+        this.masterGain = null;
+        this.limiter = null;
+        this.analyserL = null;
+        this.analyserR = null;
+        this.analyserMain = null;
+        this.noiseBuffer = null;
+
+        // Efekty Master Send dla Syntezatora
+        this.synthBus = null;
+        this.distortionNode = null;
+        this.delayNode = null;
+        this.delayFeedback = null;
+        this.delayWet = null;
+        this.reverbNode = null;
+        this.reverbWet = null;
+
+        this.activeVoices = new Map();
+    }
+
+    init() {
+        if (this.ctx) {
+            if (this.ctx.state === 'suspended') this.ctx.resume();
+            return;
+        }
+
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        this.ctx = new AudioCtx();
+
+        // Master Limiter & Gain
+        this.limiter = this.ctx.createDynamicsCompressor();
+        this.limiter.threshold.value = -3.0;
+        this.limiter.knee.value = 6.0;
+        this.limiter.ratio.value = 12.0;
+        this.limiter.attack.value = 0.003;
+        this.limiter.release.value = 0.15;
+
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.gain.value = 0.82;
+
+        // Analizatory Stereo VU + Spectrum
+        const splitter = this.ctx.createChannelSplitter(2);
+        this.analyserL = this.ctx.createAnalyser();
+        this.analyserR = this.ctx.createAnalyser();
+        this.analyserMain = this.ctx.createAnalyser();
+
+        this.analyserL.fftSize = 256;
+        this.analyserR.fftSize = 256;
+        this.analyserMain.fftSize = 1024;
+        this.analyserMain.smoothingTimeConstant = 0.82;
+
+        this.limiter.connect(this.masterGain);
+        this.masterGain.connect(this.analyserMain);
+        this.masterGain.connect(splitter);
+        splitter.connect(this.analyserL, 0);
+        splitter.connect(this.analyserR, 1);
+        this.masterGain.connect(this.ctx.destination);
+
+        // Szyna Syntezatora + FX (Drive -> Delay + Reverb -> Limiter)
+        this.synthBus = this.ctx.createGain();
+        this.synthBus.gain.value = 0.7;
+
+        this.distortionNode = this.ctx.createWaveShaper();
+        this.distortionNode.oversample = '4x';
+        this.setDistortion(12);
+
+        // Delay
+        this.delayNode = this.ctx.createDelay(2.0);
+        this.delayNode.delayTime.value = 0.36;
+        this.delayFeedback = this.ctx.createGain();
+        this.delayFeedback.gain.value = 0.38;
+        this.delayWet = this.ctx.createGain();
+        this.delayWet.gain.value = 0.25;
+
+        this.delayNode.connect(this.delayFeedback);
+        this.delayFeedback.connect(this.delayNode);
+        this.delayNode.connect(this.delayWet);
+        this.delayWet.connect(this.limiter);
+
+        // Reverb (Proceduralny Impulse Response)
+        this.reverbNode = this.ctx.createConvolver();
+        this.reverbNode.buffer = this.createImpulseResponse(2.2, 2.5);
+        this.reverbWet = this.ctx.createGain();
+        this.reverbWet.gain.value = 0.3;
+
+        this.reverbNode.connect(this.reverbWet);
+        this.reverbWet.connect(this.limiter);
+
+        // Routing szyny synth
+        this.synthBus.connect(this.distortionNode);
+        this.distortionNode.connect(this.limiter);
+        this.distortionNode.connect(this.delayNode);
+        this.distortionNode.connect(this.reverbNode);
+
+        // Bufor białego szumu dla perkusji
+        this.noiseBuffer = this.createNoiseBuffer();
+    }
+
+    createNoiseBuffer() {
+        const bufferSize = this.ctx.sampleRate * 2;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+        }
+        return buffer;
+    }
+
+    createImpulseResponse(duration, decay) {
+        const rate = this.ctx.sampleRate;
+        const length = rate * duration;
+        const impulse = this.ctx.createBuffer(2, length, rate);
+        for (let ch = 0; ch < 2; ch++) {
+            const channelData = impulse.getChannelData(ch);
+            for (let i = 0; i < length; i++) {
+                channelData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
+            }
+        }
+        return impulse;
+    }
+
+    setDistortion(amount) {
+        if (!this.distortionNode) return;
+        const k = amount * 2.5;
+        const n = 44100;
+        const curve = new Float32Array(n);
+        const deg = Math.PI / 180;
+        for (let i = 0; i < n; ++i) {
+            const x = (i * 2) / n - 1;
+            curve[i] = k === 0 ? x : ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+        }
+        this.distortionNode.curve = curve;
+    }
+
+    /* PROCEDURALNA SYNTEZA PERKUSJI (8 INSTRUMENTÓW) */
+    triggerDrum(trackId, time, trackState) {
+        this.init();
+        const t = time || this.ctx.currentTime;
+        const vol = trackState.vol;
+        const pitchMult = Math.pow(2, trackState.pitch / 12);
+
+        const panner = this.ctx.createStereoPanner();
+        panner.pan.setValueAtTime(trackState.pan, t);
+        panner.connect(this.limiter);
+
+        if (trackId === 'kick') {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(145 * pitchMult, t);
+            osc.frequency.exponentialRampToValueAtTime(42 * pitchMult, t + 0.09);
+            osc.frequency.exponentialRampToValueAtTime(28 * pitchMult, t + 0.35);
+
+            gain.gain.setValueAtTime(vol * 1.15, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.38);
+
+            osc.connect(gain);
+            gain.connect(panner);
+            osc.start(t);
+            osc.stop(t + 0.4);
+        } else if (trackId === 'snare') {
+            // Szum werbla
+            const noise = this.ctx.createBufferSource();
+            noise.buffer = this.noiseBuffer;
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'highpass';
+            filter.frequency.setValueAtTime(900 * pitchMult, t);
+            const nGain = this.ctx.createGain();
+            nGain.gain.setValueAtTime(vol * 0.75, t);
+            nGain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+
+            noise.connect(filter);
+            filter.connect(nGain);
+            nGain.connect(panner);
+            noise.start(t);
+            noise.stop(t + 0.24);
+
+            // Ciało (oscylator)
+            const osc = this.ctx.createOscillator();
+            const oGain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(210 * pitchMult, t);
+            osc.frequency.exponentialRampToValueAtTime(95 * pitchMult, t + 0.12);
+            oGain.gain.setValueAtTime(vol * 0.65, t);
+            oGain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+
+            osc.connect(oGain);
+            oGain.connect(panner);
+            osc.start(t);
+            osc.stop(t + 0.15);
+        } else if (trackId === 'chh' || trackId === 'ohh') {
+            const dur = trackId === 'chh' ? 0.065 : 0.34;
+            const noise = this.ctx.createBufferSource();
+            noise.buffer = this.noiseBuffer;
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'highpass';
+            filter.frequency.setValueAtTime(6500 * pitchMult, t);
+
+            const gain = this.ctx.createGain();
+            gain.gain.setValueAtTime(vol * 0.55, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(panner);
+            noise.start(t);
+            noise.stop(t + dur + 0.02);
+        } else if (trackId === 'clap') {
+            // Wielokrotny impuls szumu dla efektu klaskania
+            [0, 0.012, 0.024].forEach((offset, idx) => {
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = this.noiseBuffer;
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(1350 * pitchMult, t + offset);
+                filter.Q.value = 1.8;
+
+                const gain = this.ctx.createGain();
+                const decay = idx === 2 ? 0.22 : 0.03;
+                gain.gain.setValueAtTime(vol * 0.65, t + offset);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + offset + decay);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(panner);
+                noise.start(t + offset);
+                noise.stop(t + offset + decay + 0.01);
+            });
+        } else if (trackId === 'rim') {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(520 * pitchMult, t);
+            osc.frequency.exponentialRampToValueAtTime(280 * pitchMult, t + 0.045);
+            gain.gain.setValueAtTime(vol * 0.7, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.055);
+            osc.connect(gain);
+            gain.connect(panner);
+            osc.start(t);
+            osc.stop(t + 0.06);
+        } else if (trackId === 'tom') {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(165 * pitchMult, t);
+            osc.frequency.exponentialRampToValueAtTime(68 * pitchMult, t + 0.25);
+            gain.gain.setValueAtTime(vol * 0.85, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+            osc.connect(gain);
+            gain.connect(panner);
+            osc.start(t);
+            osc.stop(t + 0.3);
+        } else if (trackId === 'crash') {
+            // Metaliczny FM perc / cyber hit
+            const osc1 = this.ctx.createOscillator();
+            const osc2 = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc1.type = 'square';
+            osc2.type = 'sawtooth';
+            osc1.frequency.setValueAtTime(840 * pitchMult, t);
+            osc2.frequency.setValueAtTime(1245 * pitchMult, t);
+            osc1.frequency.exponentialRampToValueAtTime(420 * pitchMult, t + 0.18);
+
+            gain.gain.setValueAtTime(vol * 0.45, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+
+            osc1.connect(gain);
+            osc2.connect(gain);
+            gain.connect(panner);
+            osc1.start(t);
+            osc2.start(t);
+            osc1.stop(t + 0.24);
+            osc2.stop(t + 0.24);
+        }
+    }
+
+    /* METRONOM CLICK */
+    triggerMetronome(isAccent, time) {
+        this.init();
+        const t = time || this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(isAccent ? 1320 : 880, t);
+        gain.gain.setValueAtTime(0.22, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.035);
+        osc.connect(gain);
+        gain.connect(this.limiter);
+        osc.start(t);
+        osc.stop(t + 0.04);
+    }
+
+    /* POLIFONICZNY SYNTEZATOR SUBTRAKTYWNY (NOTE ON / NOTE OFF / SCHEDULED) */
+    midiToFreq(midi) {
+        return 440 * Math.pow(2, (midi - 69) / 12);
+    }
+
+    playSynthNote(midi, synthParams, durationSec = null, startTime = null) {
+        if (synthParams.muted) return;
+        this.init();
+
+        const t = startTime || this.ctx.currentTime;
+        const adjustedMidi = midi + (synthParams.oct * 12);
+        const freq = this.midiToFreq(adjustedMidi);
+
+        // Jeśli nuta grana na żywo już brzmi, zatrzymaj poprzednią
+        if (!durationSec && this.activeVoices.has(midi)) {
+            this.stopSynthNote(midi, synthParams);
+        }
+
+        const osc1 = this.ctx.createOscillator();
+        const osc2 = this.ctx.createOscillator();
+        osc1.type = synthParams.osc1;
+        osc2.type = synthParams.osc2;
+
+        osc1.frequency.setValueAtTime(freq, t);
+        osc2.frequency.setValueAtTime(freq, t);
+        osc2.detune.setValueAtTime(synthParams.detune, t);
+
+        const gain1 = this.ctx.createGain();
+        const gain2 = this.ctx.createGain();
+        gain1.gain.setValueAtTime(1 - synthParams.mix * 0.5, t);
+        gain2.gain.setValueAtTime(synthParams.mix, t);
+
+        // Filtr Lowpass z obwiednią
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.Q.setValueAtTime(synthParams.res, t);
+
+        const baseCutoff = synthParams.cutoff;
+        const peakCutoff = Math.min(18000, baseCutoff + synthParams.envAmt);
+        filter.frequency.setValueAtTime(baseCutoff, t);
+        filter.frequency.linearRampToValueAtTime(peakCutoff, t + synthParams.a);
+        filter.frequency.exponentialRampToValueAtTime(Math.max(40, baseCutoff + synthParams.envAmt * synthParams.s), t + synthParams.a + synthParams.d);
+
+        // Obwiednia głośności ADSR
+        const amp = this.ctx.createGain();
+        amp.gain.setValueAtTime(0.0001, t);
+        amp.gain.linearRampToValueAtTime(0.32, t + synthParams.a);
+        amp.gain.linearRampToValueAtTime(Math.max(0.0001, 0.32 * synthParams.s), t + synthParams.a + synthParams.d);
+
+        osc1.connect(gain1);
+        osc2.connect(gain2);
+        gain1.connect(filter);
+        gain2.connect(filter);
+        filter.connect(amp);
+        amp.connect(this.synthBus);
+
+        osc1.start(t);
+        osc2.start(t);
+
+        if (durationSec !== null) {
+            const stopT = t + durationSec;
+            amp.gain.setValueAtTime(Math.max(0.0001, 0.32 * synthParams.s), stopT);
+            amp.gain.exponentialRampToValueAtTime(0.0001, stopT + synthParams.r);
+            osc1.stop(stopT + synthParams.r + 0.03);
+            osc2.stop(stopT + synthParams.r + 0.03);
+        } else {
+            this.activeVoices.set(midi, { osc1, osc2, amp, filter });
+        }
+    }
+
+    stopSynthNote(midi, synthParams) {
+        const voice = this.activeVoices.get(midi);
+        if (!voice || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const rel = synthParams ? synthParams.r : 0.25;
+
+        voice.amp.gain.cancelScheduledValues(now);
+        voice.amp.gain.setValueAtTime(Math.max(0.0001, voice.amp.gain.value), now);
+        voice.amp.gain.exponentialRampToValueAtTime(0.0001, now + rel);
+
+        voice.osc1.stop(now + rel + 0.03);
+        voice.osc2.stop(now + rel + 0.03);
+        this.activeVoices.delete(midi);
+    }
+}
+
+const AudioEngine = new AetherAudioEngine();
+
+/* 3. GOTOWE UTWORY DEMONSTRACYJNE (SONG PRESETS) */
+const DEMO_SONGS = {
+    cyberpunk: {
+        bpm: 126,
+        swing: 10,
+        synthPreset: 'neonPluck',
+        drums: {
+            kick:  [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0,  1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,1,0],
+            snare: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0,  0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,1],
+            chh:   [0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0,  0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,1],
+            ohh:   [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,1,0,  0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,1,0],
+            clap:  [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0,  0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+            rim:   [0,0,0,1, 0,0,0,0, 0,1,0,0, 0,0,0,0,  0,0,0,1, 0,0,0,0, 0,1,0,1, 0,0,0,0],
+            tom:   [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,1,  0,0,0,0, 0,0,0,0, 0,0,0,0, 0,1,1,0],
+            crash: [1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
+        },
+        melody: [
+            { step: 0, midi: 48, len: 2 }, { step: 2, midi: 60, len: 1 }, { step: 3, midi: 55, len: 1 },
+            { step: 4, midi: 51, len: 2 }, { step: 6, midi: 63, len: 1 }, { step: 7, midi: 58, len: 1 },
+            { step: 8, midi: 53, len: 2 }, { step: 10, midi: 65, len: 1 }, { step: 11, midi: 60, len: 1 },
+            { step: 12, midi: 55, len: 2 }, { step: 14, midi: 67, len: 1 }, { step: 15, midi: 62, len: 1 }
+        ]
+    },
+    deephouse: {
+        bpm: 122,
+        swing: 28,
+        synthPreset: 'dreamPad',
+        drums: {
+            kick:  [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0,  1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0],
+            snare: [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0],
+            chh:   [0,1,0,1, 0,1,0,1, 0,1,0,1, 0,1,0,1,  0,1,0,1, 0,1,0,1, 0,1,0,1, 0,1,1,1],
+            ohh:   [0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0,  0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0],
+            clap:  [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0,  0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+            rim:   [0,0,0,1, 0,0,1,0, 0,0,0,1, 0,0,0,0,  0,0,0,1, 0,0,1,0, 0,0,0,1, 0,1,0,0],
+            tom:   [0,0,0,0, 0,0,0,0, 0,0,1,0, 0,0,0,1,  0,0,0,0, 0,0,0,0, 0,0,1,0, 0,0,0,1],
+            crash: [1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
+        },
+        melody: [
+            { step: 0, midi: 60, len: 3 }, { step: 0, midi: 63, len: 3 }, { step: 0, midi: 67, len: 3 },
+            { step: 6, midi: 58, len: 4 }, { step: 6, midi: 62, len: 4 }, { step: 6, midi: 65, len: 4 },
+            { step: 12, midi: 56, len: 4 }, { step: 12, midi: 60, len: 4 }, { step: 12, midi: 63, len: 4 }
+        ]
+    },
+    lofi: {
+        bpm: 84,
+        swing: 45,
+        synthPreset: 'dreamPad',
+        drums: {
+            kick:  [1,0,0,0, 0,0,0,1, 0,0,1,0, 0,0,0,0,  1,0,0,0, 0,0,0,1, 0,1,1,0, 0,0,0,0],
+            snare: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0,  0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,1],
+            chh:   [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0,  1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0],
+            ohh:   [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,1,0,  0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0],
+            clap:  [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0],
+            rim:   [0,0,0,1, 0,0,0,0, 0,0,0,0, 0,0,0,1,  0,0,0,1, 0,0,0,0, 0,0,0,0, 0,0,0,0],
+            tom:   [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0],
+            crash: [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
+        },
+        melody: [
+            { step: 0, midi: 63, len: 4 }, { step: 0, midi: 67, len: 4 }, { step: 0, midi: 70, len: 4 },
+            { step: 8, midi: 60, len: 4 }, { step: 8, midi: 65, len: 4 }, { step: 8, midi: 68, len: 4 },
+            { step: 13, midi: 67, len: 2 }, { step: 15, midi: 65, len: 1 }
+        ]
+    },
+    dnb: {
+        bpm: 174,
+        swing: 5,
+        synthPreset: 'reeseBass',
+        drums: {
+            kick:  [1,0,0,0, 0,0,0,0, 0,0,1,0, 0,0,0,0,  1,0,0,0, 0,0,0,0, 0,0,1,0, 0,0,0,0],
+            snare: [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0,  0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,1],
+            chh:   [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,0,  1,0,1,0, 1,0,1,0, 1,0,1,0, 1,1,1,1],
+            ohh:   [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,1,0,  0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0],
+            clap:  [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0,  0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+            rim:   [0,0,0,0, 0,0,0,1, 0,1,0,0, 0,0,0,0,  0,0,0,0, 0,0,0,1, 0,1,0,0, 0,0,0,0],
+            tom:   [0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,1,0],
+            crash: [1,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
+        },
+        melody: [
+            { step: 0, midi: 48, len: 6 }, { step: 6, midi: 51, len: 2 },
+            { step: 8, midi: 53, len: 4 }, { step: 12, midi: 55, len: 2 }, { step: 14, midi: 46, len: 2 }
+        ]
+    },
+    empty: {
+        bpm: 120,
+        swing: 0,
+        synthPreset: 'neonPluck',
+        drums: {
+            kick:  Array(32).fill(0), snare: Array(32).fill(0), chh: Array(32).fill(0), ohh: Array(32).fill(0),
+            clap:  Array(32).fill(0), rim:   Array(32).fill(0), tom: Array(32).fill(0), crash: Array(32).fill(0)
+        },
+        melody: []
+    }
+};
+
+/* 4. GŁÓWNY KONTROLER APLIKACJI (AETHER DAW) */
+const DAW = {
+    isPlaying: false,
+    isRecording: false,
+    isLooping: true,
+    metronomeOn: false,
+    bpm: 124,
+    swing: 15,
+    drumPage: 0, // 0 = kroki 1..16, 1 = kroki 17..32
+    currentStep: 0, // 0..31
+    startTime: 0,
+    timerId: null,
+    tapTimes: [],
+    vizMode: 'spectrum',
+    currentScale: 'cMinor',
+
+    // Stan ścieżek perkusyjnych
+    drumTracks: {},
+    // Nuty w Piano Roll: tablica obiektów { step: 0..15, midi: 48..71, len: 1..8 }
+    melodyNotes: [],
+    // Parametry syntezatora
+    synth: {
+        osc1: 'sawtooth',
+        osc2: 'square',
+        mix: 0.45,
+        detune: 14,
+        oct: 0,
+        cutoff: 3400,
+        res: 4.2,
+        envAmt: 2800,
+        a: 0.01,
+        d: 0.24,
+        s: 0.25,
+        r: 0.32,
+        drive: 15,
+        delay: 0.28,
+        reverb: 0.32,
+        muted: false
+    },
+
+    init() {
+        this.initDrumTracksState();
+        this.initKnobs();
+        this.renderDrumSequencer();
+        this.renderPianoRoll();
+        this.renderKeyboard();
+        this.bindEvents();
+        this.loadDemoSong('cyberpunk');
+        this.drawADSR();
+        this.startVisualLoop();
+    },
+
+    initDrumTracksState() {
+        DRUM_TRACKS_META.forEach(meta => {
+            this.drumTracks[meta.id] = {
+                ...meta,
+                vol: 0.85,
+                pan: 0,
+                pitch: 0,
+                mute: false,
+                solo: false,
+                steps: Array(32).fill(0)
+            };
+        });
+    },
+
+    toast(msg) {
+        const el = document.getElementById('daw-toast');
+        el.textContent = msg;
+        el.classList.add('show');
+        clearTimeout(this._toastTimer);
+        this._toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+    },
+
+    /* ======================================================================
+       POKRĘTŁA OBROTOWE (ROTARY KNOBS ENGINE)
+       ====================================================================== */
+    initKnobs() {
+        document.querySelectorAll('.knob-unit').forEach(unit => this.setupKnob(unit));
+    },
+
+    setupKnob(unit, customOnChange = null) {
+        const min = parseFloat(unit.dataset.min || 0);
+        const max = parseFloat(unit.dataset.max || 1);
+        const step = parseFloat(unit.dataset.step || 0);
+        const isExp = unit.dataset.exp === 'true';
+        const label = unit.dataset.label || '';
+        const unitStr = unit.dataset.unit || '';
+        const color = unit.dataset.color || 'var(--accent-cyan)';
+        let val = parseFloat(unit.dataset.val || min);
+
+        unit.innerHTML = `
+            <div class="rotary-knob" style="--knob-color:${color}">
+                <div class="knob-pointer"></div>
+            </div>
+            <span class="knob-label">${label}</span>
+            <span class="knob-val"></span>
         `;
-      });
 
-      grid.innerHTML = html;
+        const knobEl = unit.querySelector('.rotary-knob');
+        const pointerEl = unit.querySelector('.knob-pointer');
+        const valEl = unit.querySelector('.knob-val');
 
-      let paginationHtml = '';
-      if (totalPages > 1) {
-        for (let i = 1; i <= totalPages; i++) {
-          paginationHtml += `
-            <button onclick="changePage(${i})" class="w-9 h-9 rounded-xl font-bold text-xs transition-all cursor-pointer ${i === currentPage ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20' : 'bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white'}">
-              ${i}
-            </button>
-          `;
+        const getNorm = (v) => {
+            if (isExp) {
+                return Math.log(v / min) / Math.log(max / min);
+            }
+            return (v - min) / (max - min);
+        };
+
+        const fromNorm = (n) => {
+            const clamped = Math.max(0, Math.min(1, n));
+            let res = isExp ? min * Math.pow(max / min, clamped) : min + clamped * (max - min);
+            if (step > 0) res = Math.round(res / step) * step;
+            return res;
+        };
+
+        const updateVisual = (v) => {
+            const norm = getNorm(v);
+            const deg = -135 + norm * 270;
+            pointerEl.style.transform = `translateX(-50%) rotate(${deg}deg)`;
+
+            if (unitStr === '%') {
+                const pct = max === 1 ? Math.round(v * 100) : Math.round(v);
+                valEl.textContent = pct + '%';
+            } else if (unitStr === 'Hz') {
+                valEl.textContent = v >= 1000 ? (v / 1000).toFixed(1) + 'k' : Math.round(v);
+            } else if (step >= 1) {
+                valEl.textContent = (v > 0 ? '+' : '') + Math.round(v);
+            } else {
+                valEl.textContent = v.toFixed(2);
+            }
+        };
+
+        unit.setValue = (newVal) => {
+            val = Math.max(min, Math.min(max, newVal));
+            unit.dataset.val = val;
+            updateVisual(val);
+        };
+
+        updateVisual(val);
+
+        let startY = 0;
+        let startNorm = 0;
+
+        const onMouseDown = (e) => {
+            e.preventDefault();
+            AudioEngine.init();
+            startY = e.clientY;
+            startNorm = getNorm(val);
+
+            const onMouseMove = (ev) => {
+                const dy = startY - ev.clientY;
+                const newNorm = startNorm + dy / 130;
+                val = fromNorm(newNorm);
+                unit.dataset.val = val;
+                updateVisual(val);
+                if (customOnChange) customOnChange(val);
+                this.handleKnobChange(unit.id, val);
+            };
+
+            const onMouseUp = () => {
+                window.removeEventListener('mousemove', onMouseMove);
+                window.removeEventListener('mouseup', onMouseUp);
+            };
+
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup', onMouseUp);
+        };
+
+        knobEl.addEventListener('mousedown', onMouseDown);
+    },
+
+    handleKnobChange(id, val) {
+        if (id === 'knob-master-vol') {
+            if (AudioEngine.masterGain) AudioEngine.masterGain.gain.value = val;
+        } else if (id === 'knob-osc-mix') {
+            this.synth.mix = val;
+        } else if (id === 'knob-osc-detune') {
+            this.synth.detune = val;
+        } else if (id === 'knob-osc-oct') {
+            this.synth.oct = Math.round(val);
+        } else if (id === 'knob-flt-cutoff') {
+            this.synth.cutoff = val;
+        } else if (id === 'knob-flt-res') {
+            this.synth.res = val;
+        } else if (id === 'knob-flt-env') {
+            this.synth.envAmt = val;
+        } else if (id === 'knob-env-a') {
+            this.synth.a = val;
+            this.drawADSR();
+        } else if (id === 'knob-env-d') {
+            this.synth.d = val;
+            this.drawADSR();
+        } else if (id === 'knob-env-s') {
+            this.synth.s = val;
+            this.drawADSR();
+        } else if (id === 'knob-env-r') {
+            this.synth.r = val;
+            this.drawADSR();
+        } else if (id === 'knob-fx-drive') {
+            this.synth.drive = val;
+            AudioEngine.setDistortion(val);
+        } else if (id === 'knob-fx-delay') {
+            this.synth.delay = val;
+            if (AudioEngine.delayWet) AudioEngine.delayWet.gain.value = val;
+        } else if (id === 'knob-fx-reverb') {
+            this.synth.reverb = val;
+            if (AudioEngine.reverbWet) AudioEngine.reverbWet.gain.value = val;
         }
-      }
-      paginationContainer.innerHTML = paginationHtml;
-    }
+    },
 
-    function changePage(page) {
-      currentPage = page;
-      renderProducts();
-      window.scrollTo({ top: 400, behavior: 'smooth' });
-    }
+    /* Rysowanie krzywej obwiedni ADSR na Canvas */
+    drawADSR() {
+        const canvas = document.getElementById('adsr-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width;
+        const h = canvas.height;
 
-    let selectedProductForModal = null;
+        ctx.clearRect(0, 0, w, h);
 
-    function openProductModal(id) {
-      loadInventoryQtys();
-      const p = products.find(prod => String(prod.id) === String(id));
-      if (!p) return;
-      selectedProductForModal = p;
+        // Siatka tła
+        ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, h / 2);
+        ctx.lineTo(w, h / 2);
+        ctx.stroke();
 
-      document.getElementById('modal-product-img').src = p.img || '';
-      document.getElementById('modal-product-title').innerText = p.name || '';
-      document.getElementById('modal-product-desc').innerText = p.description || 'Brak opisu produktu.';
-      document.getElementById('modal-product-price').innerText = (typeof p.price === 'number' ? p.price : parseFloat(p.price)).toFixed(2) + ' PLN';
+        const pad = 6;
+        const usableW = w - pad * 2;
+        const usableH = h - pad * 2;
 
-      const flavorContainer = document.getElementById('modal-flavor-container');
-      const flavorSelect = document.getElementById('modal-flavor-select');
-      
-      if (p.smaki && p.smaki.length > 0) {
-        flavorContainer.classList.remove('hidden');
-        flavorSelect.innerHTML = '';
-        p.smaki.forEach(flavor => {
-          const key = `${p.id}_${flavor}`;
-          const qty = inventoryQtys[key] !== undefined ? inventoryQtys[key] : 0;
-          const disabledAttr = qty <= 0 ? 'disabled' : '';
-          const stockLabel = qty <= 0 ? ' (Wyprzedane)' : ` (${qty} szt.)`;
-          flavorSelect.innerHTML += `<option value="${flavor}" ${disabledAttr}>${flavor}${stockLabel}</option>`;
+        const aW = (this.synth.a / 1.5) * (usableW * 0.28);
+        const dW = (this.synth.d / 2.0) * (usableW * 0.28);
+        const sW = usableW * 0.22;
+        const rW = (this.synth.r / 2.5) * (usableW * 0.22);
+        const sY = pad + (1 - this.synth.s) * usableH;
+
+        const x0 = pad;
+        const y0 = h - pad;
+        const x1 = x0 + Math.max(4, aW);
+        const y1 = pad;
+        const x2 = x1 + Math.max(6, dW);
+        const y2 = sY;
+        const x3 = x2 + sW;
+        const y3 = sY;
+        const x4 = Math.min(w - pad, x3 + Math.max(6, rW));
+        const y4 = h - pad;
+
+        // Wypełnienie gradientem
+        const grad = ctx.createLinearGradient(0, 0, 0, h);
+        grad.addColorStop(0, 'rgba(0, 240, 255, 0.35)');
+        grad.addColorStop(1, 'rgba(0, 240, 255, 0.0)');
+
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.lineTo(x3, y3);
+        ctx.lineTo(x4, y4);
+        ctx.closePath();
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Linia obwiedni
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.lineTo(x3, y3);
+        ctx.lineTo(x4, y4);
+        ctx.strokeStyle = '#00f0ff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Punkty węzłowe
+        ctx.fillStyle = '#fff';
+        [[x1, y1], [x2, y2], [x3, y3]].forEach(([px, py]) => {
+            ctx.beginPath();
+            ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+            ctx.fill();
         });
-      } else {
-        flavorContainer.classList.add('hidden');
-      }
+    },
 
-      checkFlavorStockSelection();
-      document.getElementById('product-modal').classList.remove('hidden');
-    }
+    /* ======================================================================
+       DRUM MACHINE / STEP SEQUENCER
+       ====================================================================== */
+    setDrumPage(pageIdx) {
+        this.drumPage = pageIdx;
+        document.getElementById('btn-page-1').classList.toggle('toggle-on', pageIdx === 0);
+        document.getElementById('btn-page-2').classList.toggle('toggle-on', pageIdx === 1);
+        this.renderDrumSequencer();
+    },
 
-    function checkFlavorStockSelection() {
-      const flavorSelect = document.getElementById('modal-flavor-select');
-      const stockInfo = document.getElementById('flavor-stock-info');
-      const addBtn = document.getElementById('modal-add-btn');
+    renderDrumSequencer() {
+        const container = document.getElementById('drum-sequencer-body');
+        const offset = this.drumPage * 16;
 
-      if (!selectedProductForModal) return;
+        let html = `<div class="step-header-row">
+            <div style="font-size:10px;color:var(--text-muted);font-weight:700;padding-left:6px;">INSTRUMENT / MIX</div>`;
+        for (let i = 0; i < 16; i++) {
+            const stepNum = offset + i + 1;
+            const isBeat = i % 4 === 0;
+            html += `<div class="step-num ${isBeat ? 'beat-start' : ''}" id="step-num-${i}">${stepNum}</div>`;
+        }
+        html += `</div>`;
 
-      let currentQty = 0;
-      if (selectedProductForModal.smaki && selectedProductForModal.smaki.length > 0) {
-        const selectedFlavor = flavorSelect.value;
-        const key = `${selectedProductForModal.id}_${selectedFlavor}`;
-        currentQty = inventoryQtys[key] !== undefined ? inventoryQtys[key] : 0;
-      } else {
-        const key = `${selectedProductForModal.id}_default`;
-        currentQty = inventoryQtys[key] !== undefined ? inventoryQtys[key] : 0;
-      }
+        DRUM_TRACKS_META.forEach(meta => {
+            const track = this.drumTracks[meta.id];
+            html += `<div class="drum-row" style="--track-color:${meta.color}">
+                <div class="track-controls">
+                    <button class="track-trigger-btn" data-trigger="${meta.id}" title="Kliknij, aby odsłuchać">${meta.name}</button>
+                    <button class="ms-btn mute ${track.mute ? 'active' : ''}" data-mute="${meta.id}" title="Mute">M</button>
+                    <button class="ms-btn solo ${track.solo ? 'active' : ''}" data-solo="${meta.id}" title="Solo">S</button>
+                    <div class="knob-unit mini" id="dknob-vol-${meta.id}" data-min="0" data-max="1" data-val="${track.vol}" data-color="${meta.color}" title="Głośność"></div>
+                    <div class="knob-unit mini" id="dknob-pan-${meta.id}" data-min="-1" data-max="1" data-val="${track.pan}" data-color="#94a3b8" title="Panorama L/R"></div>
+                    <div class="knob-unit mini" id="dknob-pit-${meta.id}" data-min="-12" data-max="12" data-step="1" data-val="${track.pitch}" data-color="#ff9e00" title="Strojenie (Półtony)"></div>
+                </div>`;
 
-      if (currentQty > 0) {
-        stockInfo.innerText = `✅ Dostępne w magazynie: ${currentQty} szt.`;
-        stockInfo.className = 'text-[11px] mt-2 font-bold text-green-400';
-        addBtn.disabled = false;
-        addBtn.innerText = 'DODAJ DO KOSZYKA';
-        addBtn.className = 'w-full bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold py-4 rounded-2xl uppercase tracking-wider transition-all cursor-pointer shadow-lg shadow-orange-500/25';
-      } else {
-        stockInfo.innerText = `❌ Wyprzedane! Brak sztuk tego wariantu. Nie można zamówić.`;
-        stockInfo.className = 'text-[11px] mt-2 font-bold text-red-400';
-        addBtn.disabled = true;
-        addBtn.innerText = 'BRAK W MAGAZYNIE (NIEDOSTĘPNE)';
-        addBtn.className = 'w-full bg-neutral-800 text-neutral-500 font-bold text-xs py-4 rounded-2xl uppercase tracking-wider cursor-not-allowed border border-neutral-700';
-      }
-    }
+            for (let i = 0; i < 16; i++) {
+                const absStep = offset + i;
+                const isActive = track.steps[absStep] === 1;
+                const isAlt = Math.floor(i / 4) % 2 === 1;
+                html += `<div class="seq-pad ${isAlt ? 'beat-alt' : ''} ${isActive ? 'active' : ''}" data-track="${meta.id}" data-step="${absStep}" id="pad-${meta.id}-${i}"></div>`;
+            }
+            html += `</div>`;
+        });
 
-    function closeProductModal() {
-      document.getElementById('product-modal').classList.add('hidden');
-      selectedProductForModal = null;
-    }
+        container.innerHTML = html;
 
-    function addProductToCartFromModal(p) {
-      const flavorSelect = document.getElementById('modal-flavor-select');
-      const selectedTaste = (p.smaki && p.smaki.length > 0) ? flavorSelect.value : 'Brak';
+        // Podpięcie mini pokręteł dla każdej ścieżki perkusyjnej
+        DRUM_TRACKS_META.forEach(meta => {
+            const track = this.drumTracks[meta.id];
+            this.setupKnob(document.getElementById(`dknob-vol-${meta.id}`), (v) => track.vol = v);
+            this.setupKnob(document.getElementById(`dknob-pan-${meta.id}`), (v) => track.pan = v);
+            this.setupKnob(document.getElementById(`dknob-pit-${meta.id}`), (v) => track.pitch = v);
+        });
 
-      cart.push({
-        id: p.id,
-        name: p.name,
-        price: parseFloat(p.price),
-        selectedTaste: selectedTaste,
-        img: p.img
-      });
+        // Odsłuch ścieżki
+        container.querySelectorAll('[data-trigger]').forEach(btn => {
+            btn.onclick = () => {
+                const id = btn.dataset.trigger;
+                AudioEngine.triggerDrum(id, null, this.drumTracks[id]);
+            };
+        });
 
-      closeProductModal();
-      updateCartUI();
-      openCartDrawer();
-    }
+        // Mute / Solo
+        container.querySelectorAll('[data-mute]').forEach(btn => {
+            btn.onclick = () => {
+                const id = btn.dataset.mute;
+                this.drumTracks[id].mute = !this.drumTracks[id].mute;
+                btn.classList.toggle('active', this.drumTracks[id].mute);
+            };
+        });
 
-    function openCartDrawer() {
-      document.getElementById('cart-drawer-backdrop').classList.remove('hidden');
-      document.getElementById('cart-drawer').classList.remove('translate-x-full');
-    }
+        container.querySelectorAll('[data-solo]').forEach(btn => {
+            btn.onclick = () => {
+                const id = btn.dataset.solo;
+                this.drumTracks[id].solo = !this.drumTracks[id].solo;
+                btn.classList.toggle('active', this.drumTracks[id].solo);
+            };
+        });
 
-    function closeCartDrawer() {
-      document.getElementById('cart-drawer-backdrop').classList.add('hidden');
-      document.getElementById('cart-drawer').classList.add('translate-x-full');
-    }
+        // Klikanie padów (z obsługą malowania przeciągnięciem myszki)
+        let isPainting = false;
+        let paintValue = 1;
 
-    function updateCartUI() {
-      const countEl = document.getElementById('cart-count');
-      const drawerCountEl = document.getElementById('drawer-cart-count');
-      countEl.innerText = cart.length;
-      drawerCountEl.innerText = cart.length;
+        container.querySelectorAll('.seq-pad').forEach(pad => {
+            pad.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                AudioEngine.init();
+                const trId = pad.dataset.track;
+                const st = parseInt(pad.dataset.step);
+                paintValue = this.drumTracks[trId].steps[st] ? 0 : 1;
+                this.drumTracks[trId].steps[st] = paintValue;
+                pad.classList.toggle('active', paintValue === 1);
+                if (paintValue === 1 && !this.isPlaying) {
+                    AudioEngine.triggerDrum(trId, null, this.drumTracks[trId]);
+                }
+                isPainting = true;
+            });
 
-      const cartList = document.getElementById('cart-list');
-      if (cart.length === 0) {
-        cartList.innerHTML = '<p class="text-xs text-neutral-500 text-center py-6">Twój koszyk jest pusty.</p>';
-      } else {
+            pad.addEventListener('mouseenter', () => {
+                if (!isPainting) return;
+                const trId = pad.dataset.track;
+                const st = parseInt(pad.dataset.step);
+                this.drumTracks[trId].steps[st] = paintValue;
+                pad.classList.toggle('active', paintValue === 1);
+            });
+        });
+
+        window.addEventListener('mouseup', () => { isPainting = false; });
+    },
+
+    randomizeDrums() {
+        const patterns = {
+            kick:  () => Math.random() < 0.28 ? 1 : 0,
+            snare: (i) => (i % 8 === 4) ? 1 : (Math.random() < 0.1 ? 1 : 0),
+            chh:   (i) => (i % 2 === 0 && Math.random() < 0.85) ? 1 : (Math.random() < 0.3 ? 1 : 0),
+            ohh:   (i) => (i % 4 === 2 && Math.random() < 0.4) ? 1 : 0,
+            clap:  (i) => (i % 8 === 4 && Math.random() < 0.7) ? 1 : 0,
+            rim:   () => Math.random() < 0.15 ? 1 : 0,
+            tom:   () => Math.random() < 0.14 ? 1 : 0,
+            crash: (i) => i === 0 ? 1 : 0
+        };
+
+        DRUM_TRACKS_META.forEach(m => {
+            for (let i = 0; i < 32; i++) {
+                this.drumTracks[m.id].steps[i] = patterns[m.id](i);
+            }
+        });
+        this.renderDrumSequencer();
+        this.toast('Wygenerowano nowy pattern perkusyjny');
+    },
+
+    clearDrums() {
+        DRUM_TRACKS_META.forEach(m => {
+            this.drumTracks[m.id].steps.fill(0);
+        });
+        this.renderDrumSequencer();
+        this.toast('Wyczyszczono ścieżki perkusyjne');
+    },
+
+    /* ======================================================================
+       PIANO ROLL (EDYTOR MELODII 24x16)
+       ====================================================================== */
+    renderPianoRoll() {
+        const container = document.getElementById('pianoroll-container');
+        const allowedPitchClasses = SCALES[this.currentScale] || SCALES.chromatic;
+
         let html = '';
-        cart.forEach((item, index) => {
-          html += `
-            <div class="bg-neutral-950 p-3.5 rounded-2xl border border-neutral-800 flex items-center justify-between gap-3">
-              <div class="w-12 h-12 bg-neutral-900 rounded-xl flex items-center justify-center p-1 shrink-0 border border-neutral-800">
-                <img src="${item.img}" class="max-h-full object-contain">
-              </div>
-              <div class="flex-1 min-w-0">
-                <h4 class="text-xs font-bold text-white truncate">${item.name}</h4>
-                <p class="text-[10px] text-neutral-400">Wariant: <span class="text-orange-400">${item.selectedTaste}</span></p>
-                <span class="text-xs font-black text-orange-500">${item.price.toFixed(2)} PLN</span>
-              </div>
-              <button onclick="removeFromCart(${index})" class="text-neutral-500 hover:text-red-400 text-xs font-bold p-2 cursor-pointer transition-colors">✕</button>
-            </div>
-          `;
+        NOTES_24.forEach(note => {
+            const pitchClass = note.midi % 12;
+            const inScale = allowedPitchClasses.includes(pitchClass);
+
+            html += `<div class="pianoroll-grid">
+                <div class="pr-key-label ${note.black ? 'black' : 'white'} ${inScale ? 'in-scale' : ''}" data-preview-midi="${note.midi}">
+                    <span>${note.name}</span>
+                    <span style="font-size:8px;opacity:0.65;">${note.keyHint}</span>
+                </div>`;
+
+            for (let step = 0; step < 16; step++) {
+                const isBeat = step % 4 === 0;
+                // Sprawdź czy w tym miejscu zaczyna się lub trwa nuta
+                const startingNote = this.melodyNotes.find(n => n.midi === note.midi && n.step === step);
+                const sustainingNote = this.melodyNotes.find(n => n.midi === note.midi && step > n.step && step < n.step + n.len);
+
+                let cls = `pr-cell ${note.black ? 'black-row' : ''} ${isBeat ? 'beat-col' : ''} ${!inScale ? 'out-scale' : ''}`;
+                if (startingNote) cls += ' note-on';
+                else if (sustainingNote) cls += ' note-sustain';
+
+                html += `<div class="${cls}" data-midi="${note.midi}" data-step="${step}" id="pr-${note.midi}-${step}"></div>`;
+            }
+            html += `</div>`;
         });
-        cartList.innerHTML = html;
-      }
 
-      calculateTotals();
-      checkCartForm();
-    }
+        container.innerHTML = html;
 
-    function removeFromCart(index) {
-      cart.splice(index, 1);
-      updateCartUI();
-    }
-
-    function calculateTotals() {
-      const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
-      document.getElementById('subtotal-amount').innerText = subtotal.toFixed(2) + ' PLN';
-
-      let discountVal = 0;
-      if (activeDiscount > 0) {
-        discountVal = (subtotal * activeDiscount) / 100;
-        document.getElementById('discount-row').classList.remove('hidden');
-        document.getElementById('discount-amount').innerText = '-' + discountVal.toFixed(2) + ' PLN';
-      } else {
-        document.getElementById('discount-row').classList.add('hidden');
-      }
-
-      const total = Math.max(0, subtotal - discountVal) + deliveryFee;
-      document.getElementById('cart-total').innerText = total.toFixed(2) + ' PLN';
-    }
-
-    async function applyPromoCode() {
-      const codeInput = document.getElementById('promo-code-input').value.trim();
-      const promoMsg = document.getElementById('promo-msg');
-      if (!codeInput) return;
-
-      try {
-        const res = await fetch('https://lbk.onrender.com/check-promo', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code: codeInput })
+        // Podgląd dźwięku po kliknięciu nazwy klawisza po lewej
+        container.querySelectorAll('[data-preview-midi]').forEach(el => {
+            el.onmousedown = () => {
+                const midi = parseInt(el.dataset.previewMidi);
+                AudioEngine.playSynthNote(midi, this.synth, 0.25);
+            };
         });
-        const data = await res.json();
 
-        if (data.success) {
-          activeDiscount = parseFloat(data.discount);
-          appliedPromoCode = codeInput;
-          promoMsg.innerText = `✅ Kod zastosowany! Rabat: ${activeDiscount}%`;
-          promoMsg.className = 'text-[11px] mt-1.5 text-green-400 font-medium';
-          promoMsg.classList.remove('hidden');
-          calculateTotals();
+        // Kliknięcie komórki Piano Roll
+        container.querySelectorAll('.pr-cell').forEach(cell => {
+            cell.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                AudioEngine.init();
+                const midi = parseInt(cell.dataset.midi);
+                const step = parseInt(cell.dataset.step);
+
+                // Prawy przycisk myszy: wydłużenie nuty o 1 krok (do max 8 kroków)
+                if (e.button === 2) {
+                    const existing = this.melodyNotes.find(n => n.midi === midi && step >= n.step && step < n.step + n.len);
+                    if (existing) {
+                        existing.len = existing.len >= 6 ? 1 : existing.len + 1;
+                        this.renderPianoRoll();
+                    }
+                    return;
+                }
+
+                // Lewy przycisk myszy: dodaj lub usuń nutę
+                const existingIdx = this.melodyNotes.findIndex(n => n.midi === midi && step >= n.step && step < n.step + n.len);
+                if (existingIdx !== -1) {
+                    this.melodyNotes.splice(existingIdx, 1);
+                } else {
+                    this.melodyNotes.push({ step, midi, len: 1 });
+                    if (!this.isPlaying) {
+                        AudioEngine.playSynthNote(midi, this.synth, 0.22);
+                    }
+                }
+                this.renderPianoRoll();
+            });
+
+            cell.addEventListener('contextmenu', (e) => e.preventDefault());
+        });
+    },
+
+    /* ======================================================================
+       DOLNA KLAWIATURA MIDI (2 OKTAWY: C3 DO B4)
+       ====================================================================== */
+    renderKeyboard() {
+        const kb = document.getElementById('piano-keyboard');
+        kb.innerHTML = '';
+
+        // Odwracamy kolejność z C3 do B4
+        const notesAsc = [...NOTES_24].reverse();
+        const whiteNotes = notesAsc.filter(n => !n.black);
+
+        whiteNotes.forEach(note => {
+            const key = document.createElement('div');
+            key.className = 'key-white';
+            key.id = `midi-key-${note.midi}`;
+            key.innerHTML = `<span style="font-size:8px;opacity:0.6;">${note.keyHint}</span><span>${note.name}</span>`;
+
+            key.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                this.triggerLiveKeyOn(note.midi, note.name);
+            });
+            key.addEventListener('mouseup', () => this.triggerLiveKeyOff(note.midi));
+            key.addEventListener('mouseleave', () => this.triggerLiveKeyOff(note.midi));
+            kb.appendChild(key);
+        });
+
+        // Czarne klawisze pozycjonowane procentowo względem białych
+        const blackOffsets = {
+            49: 4.8,  // C#3
+            51: 12.0, // D#3
+            54: 26.2, // F#3
+            56: 33.4, // G#3
+            58: 40.5, // A#3
+            61: 54.8, // C#4
+            63: 62.0, // D#4
+            66: 76.2, // F#4
+            68: 83.4, // G#4
+            70: 90.5  // A#4
+        };
+
+        notesAsc.filter(n => n.black).forEach(note => {
+            const key = document.createElement('div');
+            key.className = 'key-black';
+            key.id = `midi-key-${note.midi}`;
+            key.style.left = blackOffsets[note.midi] + '%';
+            key.innerHTML = `<span>${note.keyHint}</span>`;
+
+            key.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.triggerLiveKeyOn(note.midi, note.name);
+            });
+            key.addEventListener('mouseup', () => this.triggerLiveKeyOff(note.midi));
+            key.addEventListener('mouseleave', () => this.triggerLiveKeyOff(note.midi));
+            kb.appendChild(key);
+        });
+    },
+
+    triggerLiveKeyOn(midi, noteName = '') {
+        const keyEl = document.getElementById(`midi-key-${midi}`);
+        if (keyEl) keyEl.classList.add('active');
+        if (noteName) {
+            document.getElementById('active-note-display').textContent = `Ostatnia nuta: ${noteName} (MIDI ${midi})`;
+        }
+
+        AudioEngine.playSynthNote(midi, this.synth, null);
+
+        // Jeśli włączony jest tryb nagrywania (REC) podczas odtwarzania, zapisz nutę w Piano Roll!
+        if (this.isPlaying && this.isRecording) {
+            const step16 = this.currentStep % 16;
+            const exists = this.melodyNotes.some(n => n.midi === midi && n.step === step16);
+            if (!exists) {
+                this.melodyNotes.push({ step: step16, midi, len: 1 });
+                this.renderPianoRoll();
+            }
+        }
+    },
+
+    triggerLiveKeyOff(midi) {
+        const keyEl = document.getElementById(`midi-key-${midi}`);
+        if (keyEl) keyEl.classList.remove('active');
+        AudioEngine.stopSynthNote(midi, this.synth);
+    },
+
+    /* ======================================================================
+       SILNIK SEKWENCERA CZASU RZECZYWISTEGO (TRANSPORT & TIMING)
+       ====================================================================== */
+    togglePlay() {
+        AudioEngine.init();
+        if (this.isPlaying) {
+            this.pause();
         } else {
-          promoMsg.innerText = `❌ ${data.error || 'Nieprawidłowy kod'}`;
-          promoMsg.className = 'text-[11px] mt-1.5 text-red-400 font-medium';
-          promoMsg.classList.remove('hidden');
+            this.play();
         }
-      } catch (e) {
-        promoMsg.innerText = '❌ Błąd serwera przy sprawdzaniu kodu.';
-        promoMsg.className = 'text-[11px] mt-1.5 text-red-400 font-medium';
-        promoMsg.classList.remove('hidden');
-      }
-    }
+    },
 
-    function checkCartForm() {
-      const discord = document.getElementById('discord-nick').value.trim();
-      const email = document.getElementById('customer-email').value.trim();
-      const phone = document.getElementById('customer-phone').value.trim();
-      const paczkomat = document.getElementById('customer-paczkomat').value.trim();
-      const genBtn = document.getElementById('gen-btn');
+    play() {
+        if (this.isPlaying) return;
+        this.isPlaying = true;
+        this.startTime = performance.now();
+        document.getElementById('btn-play').classList.add('active');
+        document.getElementById('btn-play').textContent = '❚❚ Pause';
+        this.scheduleNextStep();
+    },
 
-      const isEmailValid = email.endsWith('@gmail.com');
-      const isPhoneValid = phone.length >= 9;
+    pause() {
+        this.isPlaying = false;
+        clearTimeout(this.timerId);
+        document.getElementById('btn-play').classList.remove('active');
+        document.getElementById('btn-play').textContent = '▶ Play';
+        this.clearPlayheadHighlights();
+    },
 
-      if (cart.length > 0 && discord && isEmailValid && isPhoneValid && paczkomat) {
-        genBtn.disabled = false;
-        genBtn.className = 'w-full bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs py-4 rounded-2xl uppercase tracking-wider cursor-pointer transition-all flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25';
-        genBtn.innerText = 'ZŁÓŻ ZAMÓWIENIE';
-      } else {
-        genBtn.disabled = true;
-        genBtn.className = 'w-full bg-neutral-800 text-neutral-500 font-bold text-xs py-4 rounded-2xl uppercase tracking-wider cursor-not-allowed border border-neutral-700 transition-all flex items-center justify-center gap-2';
-        if (cart.length === 0) genBtn.innerText = 'Twój koszyk jest pusty';
-        else if (!discord) genBtn.innerText = 'Podaj nick z Discorda';
-        else if (!isEmailValid) genBtn.innerText = 'Wymagany e-mail @gmail.com';
-        else if (!isPhoneValid) genBtn.innerText = 'Podaj poprawny telefon (9 cyfr)';
-        else if (!paczkomat) genBtn.innerText = 'Podaj kod paczkomatu';
-      }
-    }
+    stop() {
+        this.pause();
+        this.currentStep = 0;
+        this.updateLCD(0);
+    },
 
-    async function submitOrder() {
-      const discordNick = document.getElementById('discord-nick').value.trim();
-      const email = document.getElementById('customer-email').value.trim();
-      const phone = document.getElementById('customer-phone').value.trim();
-      const paczkomat = document.getElementById('customer-paczkomat').value.trim();
+    scheduleNextStep() {
+        if (!this.isPlaying) return;
 
-      const genBtn = document.getElementById('gen-btn');
-      
-      genBtn.disabled = true;
-      genBtn.innerHTML = 'Składanie zamówienia... <span class="spinner"></span>';
+        const step = this.currentStep;
+        this.processStep(step);
+        this.updateLCD(step);
+        this.highlightPlayhead(step);
 
-      const orderData = {
-        discord: discordNick,
-        email: email,
-        phone: phone,
-        paczkomat: paczkomat,
-        items: cart,
-        promo: appliedPromoCode
-      };
+        // Obliczenie czasu trwania szesnastki (16th note) z uwzględnieniem Swing
+        const baseStepMs = (60 / this.bpm / 4) * 1000;
+        const swingFactor = (this.swing / 100) * 0.45;
+        const isOddStep = step % 2 === 1;
+        const delayMs = isOddStep ? baseStepMs * (1 - swingFactor) : baseStepMs * (1 + swingFactor);
 
-      try {
-        const response = await fetch('https://lbk.onrender.com/create-order', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(orderData)
+        this.currentStep++;
+        if (this.currentStep >= 32) {
+            if (this.isLooping) {
+                this.currentStep = 0;
+            } else {
+                this.stop();
+                return;
+            }
+        }
+
+        this.timerId = setTimeout(() => this.scheduleNextStep(), delayMs);
+    },
+
+    processStep(step) {
+        const now = AudioEngine.ctx ? AudioEngine.ctx.currentTime : 0;
+        const stepSec = (60 / this.bpm) / 4;
+
+        // 1. Metronom (co ćwierćnutę = co 4 kroki)
+        if (this.metronomeOn && step % 4 === 0) {
+            AudioEngine.triggerMetronome(step % 16 === 0, now);
+        }
+
+        // 2. Ścieżki perkusyjne (32 kroki)
+        const anySolo = Object.values(this.drumTracks).some(t => t.solo);
+        DRUM_TRACKS_META.forEach(meta => {
+            const track = this.drumTracks[meta.id];
+            if (track.steps[step] === 1) {
+                const audible = anySolo ? track.solo : !track.mute;
+                if (audible) {
+                    AudioEngine.triggerDrum(meta.id, now, track);
+                }
+            }
         });
 
-        const data = await response.json();
-
-        if (response.ok && data.success) {
-          document.getElementById('final-code').innerText = data.order_id;
-          document.getElementById('token-result').classList.remove('hidden');
-          cart = [];
-          updateCartUI();
-          genBtn.style.display = 'none';
-        } else {
-          alert('Błąd: ' + (data.error || 'Nie udało się złożyć zamówienia.'));
-          genBtn.disabled = false;
-          genBtn.innerHTML = 'ZŁÓŻ ZAMÓWIENIE';
-        }
-      } catch (error) {
-        console.error('Błąd sieci:', error);
-        alert('Wystąpił błąd połączenia z serwerem.');
-        genBtn.disabled = false;
-        genBtn.innerHTML = 'ZŁÓŻ ZAMÓWIENIE';
-      }
-    }
-
-    function copyCode() {
-      const codeText = document.getElementById('final-code').innerText;
-      navigator.clipboard.writeText(codeText);
-      alert('Skopiowano kod zamówienia: ' + codeText);
-    }
-
-    function openAuthModal() {
-      const user = localStorage.getItem('lbk_user');
-      if (user) {
-        const parsed = JSON.parse(user);
-        if (confirm(`Jesteś zalogowany jako: ${parsed.username}\nCzy chcesz się wylogować?`)) {
-          localStorage.removeItem('lbk_user');
-          checkAuthSession();
-        }
-      } else {
-        document.getElementById('auth-modal').classList.remove('hidden');
-      }
-    }
-
-    function closeAuthModal() {
-      document.getElementById('auth-modal').classList.add('hidden');
-      document.getElementById('auth-error').classList.add('hidden');
-    }
-
-    function switchAuthTab(tab) {
-      const loginForm = document.getElementById('login-form');
-      const regForm = document.getElementById('register-form');
-      const loginBtn = document.getElementById('tab-login-btn');
-      const regBtn = document.getElementById('tab-register-btn');
-      document.getElementById('auth-error').classList.add('hidden');
-      
-      if (tab === 'login') {
-        loginForm.classList.remove('hidden');
-        regForm.classList.add('hidden');
-        loginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-xl bg-orange-500 text-white transition-all cursor-pointer';
-        regBtn.className = 'flex-1 py-2 text-xs font-bold rounded-xl text-neutral-400 transition-all cursor-pointer';
-      } else {
-        loginForm.classList.add('hidden');
-        regForm.classList.remove('hidden');
-        regBtn.className = 'flex-1 py-2 text-xs font-bold rounded-xl bg-orange-500 text-white transition-all cursor-pointer';
-        loginBtn.className = 'flex-1 py-2 text-xs font-bold rounded-xl text-neutral-400 transition-all cursor-pointer';
-      }
-    }
-
-    async function handleRegister() {
-      const username = document.getElementById('reg-username').value.trim();
-      const email = document.getElementById('reg-email').value.trim();
-      const password = document.getElementById('reg-password').value.trim();
-      const errDiv = document.getElementById('auth-error');
-
-      if (!username || !email || !password) {
-        errDiv.innerText = "Wypełnij wszystkie pola!";
-        errDiv.classList.remove('hidden');
-        return;
-      }
-
-      try {
-        const res = await fetch('https://lbk.onrender.com/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, email, password })
+        // 3. Melodia z Piano Roll (pętla 16-krokowa)
+        const prStep = step % 16;
+        const notesToPlay = this.melodyNotes.filter(n => n.step === prStep);
+        notesToPlay.forEach(note => {
+            const dur = note.len * stepSec * 0.92;
+            AudioEngine.playSynthNote(note.midi, this.synth, dur, now);
         });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          alert("Konto zostało pomyślnie utworzone! Możesz się teraz zalogować.");
-          switchAuthTab('login');
+    },
+
+    updateLCD(step) {
+        const bar = Math.floor(step / 16) + 1;
+        const beat = Math.floor((step % 16) / 4) + 1;
+        const sub = (step % 4) + 1;
+        document.getElementById('lcd-pos').textContent =
+            `${String(bar).padStart(3, '0')} : ${beat} : ${String(sub).padStart(2, '0')}`;
+
+        if (this.isPlaying) {
+            const elapsedSec = (performance.now() - this.startTime) / 1000;
+            const mins = Math.floor(elapsedSec / 60);
+            const secs = (elapsedSec % 60).toFixed(1).padStart(4, '0');
+            document.getElementById('lcd-time').textContent = `${String(mins).padStart(2, '0')}:${secs}`;
         } else {
-          errDiv.innerText = data.error || "Błąd rejestracji";
-          errDiv.classList.remove('hidden');
+            document.getElementById('lcd-time').textContent = '00:00.0';
         }
-      } catch (e) {
-        errDiv.innerText = "Błąd połączenia z serwerem";
-        errDiv.classList.remove('hidden');
-      }
-    }
+    },
 
-    async function handleLogin() {
-      const identifier = document.getElementById('login-identifier').value.trim();
-      const password = document.getElementById('login-password').value.trim();
-      const errDiv = document.getElementById('auth-error');
+    highlightPlayhead(step) {
+        this.clearPlayheadHighlights();
 
-      if (!identifier || !password) {
-        errDiv.innerText = "Wypełnij wszystkie pola!";
-        errDiv.classList.remove('hidden');
-        return;
-      }
+        // Automatyczne przełączanie strony 1-16 / 17-32 w trakcie gry
+        const targetPage = Math.floor(step / 16);
+        if (targetPage !== this.drumPage) {
+            this.setDrumPage(targetPage);
+        }
 
-      try {
-        const res = await fetch('https://lbk.onrender.com/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ identifier, password })
+        const localStep = step % 16;
+        const numEl = document.getElementById(`step-num-${localStep}`);
+        if (numEl) numEl.classList.add('current');
+
+        DRUM_TRACKS_META.forEach(m => {
+            const pad = document.getElementById(`pad-${m.id}-${localStep}`);
+            if (pad) pad.classList.add('playing');
         });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          localStorage.setItem('lbk_user', JSON.stringify({ username: data.username, email: data.email }));
-          closeAuthModal();
-          checkAuthSession();
-        } else {
-          errDiv.innerText = data.error || "Nieprawidłowe dane logowania";
-          errDiv.classList.add('hidden');
-        }
-      } catch (e) {
-        errDiv.innerText = "Błąd połączenia z serwerem";
-        errDiv.classList.remove('hidden');
-      }
-    }
 
-    function checkAuthSession() {
-      const user = localStorage.getItem('lbk_user');
-      const navText = document.getElementById('auth-nav-text');
-      if (user) {
-        const parsed = JSON.parse(user);
-        navText.innerText = parsed.username;
-        const emailInput = document.getElementById('customer-email');
-        if (emailInput && !emailInput.value) {
-          emailInput.value = parsed.email;
-          checkCartForm();
+        NOTES_24.forEach(n => {
+            const cell = document.getElementById(`pr-${n.midi}-${localStep}`);
+            if (cell) cell.classList.add('playing-col');
+        });
+    },
+
+    clearPlayheadHighlights() {
+        document.querySelectorAll('.step-num.current').forEach(el => el.classList.remove('current'));
+        document.querySelectorAll('.seq-pad.playing').forEach(el => el.classList.remove('playing'));
+        document.querySelectorAll('.pr-cell.playing-col').forEach(el => el.classList.remove('playing-col'));
+    },
+
+    /* ======================================================================
+       PRESETY SYNTEZATORA I PROJEKTÓW
+       ====================================================================== */
+    applySynthPreset(presetKey) {
+        const p = SYNTH_PRESETS[presetKey];
+        if (!p) return;
+
+        Object.assign(this.synth, p);
+        document.getElementById('osc1-wave').value = p.osc1;
+        document.getElementById('osc2-wave').value = p.osc2;
+
+        document.getElementById('knob-osc-mix').setValue(p.mix);
+        document.getElementById('knob-osc-detune').setValue(p.detune);
+        document.getElementById('knob-osc-oct').setValue(p.oct);
+        document.getElementById('knob-flt-cutoff').setValue(p.cutoff);
+        document.getElementById('knob-flt-res').setValue(p.res);
+        document.getElementById('knob-flt-env').setValue(p.envAmt);
+        document.getElementById('knob-env-a').setValue(p.a);
+        document.getElementById('knob-env-d').setValue(p.d);
+        document.getElementById('knob-env-s').setValue(p.s);
+        document.getElementById('knob-env-r').setValue(p.r);
+        document.getElementById('knob-fx-drive').setValue(p.drive);
+        document.getElementById('knob-fx-delay').setValue(p.delay);
+        document.getElementById('knob-fx-reverb').setValue(p.reverb);
+
+        AudioEngine.setDistortion(p.drive);
+        if (AudioEngine.delayWet) AudioEngine.delayWet.gain.value = p.delay;
+        if (AudioEngine.reverbWet) AudioEngine.reverbWet.gain.value = p.reverb;
+
+        this.drawADSR();
+    },
+
+    loadDemoSong(songKey) {
+        const song = DEMO_SONGS[songKey];
+        if (!song) return;
+
+        this.bpm = song.bpm;
+        this.swing = song.swing;
+        document.getElementById('bpm-slider').value = this.bpm;
+        document.getElementById('lcd-bpm').textContent = `${this.bpm} BPM`;
+        document.getElementById('swing-slider').value = this.swing;
+        document.getElementById('swing-val').textContent = `${this.swing}%`;
+
+        document.getElementById('synth-preset-select').value = song.synthPreset;
+        this.applySynthPreset(song.synthPreset);
+
+        DRUM_TRACKS_META.forEach(m => {
+            this.drumTracks[m.id].steps = [...song.drums[m.id]];
+        });
+
+        this.melodyNotes = JSON.parse(JSON.stringify(song.melody));
+
+        this.renderDrumSequencer();
+        this.renderPianoRoll();
+    },
+
+    saveProjectToStorage() {
+        const data = {
+            bpm: this.bpm,
+            swing: this.swing,
+            synth: this.synth,
+            drums: Object.fromEntries(DRUM_TRACKS_META.map(m => [m.id, this.drumTracks[m.id].steps])),
+            melody: this.melodyNotes
+        };
+        localStorage.setItem('aether_daw_project', JSON.stringify(data));
+        this.toast('Projekt zapisany w pamięci przeglądarki!');
+    },
+
+    loadProjectFromStorage() {
+        try {
+            const raw = localStorage.getItem('aether_daw_project');
+            if (!raw) {
+                this.toast('Brak zapisanego projektu w pamięci.');
+                return;
+            }
+            const data = JSON.parse(raw);
+            this.bpm = data.bpm;
+            this.swing = data.swing;
+            document.getElementById('bpm-slider').value = this.bpm;
+            document.getElementById('lcd-bpm').textContent = `${this.bpm} BPM`;
+            document.getElementById('swing-slider').value = this.swing;
+            document.getElementById('swing-val').textContent = `${this.swing}%`;
+
+            Object.assign(this.synth, data.synth);
+            DRUM_TRACKS_META.forEach(m => {
+                if (data.drums[m.id]) this.drumTracks[m.id].steps = data.drums[m.id];
+            });
+            this.melodyNotes = data.melody || [];
+
+            this.renderDrumSequencer();
+            this.renderPianoRoll();
+            this.drawADSR();
+            this.toast('Wczytano zapisany projekt!');
+        } catch (e) {
+            this.toast('Błąd podczas wczytywania projektu.');
         }
-      } else {
-        navText.innerText = "Konto";
-      }
+    },
+
+    exportProjectJSON() {
+        const data = {
+            name: 'AetherDAW_Project',
+            date: new Date().toISOString(),
+            bpm: this.bpm,
+            swing: this.swing,
+            synth: this.synth,
+            drums: Object.fromEntries(DRUM_TRACKS_META.map(m => [m.id, this.drumTracks[m.id].steps])),
+            melody: this.melodyNotes
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `AetherDAW_${this.bpm}BPM.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.toast('Wyeksportowano projekt do pliku JSON!');
+    },
+
+    /* ======================================================================
+       WIZUALIZATOR AUDIO (60 FPS) & STEREO VU METER
+       ====================================================================== */
+    startVisualLoop() {
+        const vizCanvas = document.getElementById('main-visualizer');
+        const vCtx = vizCanvas.getContext('2d');
+        const vuCanvas = document.getElementById('vu-meter-canvas');
+        const vuCtx = vuCanvas.getContext('2d');
+
+        const freqData = new Uint8Array(512);
+        const timeData = new Uint8Array(512);
+        const dataL = new Uint8Array(128);
+        const dataR = new Uint8Array(128);
+
+        let frameCounter = 0;
+
+        const renderFrame = () => {
+            frameCounter++;
+
+            // Aktualizacja wskaźnika obciążenia DSP co 30 klatek
+            if (frameCounter % 30 === 0) {
+                const baseDsp = this.isPlaying ? 16 : 6;
+                const voicesDsp = AudioEngine.activeVoices.size * 3;
+                const jitter = Math.floor(Math.random() * 4);
+                document.getElementById('dsp-load').textContent = `DSP ${baseDsp + voicesDsp + jitter}%`;
+            }
+
+            // 1. STEREO VU METER
+            vuCtx.fillStyle = '#06080b';
+            vuCtx.fillRect(0, 0, vuCanvas.width, vuCanvas.height);
+
+            let rmsL = 0, rmsR = 0;
+            if (AudioEngine.analyserL && AudioEngine.analyserR) {
+                AudioEngine.analyserL.getByteTimeDomainData(dataL);
+                AudioEngine.analyserR.getByteTimeDomainData(dataR);
+                for (let i = 0; i < dataL.length; i++) {
+                    const normL = (dataL[i] - 128) / 128;
+                    const normR = (dataR[i] - 128) / 128;
+                    rmsL += normL * normL;
+                    rmsR += normR * normR;
+                }
+                rmsL = Math.min(1, Math.sqrt(rmsL / dataL.length) * 3.2);
+                rmsR = Math.min(1, Math.sqrt(rmsR / dataR.length) * 3.2);
+            }
+
+            const drawVuBar = (y, level) => {
+                const segments = 18;
+                const segW = (vuCanvas.width - segments * 1.5) / segments;
+                const activeSegs = Math.round(level * segments);
+                for (let s = 0; s < segments; s++) {
+                    if (s < activeSegs) {
+                        vuCtx.fillStyle = s > 14 ? '#ff2a6d' : (s > 11 ? '#ff9e00' : '#05ffa1');
+                    } else {
+                        vuCtx.fillStyle = '#161b26';
+                    }
+                    vuCtx.fillRect(s * (segW + 1.5), y, segW, 8);
+                }
+            };
+            drawVuBar(3, rmsL);
+            drawVuBar(13, rmsR);
+
+            // 2. GŁÓWNY WIZUALIZATOR (SPECTRUM / SCOPE / STEREO PHASE)
+            vCtx.fillStyle = 'rgba(6, 8, 12, 0.45)';
+            vCtx.fillRect(0, 0, vizCanvas.width, vizCanvas.height);
+
+            if (AudioEngine.analyserMain) {
+                if (this.vizMode === 'spectrum') {
+                    AudioEngine.analyserMain.getByteFrequencyData(freqData);
+                    const bars = 48;
+                    const barW = vizCanvas.width / bars;
+                    for (let i = 0; i < bars; i++) {
+                        const val = freqData[i * 3] / 255;
+                        const h = Math.max(2, val * (vizCanvas.height - 6));
+                        const grad = vCtx.createLinearGradient(0, vizCanvas.height, 0, 0);
+                        grad.addColorStop(0, '#00f0ff');
+                        grad.addColorStop(0.6, '#9d4edd');
+                        grad.addColorStop(1, '#ff2a6d');
+                        vCtx.fillStyle = grad;
+                        vCtx.fillRect(i * barW + 1, vizCanvas.height - h, barW - 2, h);
+                    }
+                } else if (this.vizMode === 'scope') {
+                    AudioEngine.analyserMain.getByteTimeDomainData(timeData);
+                    vCtx.lineWidth = 2;
+                    vCtx.strokeStyle = '#05ffa1';
+                    vCtx.beginPath();
+                    const sliceW = vizCanvas.width / timeData.length;
+                    let x = 0;
+                    for (let i = 0; i < timeData.length; i++) {
+                        const v = timeData[i] / 128.0;
+                        const y = (v * vizCanvas.height) / 2;
+                        if (i === 0) vCtx.moveTo(x, y);
+                        else vCtx.lineTo(x, y);
+                        x += sliceW;
+                    }
+                    vCtx.stroke();
+                } else if (this.vizMode === 'phase') {
+                    // Lissajous Stereo Goniometer
+                    vCtx.strokeStyle = 'rgba(255,255,255,0.08)';
+                    vCtx.beginPath();
+                    vCtx.moveTo(vizCanvas.width / 2, 0);
+                    vCtx.lineTo(vizCanvas.width / 2, vizCanvas.height);
+                    vCtx.moveTo(0, vizCanvas.height / 2);
+                    vCtx.lineTo(vizCanvas.width, vizCanvas.height / 2);
+                    vCtx.stroke();
+
+                    vCtx.fillStyle = '#ff9e00';
+                    for (let i = 0; i < dataL.length; i++) {
+                        const l = (dataL[i] - 128) / 128;
+                        const r = (dataR[i] - 128) / 128;
+                        const px = vizCanvas.width / 2 + (l - r) * 85;
+                        const py = vizCanvas.height / 2 - (l + r) * 42;
+                        vCtx.fillRect(px, py, 2, 2);
+                    }
+                }
+            }
+
+            requestAnimationFrame(renderFrame);
+        };
+
+        requestAnimationFrame(renderFrame);
+    },
+
+    /* ======================================================================
+       PODPIĘCIE ZDARZEŃ UI I SKRÓTÓW KLAWISZOWYCH
+       ====================================================================== */
+    bindEvents() {
+        document.getElementById('btn-play').onclick = () => this.togglePlay();
+        document.getElementById('btn-stop').onclick = () => this.stop();
+
+        document.getElementById('btn-rec').onclick = (e) => {
+            this.isRecording = !this.isRecording;
+            e.currentTarget.classList.toggle('active', this.isRecording);
+            this.toast(this.isRecording ? 'Tryb nagrywania MIDI aktywny!' : 'Wyłączono nagrywanie MIDI');
+        };
+
+        document.getElementById('btn-loop').onclick = (e) => {
+            this.isLooping = !this.isLooping;
+            e.currentTarget.classList.toggle('active', this.isLooping);
+        };
+
+        document.getElementById('btn-metro').onclick = (e) => {
+            this.metronomeOn = !this.metronomeOn;
+            e.currentTarget.classList.toggle('active', this.metronomeOn);
+        };
+
+        // BPM Slider & Tap Tempo
+        const bpmSlider = document.getElementById('bpm-slider');
+        bpmSlider.oninput = (e) => {
+            this.bpm = parseInt(e.target.value);
+            document.getElementById('lcd-bpm').textContent = `${this.bpm} BPM`;
+        };
+
+        document.getElementById('btn-tap').onclick = () => {
+            const now = performance.now();
+            this.tapTimes.push(now);
+            if (this.tapTimes.length > 4) this.tapTimes.shift();
+            if (this.tapTimes.length >= 2) {
+                const diffs = [];
+                for (let i = 1; i < this.tapTimes.length; i++) {
+                    diffs.push(this.tapTimes[i] - this.tapTimes[i - 1]);
+                }
+                const avgMs = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+                const calcBpm = Math.max(60, Math.min(200, Math.round(60000 / avgMs)));
+                this.bpm = calcBpm;
+                bpmSlider.value = calcBpm;
+                document.getElementById('lcd-bpm').textContent = `${calcBpm} BPM`;
+            }
+        };
+
+        // Swing
+        document.getElementById('swing-slider').oninput = (e) => {
+            this.swing = parseInt(e.target.value);
+            document.getElementById('swing-val').textContent = `${this.swing}%`;
+        };
+
+        // Drum Buttons
+        document.getElementById('btn-drum-rand').onclick = () => this.randomizeDrums();
+        document.getElementById('btn-drum-clear').onclick = () => this.clearDrums();
+
+        // Synth Controls
+        document.getElementById('osc1-wave').onchange = (e) => this.synth.osc1 = e.target.value;
+        document.getElementById('osc2-wave').onchange = (e) => this.synth.osc2 = e.target.value;
+        document.getElementById('synth-preset-select').onchange = (e) => this.applySynthPreset(e.target.value);
+
+        document.getElementById('btn-synth-mute').onclick = (e) => {
+            this.synth.muted = !this.synth.muted;
+            e.currentTarget.style.background = this.synth.muted ? 'var(--accent-rose)' : '';
+            e.currentTarget.style.color = this.synth.muted ? '#fff' : '';
+        };
+
+        // Piano Roll Controls
+        document.getElementById('scale-select').onchange = (e) => {
+            this.currentScale = e.target.value;
+            this.renderPianoRoll();
+        };
+
+        document.getElementById('btn-pr-clear').onclick = () => {
+            this.melodyNotes = [];
+            this.renderPianoRoll();
+            this.toast('Wyczyszczono melodię w Piano Roll');
+        };
+
+        // Song Presets & Save/Load/Export
+        document.getElementById('song-preset-select').onchange = (e) => {
+            this.loadDemoSong(e.target.value);
+            this.toast(`Wczytano utwór: ${e.target.options[e.target.selectedIndex].text}`);
+        };
+        document.getElementById('btn-save-proj').onclick = () => this.saveProjectToStorage();
+        document.getElementById('btn-load-proj').onclick = () => this.loadProjectFromStorage();
+        document.getElementById('btn-export-json').onclick = () => this.exportProjectJSON();
+
+        // Visualizer Mode Switcher
+        document.querySelectorAll('.viz-mode-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.viz-mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.vizMode = btn.dataset.mode;
+            };
+        });
+
+        // Klawiatura komputera -> MIDI & Transport (Spacja)
+        const keyToMidiMap = {};
+        NOTES_24.forEach(n => {
+            keyToMidiMap[n.keyHint.toLowerCase()] = { midi: n.midi, name: n.name };
+        });
+
+        const pressedKeys = new Set();
+
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+
+            if (e.code === 'Space') {
+                e.preventDefault();
+                this.togglePlay();
+                return;
+            }
+
+            const k = e.key.toLowerCase();
+            if (keyToMidiMap[k] && !pressedKeys.has(k)) {
+                pressedKeys.add(k);
+                const note = keyToMidiMap[k];
+                this.triggerLiveKeyOn(note.midi, note.name);
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            const k = e.key.toLowerCase();
+            if (keyToMidiMap[k]) {
+                pressedKeys.delete(k);
+                this.triggerLiveKeyOff(keyToMidiMap[k].midi);
+            }
+        });
     }
-  </script>
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+    DAW.init();
+});
+</script>
 </body>
 </html>
